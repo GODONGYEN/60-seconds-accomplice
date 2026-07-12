@@ -1,0 +1,42 @@
+# Godot-generated state and import cache
+.godot/
+.import/
+.mono/
+
+# Local exports and build products
+.export/
+build/*
+!build/.gdignore
+dist/
+exports/
+
+# Local/editor files
+.DS_Store
+Thumbs.db
+Desktop.ini
+*.tmp
+*.temp
+*.bak
+*.swp
+*.swo
+*~
+*.log
+.idea/
+.vscode/
+
+# Secrets and signing material
+.env
+.env.*
+!.env.example
+*.keystore
+*.jks
+*.p12
+*.pfx
+*.cer
+*.mobileprovision
+auth.cfg
+export_credentials.cfg
+
+# Test coverage or local reports
+coverage/
+test-results/
