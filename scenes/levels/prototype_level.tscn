@@ -1,0 +1,199 @@
+[gd_scene load_steps=17 format=3]
+
+[ext_resource type="Script" path="res://scripts/core/prototype_level.gd" id="1_level"]
+[ext_resource type="Script" path="res://scripts/core/object_registry.gd" id="2_registry"]
+[ext_resource type="PackedScene" path="res://scenes/objects/pressure_plate.tscn" id="3_plate"]
+[ext_resource type="PackedScene" path="res://scenes/objects/security_door.tscn" id="4_door"]
+[ext_resource type="PackedScene" path="res://scenes/objects/objective_item.tscn" id="5_objective"]
+[ext_resource type="PackedScene" path="res://scenes/objects/exit_zone.tscn" id="6_exit"]
+
+[sub_resource type="RectangleShape2D" id="Shape_top_bottom"]
+size = Vector2(1280, 28)
+
+[sub_resource type="RectangleShape2D" id="Shape_side"]
+size = Vector2(28, 580)
+
+[sub_resource type="RectangleShape2D" id="Shape_divider_top"]
+size = Vector2(32, 158)
+
+[sub_resource type="RectangleShape2D" id="Shape_divider_bottom"]
+size = Vector2(32, 238)
+
+[sub_resource type="RectangleShape2D" id="Shape_inner_block"]
+size = Vector2(180, 38)
+
+[sub_resource type="RectangleShape2D" id="Shape_label_back"]
+size = Vector2(150, 26)
+
+[sub_resource type="StyleBoxFlat" id="StyleBox_zone"]
+bg_color = Color(0.035, 0.078, 0.137, 0.88)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(0.255, 0.447, 0.635, 0.8)
+corner_radius_top_left = 8
+corner_radius_top_right = 8
+corner_radius_bottom_right = 8
+corner_radius_bottom_left = 8
+
+[sub_resource type="LabelSettings" id="LabelSettings_zone"]
+font_size = 18
+font_color = Color(0.823, 0.89, 0.98, 1)
+outline_size = 4
+outline_color = Color(0.02, 0.035, 0.065, 1)
+
+[sub_resource type="LabelSettings" id="LabelSettings_small"]
+font_size = 15
+font_color = Color(0.95, 0.81, 0.36, 1)
+outline_size = 3
+outline_color = Color(0.02, 0.035, 0.065, 1)
+
+[node name="PrototypeLevel" type="Node2D"]
+process_mode = 1
+script = ExtResource("1_level")
+
+[node name="Environment" type="Node2D" parent="."]
+
+[node name="TopWall" type="StaticBody2D" parent="Environment"]
+position = Vector2(640, 112)
+collision_layer = 1
+collision_mask = 0
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Environment/TopWall"]
+shape = SubResource("Shape_top_bottom")
+
+[node name="Visual" type="Polygon2D" parent="Environment/TopWall"]
+polygon = PackedVector2Array(-640, -14, 640, -14, 640, 14, -640, 14)
+color = Color(0.145, 0.2, 0.29, 1)
+
+[node name="BottomWall" type="StaticBody2D" parent="Environment"]
+position = Vector2(640, 688)
+collision_layer = 1
+collision_mask = 0
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Environment/BottomWall"]
+shape = SubResource("Shape_top_bottom")
+
+[node name="Visual" type="Polygon2D" parent="Environment/BottomWall"]
+polygon = PackedVector2Array(-640, -14, 640, -14, 640, 14, -640, 14)
+color = Color(0.145, 0.2, 0.29, 1)
+
+[node name="LeftWall" type="StaticBody2D" parent="Environment"]
+position = Vector2(20, 400)
+collision_layer = 1
+collision_mask = 0
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Environment/LeftWall"]
+shape = SubResource("Shape_side")
+
+[node name="Visual" type="Polygon2D" parent="Environment/LeftWall"]
+polygon = PackedVector2Array(-14, -290, 14, -290, 14, 290, -14, 290)
+color = Color(0.145, 0.2, 0.29, 1)
+
+[node name="RightWall" type="StaticBody2D" parent="Environment"]
+position = Vector2(1260, 400)
+collision_layer = 1
+collision_mask = 0
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Environment/RightWall"]
+shape = SubResource("Shape_side")
+
+[node name="Visual" type="Polygon2D" parent="Environment/RightWall"]
+polygon = PackedVector2Array(-14, -290, 14, -290, 14, 290, -14, 290)
+color = Color(0.145, 0.2, 0.29, 1)
+
+[node name="DividerTop" type="StaticBody2D" parent="Environment"]
+position = Vector2(640, 205)
+collision_layer = 1
+collision_mask = 0
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Environment/DividerTop"]
+shape = SubResource("Shape_divider_top")
+
+[node name="Visual" type="Polygon2D" parent="Environment/DividerTop"]
+polygon = PackedVector2Array(-16, -79, 16, -79, 16, 79, -16, 79)
+color = Color(0.23, 0.3, 0.4, 1)
+
+[node name="DividerBottom" type="StaticBody2D" parent="Environment"]
+position = Vector2(640, 555)
+collision_layer = 1
+collision_mask = 0
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Environment/DividerBottom"]
+shape = SubResource("Shape_divider_bottom")
+
+[node name="Visual" type="Polygon2D" parent="Environment/DividerBottom"]
+polygon = PackedVector2Array(-16, -119, 16, -119, 16, 119, -16, 119)
+color = Color(0.23, 0.3, 0.4, 1)
+
+[node name="CoverBlock" type="StaticBody2D" parent="Environment"]
+position = Vector2(930, 405)
+collision_layer = 1
+collision_mask = 0
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Environment/CoverBlock"]
+shape = SubResource("Shape_inner_block")
+
+[node name="Visual" type="Polygon2D" parent="Environment/CoverBlock"]
+polygon = PackedVector2Array(-90, -19, 90, -19, 90, 19, -90, 19)
+color = Color(0.115, 0.18, 0.27, 1)
+
+[node name="PlayerSpawn" type="Marker2D" parent="."]
+unique_name_in_owner = true
+position = Vector2(165, 360)
+
+[node name="SpawnLabel" type="Label" parent="."]
+offset_left = 95.0
+offset_top = 408.0
+offset_right = 235.0
+offset_bottom = 438.0
+text = "START"
+label_settings = SubResource("LabelSettings_zone")
+horizontal_alignment = 1
+
+[node name="PlateLabel" type="Label" parent="."]
+offset_left = 320.0
+offset_top = 404.0
+offset_right = 480.0
+offset_bottom = 434.0
+text = "PRESSURE PLATE"
+label_settings = SubResource("LabelSettings_small")
+horizontal_alignment = 1
+
+[node name="VaultLabel" type="Label" parent="."]
+offset_left = 755.0
+offset_top = 150.0
+offset_right = 1045.0
+offset_bottom = 184.0
+theme_override_styles/normal = SubResource("StyleBox_zone")
+text = "TIME CORE VAULT"
+label_settings = SubResource("LabelSettings_zone")
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="PlayerContainer" type="Node2D" parent="."]
+unique_name_in_owner = true
+
+[node name="GhostContainer" type="Node2D" parent="."]
+unique_name_in_owner = true
+
+[node name="ObjectRegistry" type="Node" parent="."]
+unique_name_in_owner = true
+script = ExtResource("2_registry")
+
+[node name="PressurePlate" parent="." instance=ExtResource("3_plate")]
+unique_name_in_owner = true
+position = Vector2(400, 360)
+
+[node name="SecurityDoor" parent="." instance=ExtResource("4_door")]
+unique_name_in_owner = true
+position = Vector2(640, 360)
+
+[node name="ObjectiveItem" parent="." instance=ExtResource("5_objective")]
+unique_name_in_owner = true
+position = Vector2(840, 300)
+
+[node name="ExitZone" parent="." instance=ExtResource("6_exit")]
+unique_name_in_owner = true
+position = Vector2(1110, 535)

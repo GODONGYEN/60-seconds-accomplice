@@ -1,0 +1,16 @@
+[gd_scene load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://scripts/core/timeline_manager.gd" id="1_timeline"]
+[ext_resource type="Script" path="res://scripts/recording/action_recorder.gd" id="2_recorder"]
+
+[node name="TimelineManager" type="Node"]
+process_mode = 1
+script = ExtResource("1_timeline")
+loop_duration_seconds = 20.0
+recording_frequency_hz = 20.0
+max_ghosts = 8
+
+[node name="ActionRecorder" type="Node" parent="."]
+unique_name_in_owner = true
+script = ExtResource("2_recorder")
+sample_rate_hz = 20.0

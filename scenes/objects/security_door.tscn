@@ -1,0 +1,29 @@
+[gd_scene load_steps=4 format=3]
+
+[ext_resource type="Script" path="res://scripts/objects/security_door.gd" id="1_door"]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_blocker"]
+size = Vector2(44, 152)
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_safety"]
+size = Vector2(74, 184)
+
+[node name="SecurityDoor" type="StaticBody2D"]
+collision_layer = 1
+collision_mask = 0
+script = ExtResource("1_door")
+object_id = &"door_vault_01"
+
+[node name="Blocker" type="CollisionShape2D" parent="."]
+unique_name_in_owner = true
+shape = SubResource("RectangleShape2D_blocker")
+
+[node name="SafetyArea" type="Area2D" parent="."]
+unique_name_in_owner = true
+collision_layer = 0
+collision_mask = 2
+monitorable = false
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="SafetyArea"]
+shape = SubResource("RectangleShape2D_safety")
+

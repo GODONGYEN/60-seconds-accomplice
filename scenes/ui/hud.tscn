@@ -1,0 +1,442 @@
+[gd_scene load_steps=8 format=3]
+
+[ext_resource type="Script" path="res://scripts/ui/hud.gd" id="1_hud"]
+
+[sub_resource type="StyleBoxFlat" id="Style_top"]
+bg_color = Color(0.025, 0.055, 0.098, 0.94)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(0.145, 0.42, 0.57, 0.9)
+corner_radius_top_left = 10
+corner_radius_top_right = 10
+corner_radius_bottom_right = 10
+corner_radius_bottom_left = 10
+
+[sub_resource type="StyleBoxFlat" id="Style_hint"]
+bg_color = Color(0.033, 0.075, 0.125, 0.9)
+border_width_left = 3
+border_color = Color(0.22, 0.91, 0.81, 1)
+corner_radius_top_right = 8
+corner_radius_bottom_right = 8
+
+[sub_resource type="StyleBoxFlat" id="Style_button"]
+bg_color = Color(0.105, 0.22, 0.32, 1)
+border_width_left = 1
+border_width_top = 1
+border_width_right = 1
+border_width_bottom = 1
+border_color = Color(0.27, 0.8, 0.83, 1)
+corner_radius_top_left = 7
+corner_radius_top_right = 7
+corner_radius_bottom_right = 7
+corner_radius_bottom_left = 7
+content_margin_left = 18.0
+content_margin_top = 10.0
+content_margin_right = 18.0
+content_margin_bottom = 10.0
+
+[sub_resource type="StyleBoxFlat" id="Style_button_hover"]
+bg_color = Color(0.13, 0.42, 0.47, 1)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(0.42, 1, 0.88, 1)
+corner_radius_top_left = 7
+corner_radius_top_right = 7
+corner_radius_bottom_right = 7
+corner_radius_bottom_left = 7
+content_margin_left = 18.0
+content_margin_top = 10.0
+content_margin_right = 18.0
+content_margin_bottom = 10.0
+
+[sub_resource type="StyleBoxFlat" id="Style_modal"]
+bg_color = Color(0.025, 0.055, 0.098, 0.98)
+border_width_left = 3
+border_width_top = 3
+border_width_right = 3
+border_width_bottom = 3
+border_color = Color(0.22, 0.91, 0.81, 1)
+corner_radius_top_left = 14
+corner_radius_top_right = 14
+corner_radius_bottom_right = 14
+corner_radius_bottom_left = 14
+content_margin_left = 36.0
+content_margin_top = 30.0
+content_margin_right = 36.0
+content_margin_bottom = 30.0
+
+[sub_resource type="StyleBoxFlat" id="Style_interaction"]
+bg_color = Color(0.95, 0.81, 0.29, 0.96)
+corner_radius_top_left = 8
+corner_radius_top_right = 8
+corner_radius_bottom_right = 8
+corner_radius_bottom_left = 8
+content_margin_left = 18.0
+content_margin_top = 8.0
+content_margin_right = 18.0
+content_margin_bottom = 8.0
+
+[node name="HUD" type="CanvasLayer"]
+unique_name_in_owner = true
+process_mode = 3
+script = ExtResource("1_hud")
+
+[node name="TopBar" type="PanelContainer" parent="."]
+anchors_preset = 10
+anchor_right = 1.0
+offset_left = 18.0
+offset_top = 16.0
+offset_right = -18.0
+offset_bottom = 94.0
+theme_override_styles/panel = SubResource("Style_top")
+
+[node name="Margin" type="MarginContainer" parent="TopBar"]
+theme_override_constants/margin_left = 20
+theme_override_constants/margin_top = 8
+theme_override_constants/margin_right = 20
+theme_override_constants/margin_bottom = 8
+
+[node name="Row" type="HBoxContainer" parent="TopBar/Margin"]
+theme_override_constants/separation = 28
+
+[node name="LoopLabel" type="Label" parent="TopBar/Margin/Row"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(180, 0)
+theme_override_colors/font_color = Color(0.31, 0.91, 0.95, 1)
+theme_override_colors/font_outline_color = Color(0, 0.05, 0.08, 1)
+theme_override_constants/outline_size = 4
+theme_override_font_sizes/font_size = 22
+text = "TIMELINE  01"
+vertical_alignment = 1
+
+[node name="GhostLabel" type="Label" parent="TopBar/Margin/Row"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(150, 0)
+theme_override_colors/font_color = Color(0.58, 0.94, 1, 1)
+theme_override_font_sizes/font_size = 19
+text = "GHOSTS  0 / 8"
+vertical_alignment = 1
+
+[node name="SpacerLeft" type="Control" parent="TopBar/Margin/Row"]
+size_flags_horizontal = 3
+
+[node name="TimerCaption" type="Label" parent="TopBar/Margin/Row"]
+theme_override_colors/font_color = Color(0.61, 0.69, 0.79, 1)
+theme_override_font_sizes/font_size = 14
+text = "REMAINING"
+vertical_alignment = 1
+
+[node name="TimerLabel" type="Label" parent="TopBar/Margin/Row"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(128, 0)
+pivot_offset = Vector2(64, 28)
+theme_override_colors/font_outline_color = Color(0, 0.03, 0.06, 1)
+theme_override_constants/outline_size = 5
+theme_override_font_sizes/font_size = 35
+text = "20.00"
+horizontal_alignment = 2
+vertical_alignment = 1
+
+[node name="SpacerRight" type="Control" parent="TopBar/Margin/Row"]
+size_flags_horizontal = 3
+
+[node name="ObjectiveLabel" type="Label" parent="TopBar/Margin/Row"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(285, 0)
+theme_override_font_sizes/font_size = 18
+text = "OBJECTIVE  FIND THE TIME CORE"
+horizontal_alignment = 2
+vertical_alignment = 1
+
+[node name="HintPanel" type="PanelContainer" parent="."]
+anchors_preset = 10
+anchor_right = 1.0
+offset_left = 260.0
+offset_top = 102.0
+offset_right = -260.0
+offset_bottom = 151.0
+theme_override_styles/panel = SubResource("Style_hint")
+
+[node name="HintLabel" type="Label" parent="HintPanel"]
+unique_name_in_owner = true
+theme_override_colors/font_color = Color(0.89, 0.95, 1, 1)
+theme_override_font_sizes/font_size = 18
+text = "STAND ON THE PRESSURE PLATE, THEN PRESS R TO REWIND"
+horizontal_alignment = 1
+vertical_alignment = 1
+autowrap_mode = 2
+
+[node name="Controls" type="Label" parent="."]
+anchors_preset = 2
+anchor_top = 1.0
+anchor_bottom = 1.0
+offset_left = 24.0
+offset_top = -37.0
+offset_right = 610.0
+offset_bottom = -11.0
+theme_override_colors/font_color = Color(0.62, 0.7, 0.8, 1)
+theme_override_colors/font_outline_color = Color(0.01, 0.025, 0.05, 1)
+theme_override_constants/outline_size = 3
+theme_override_font_sizes/font_size = 15
+text = "WASD/ARROWS MOVE   E INTERACT   R REWIND   ESC PAUSE   F11 FULLSCREEN   M MUTE"
+
+[node name="InteractionCenter" type="CenterContainer" parent="."]
+anchors_preset = 12
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_top = -94.0
+offset_bottom = -48.0
+
+[node name="InteractionLabel" type="Label" parent="InteractionCenter"]
+unique_name_in_owner = true
+theme_override_colors/font_color = Color(0.035, 0.055, 0.08, 1)
+theme_override_font_sizes/font_size = 19
+theme_override_styles/normal = SubResource("Style_interaction")
+text = "E  COLLECT TIME CORE"
+
+[node name="PausePanel" type="Control" parent="."]
+unique_name_in_owner = true
+visible = false
+process_mode = 3
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="Shade" type="ColorRect" parent="PausePanel"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+color = Color(0.01, 0.02, 0.04, 0.78)
+
+[node name="Center" type="CenterContainer" parent="PausePanel"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="Card" type="PanelContainer" parent="PausePanel/Center"]
+custom_minimum_size = Vector2(440, 0)
+layout_mode = 2
+theme_override_styles/panel = SubResource("Style_modal")
+
+[node name="Content" type="VBoxContainer" parent="PausePanel/Center/Card"]
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="Title" type="Label" parent="PausePanel/Center/Card/Content"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.31, 0.91, 0.95, 1)
+theme_override_font_sizes/font_size = 32
+text = "TIME FROZEN"
+horizontal_alignment = 1
+
+[node name="Subtitle" type="Label" parent="PausePanel/Center/Card/Content"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.71, 0.78, 0.87, 1)
+theme_override_font_sizes/font_size = 16
+text = "Recording and Ghost playback stop while paused."
+horizontal_alignment = 1
+
+[node name="ResumeButton" type="Button" parent="PausePanel/Center/Card/Content"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_font_sizes/font_size = 18
+theme_override_styles/normal = SubResource("Style_button")
+theme_override_styles/hover = SubResource("Style_button_hover")
+text = "CONTINUE (ESC)"
+
+[node name="RestartButton" type="Button" parent="PausePanel/Center/Card/Content"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_font_sizes/font_size = 18
+theme_override_styles/normal = SubResource("Style_button")
+theme_override_styles/hover = SubResource("Style_button_hover")
+text = "REWIND CURRENT TIMELINE (R)"
+
+[node name="ResetTimelineButton" type="Button" parent="PausePanel/Center/Card/Content"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_font_sizes/font_size = 18
+theme_override_styles/normal = SubResource("Style_button")
+theme_override_styles/hover = SubResource("Style_button_hover")
+text = "RESET ALL TIMELINES"
+
+[node name="VolumeRow" type="HBoxContainer" parent="PausePanel/Center/Card/Content"]
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="VolumeText" type="Label" parent="PausePanel/Center/Card/Content/VolumeRow"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 16
+text = "VOLUME"
+vertical_alignment = 1
+
+[node name="VolumeSlider" type="HSlider" parent="PausePanel/Center/Card/Content/VolumeRow"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(190, 0)
+layout_mode = 2
+size_flags_horizontal = 3
+value = 70.0
+
+[node name="MuteButton" type="Button" parent="PausePanel/Center/Card/Content/VolumeRow"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_styles/normal = SubResource("Style_button")
+theme_override_styles/hover = SubResource("Style_button_hover")
+text = "MUTE (M)"
+
+[node name="FullscreenButton" type="Button" parent="PausePanel/Center/Card/Content"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_font_sizes/font_size = 18
+theme_override_styles/normal = SubResource("Style_button")
+theme_override_styles/hover = SubResource("Style_button_hover")
+text = "TOGGLE FULLSCREEN (F11)"
+
+[node name="VictoryPanel" type="Control" parent="."]
+unique_name_in_owner = true
+visible = false
+process_mode = 3
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="Shade" type="ColorRect" parent="VictoryPanel"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0.01, 0.04, 0.055, 0.84)
+
+[node name="Center" type="CenterContainer" parent="VictoryPanel"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="Card" type="PanelContainer" parent="VictoryPanel/Center"]
+custom_minimum_size = Vector2(590, 0)
+layout_mode = 2
+theme_override_styles/panel = SubResource("Style_modal")
+
+[node name="Content" type="VBoxContainer" parent="VictoryPanel/Center/Card"]
+layout_mode = 2
+theme_override_constants/separation = 16
+
+[node name="Title" type="Label" parent="VictoryPanel/Center/Card/Content"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.29, 1, 0.72, 1)
+theme_override_colors/font_outline_color = Color(0.01, 0.08, 0.08, 1)
+theme_override_constants/outline_size = 5
+theme_override_font_sizes/font_size = 44
+text = "TIMELINE SECURED"
+horizontal_alignment = 1
+
+[node name="VictorySummary" type="Label" parent="VictoryPanel/Center/Card/Content"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_colors/font_color = Color(0.88, 0.95, 1, 1)
+theme_override_font_sizes/font_size = 20
+text = "TIMELINE 02  •  00.00s\nPerfect synchronization with your past self."
+horizontal_alignment = 1
+
+[node name="VictoryResetButton" type="Button" parent="VictoryPanel/Center/Card/Content"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_font_sizes/font_size = 18
+theme_override_styles/normal = SubResource("Style_button")
+theme_override_styles/hover = SubResource("Style_button_hover")
+text = "PLAY AGAIN FROM THE START"
+
+[node name="FocusOverlay" type="Control" parent="."]
+unique_name_in_owner = true
+process_mode = 3
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="Shade" type="ColorRect" parent="FocusOverlay"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0.01, 0.025, 0.05, 0.9)
+
+[node name="Center" type="CenterContainer" parent="FocusOverlay"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="Content" type="VBoxContainer" parent="FocusOverlay/Center"]
+custom_minimum_size = Vector2(560, 0)
+layout_mode = 2
+theme_override_constants/separation = 16
+
+[node name="Brand" type="Label" parent="FocusOverlay/Center/Content"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.27, 0.94, 0.85, 1)
+theme_override_colors/font_outline_color = Color(0.01, 0.05, 0.08, 1)
+theme_override_constants/outline_size = 6
+theme_override_font_sizes/font_size = 48
+text = "SIXTY-SECOND ACCOMPLICE"
+horizontal_alignment = 1
+
+[node name="English" type="Label" parent="FocusOverlay/Center/Content"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.61, 0.73, 0.85, 1)
+theme_override_font_sizes/font_size = 18
+text = "A TIME-LOOP ACTION PUZZLE"
+horizontal_alignment = 1
+
+[node name="FocusMessage" type="Label" parent="FocusOverlay/Center/Content"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_colors/font_color = Color(0.9, 0.94, 1, 1)
+theme_override_font_sizes/font_size = 21
+text = "CLICK THE GAME TO START THE TIMELINE"
+horizontal_alignment = 1
+autowrap_mode = 2
+
+[node name="FocusButton" type="Button" parent="FocusOverlay/Center/Content"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 58)
+layout_mode = 2
+theme_override_font_sizes/font_size = 21
+theme_override_styles/normal = SubResource("Style_button")
+theme_override_styles/hover = SubResource("Style_button_hover")
+text = "CLICK TO START"
+
+[node name="Privacy" type="Label" parent="FocusOverlay/Center/Content"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.43, 0.53, 0.65, 1)
+theme_override_font_sizes/font_size = 13
+text = "OFFLINE SINGLE PLAYER • NO ACCOUNT • NO TRACKING"
+horizontal_alignment = 1
