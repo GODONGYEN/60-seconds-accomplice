@@ -1,0 +1,99 @@
+name: Bug report
+description: Report a reproducible gameplay, Web, desktop, or tooling problem.
+title: "[Bug]: "
+labels:
+  - bug
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thank you for helping make the time loop reliable. Search existing issues first and remove private information from logs.
+
+  - type: dropdown
+    id: platform
+    attributes:
+      label: Platform
+      description: Where did the problem occur?
+      options:
+        - Web browser
+        - Windows
+        - Linux
+        - macOS
+        - Godot editor or headless test
+    validations:
+      required: true
+
+  - type: input
+    id: browser_os
+    attributes:
+      label: Browser and version, or OS and version
+      description: "Examples: Firefox 128 on Windows 11; macOS 15.5; Ubuntu 24.04."
+      placeholder: Firefox 128 on Windows 11
+    validations:
+      required: true
+
+  - type: input
+    id: version
+    attributes:
+      label: Game version or commit
+      description: Provide a release tag, full/short commit SHA, or Pages deployment identifier.
+      placeholder: v0.1.0 or abc1234
+    validations:
+      required: true
+
+  - type: textarea
+    id: steps
+    attributes:
+      label: Reproduction steps
+      description: Include loop number, pause/restart state, and which actor touched or interacted with an object.
+      placeholder: |
+        1. Start loop 1...
+        2. Move onto...
+        3. Press...
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected result
+    validations:
+      required: true
+
+  - type: textarea
+    id: actual
+    attributes:
+      label: Actual result
+    validations:
+      required: true
+
+  - type: textarea
+    id: logs
+    attributes:
+      label: Console or Godot log
+      description: Paste relevant text; do not upload secrets or personal paths. Use a code block when possible.
+      render: shell
+
+  - type: textarea
+    id: media
+    attributes:
+      label: Screenshot or video
+      description: Drag in a screenshot or short recording if the issue is visible.
+
+  - type: checkboxes
+    id: regression
+    attributes:
+      label: Regression details
+      options:
+        - label: I can reproduce this more than once.
+        - label: This worked in an earlier version or commit.
+
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: Submission checklist
+      options:
+        - label: I searched existing issues for the same problem.
+          required: true
+        - label: I removed secrets and private information from logs and media.
+          required: true

@@ -1,0 +1,109 @@
+name: Deploy GitHub Pages
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+env:
+  GODOT_VERSION: 4.7-stable
+  GODOT_TEMPLATE_VERSION: 4.7.stable
+  GODOT_EDITOR_SHA512: b639ca9c1ddea39bb3df89bd5283a51ca6047467abe6b25e9436566f2b2082ede633025073989ecf39c7d5d3c2493d80ea13e3af6dd5e261bbf89e462d6d2214
+  GODOT_TEMPLATES_SHA512: 1035dfde4edcc2472bb0c0b9610ce3ee9302642c2b9957e9066372f9f6bb759ab250c8887551a66f0bc5f51bbd9a58bb45e33a0f29844e97615a9b1138c1120e
+
+jobs:
+  build:
+    name: Build single-threaded Web export
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    steps:
+      - name: Check out source
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+
+      - name: Configure Pages
+        uses: actions/configure-pages@983d7736d9b0ae728b81ab479565c72886d7745b # v5.0.0
+
+      - name: Install verified Godot editor and templates
+        shell: bash
+        run: |
+          set -euo pipefail
+          editor_archive="$RUNNER_TEMP/Godot_v${GODOT_VERSION}_linux.x86_64.zip"
+          template_archive="$RUNNER_TEMP/Godot_v${GODOT_VERSION}_export_templates.tpz"
+          release_url="https://github.com/godotengine/godot-builds/releases/download/${GODOT_VERSION}"
+
+          curl --proto '=https' --tlsv1.2 --fail --location --retry 3 \
+            --output "$editor_archive" \
+            "$release_url/Godot_v${GODOT_VERSION}_linux.x86_64.zip"
+          curl --proto '=https' --tlsv1.2 --fail --location --retry 3 \
+            --output "$template_archive" \
+            "$release_url/Godot_v${GODOT_VERSION}_export_templates.tpz"
+
+          printf '%s  %s\n' "$GODOT_EDITOR_SHA512" "$editor_archive" | sha512sum --check --strict
+          printf '%s  %s\n' "$GODOT_TEMPLATES_SHA512" "$template_archive" | sha512sum --check --strict
+
+          mkdir -p "$RUNNER_TEMP/godot-editor" "$RUNNER_TEMP/godot-templates" "$HOME/.local/bin"
+          unzip -q "$editor_archive" -d "$RUNNER_TEMP/godot-editor"
+          install -m 0755 \
+            "$RUNNER_TEMP/godot-editor/Godot_v${GODOT_VERSION}_linux.x86_64" \
+            "$HOME/.local/bin/godot"
+
+          unzip -q "$template_archive" -d "$RUNNER_TEMP/godot-templates"
+          template_dir="$HOME/.local/share/godot/export_templates/$GODOT_TEMPLATE_VERSION"
+          mkdir -p "$template_dir"
+          cp -R "$RUNNER_TEMP/godot-templates/templates/." "$template_dir/"
+
+          echo "$HOME/.local/bin" >> "$GITHUB_PATH"
+          "$HOME/.local/bin/godot" --version
+
+      - name: Import and test project
+        run: |
+          set -euo pipefail
+          godot --headless --path . --import
+          godot --headless --path . --quit
+          GODOT_BIN=godot tools/run_tests.sh
+
+      - name: Export Web release
+        run: |
+          set -euo pipefail
+          mkdir -p build/web
+          godot --headless --path . --export-release "Web" build/web/index.html
+          touch build/web/.nojekyll
+
+      - name: Validate Pages artifact root
+        run: |
+          set -euo pipefail
+          test -f build/web/index.html
+          find build/web -maxdepth 1 -type f -name '*.wasm' -print -quit | grep -q .
+          find build/web -maxdepth 1 -type f -name '*.pck' -print -quit | grep -q .
+          find build/web -maxdepth 1 -type f -name '*.js' -print -quit | grep -q .
+          find build/web -maxdepth 1 -type f -print | sort
+
+      - name: Upload Pages artifact
+        uses: actions/upload-pages-artifact@56afc609e74202658d3ffba0e8f6dda462b719fa # v3.0.1
+        with:
+          path: build/web
+
+  deploy:
+    name: Deploy Pages artifact
+    needs: build
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@d6db90164ac5ed86f2b6aed7e0febac5b3c0c03e # v4.0.5

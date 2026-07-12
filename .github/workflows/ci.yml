@@ -1,0 +1,95 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  GODOT_VERSION: 4.7-stable
+  GODOT_TEMPLATE_VERSION: 4.7.stable
+  GODOT_EDITOR_SHA512: b639ca9c1ddea39bb3df89bd5283a51ca6047467abe6b25e9436566f2b2082ede633025073989ecf39c7d5d3c2493d80ea13e3af6dd5e261bbf89e462d6d2214
+  GODOT_TEMPLATES_SHA512: 1035dfde4edcc2472bb0c0b9610ce3ee9302642c2b9957e9066372f9f6bb759ab250c8887551a66f0bc5f51bbd9a58bb45e33a0f29844e97615a9b1138c1120e
+
+jobs:
+  validate:
+    name: Import, test, and Web smoke export
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    steps:
+      - name: Check out source
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+
+      - name: Install verified Godot editor and templates
+        shell: bash
+        run: |
+          set -euo pipefail
+          editor_archive="$RUNNER_TEMP/Godot_v${GODOT_VERSION}_linux.x86_64.zip"
+          template_archive="$RUNNER_TEMP/Godot_v${GODOT_VERSION}_export_templates.tpz"
+          release_url="https://github.com/godotengine/godot-builds/releases/download/${GODOT_VERSION}"
+
+          curl --proto '=https' --tlsv1.2 --fail --location --retry 3 \
+            --output "$editor_archive" \
+            "$release_url/Godot_v${GODOT_VERSION}_linux.x86_64.zip"
+          curl --proto '=https' --tlsv1.2 --fail --location --retry 3 \
+            --output "$template_archive" \
+            "$release_url/Godot_v${GODOT_VERSION}_export_templates.tpz"
+
+          printf '%s  %s\n' "$GODOT_EDITOR_SHA512" "$editor_archive" | sha512sum --check --strict
+          printf '%s  %s\n' "$GODOT_TEMPLATES_SHA512" "$template_archive" | sha512sum --check --strict
+
+          mkdir -p "$RUNNER_TEMP/godot-editor" "$RUNNER_TEMP/godot-templates" "$HOME/.local/bin"
+          unzip -q "$editor_archive" -d "$RUNNER_TEMP/godot-editor"
+          install -m 0755 \
+            "$RUNNER_TEMP/godot-editor/Godot_v${GODOT_VERSION}_linux.x86_64" \
+            "$HOME/.local/bin/godot"
+
+          unzip -q "$template_archive" -d "$RUNNER_TEMP/godot-templates"
+          template_dir="$HOME/.local/share/godot/export_templates/$GODOT_TEMPLATE_VERSION"
+          mkdir -p "$template_dir"
+          cp -R "$RUNNER_TEMP/godot-templates/templates/." "$template_dir/"
+
+          echo "$HOME/.local/bin" >> "$GITHUB_PATH"
+          "$HOME/.local/bin/godot" --version
+
+      - name: Import project
+        run: godot --headless --path . --import
+
+      - name: Validate headless boot and GDScript parsing
+        run: godot --headless --path . --quit
+
+      - name: Run automated tests
+        run: GODOT_BIN=godot tools/run_tests.sh
+
+      - name: Export Web release
+        run: |
+          set -euo pipefail
+          mkdir -p build/web
+          godot --headless --path . --export-release "Web" build/web/index.html
+
+      - name: Validate Web artifact
+        run: |
+          set -euo pipefail
+          test -f build/web/index.html
+          find build/web -maxdepth 1 -type f -name '*.wasm' -print -quit | grep -q .
+          find build/web -maxdepth 1 -type f -name '*.pck' -print -quit | grep -q .
+          find build/web -maxdepth 1 -type f -name '*.js' -print -quit | grep -q .
+          find build/web -maxdepth 1 -type f -print | sort
+
+      - name: Upload Web smoke artifact
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: web-smoke-${{ github.sha }}
+          path: build/web
+          if-no-files-found: error
+          retention-days: 7

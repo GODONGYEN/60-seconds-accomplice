@@ -1,0 +1,56 @@
+name: Feature request
+description: Propose a focused improvement that supports the time-loop puzzle MVP.
+title: "[Feature]: "
+labels:
+  - enhancement
+body:
+  - type: markdown
+    attributes:
+      value: |
+        The MVP deliberately excludes multiplayer, accounts, procedural generation, complex combat, progression, mobile touch, analytics, and monetization. Large additions should begin with a design discussion.
+
+  - type: textarea
+    id: problem
+    attributes:
+      label: Player or developer problem
+      description: Describe the observed problem, not only a preferred implementation.
+    validations:
+      required: true
+
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed change
+      description: Explain the smallest change that addresses the problem.
+    validations:
+      required: true
+
+  - type: textarea
+    id: loop_value
+    attributes:
+      label: Value to the core time-loop mechanic
+      description: How does this make recording, Ghost cooperation, reset reliability, onboarding, accessibility, or Web delivery better?
+    validations:
+      required: true
+
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives considered
+      description: Include a no-code or smaller-scope alternative when applicable.
+
+  - type: textarea
+    id: risks
+    attributes:
+      label: Determinism, reset, and Web risks
+      description: Note effects on event ordering, stable IDs, scene state, performance, input, or export size.
+
+  - type: checkboxes
+    id: scope
+    attributes:
+      label: Scope checklist
+      options:
+        - label: This request supports the current MVP or its hardening roadmap.
+          required: true
+        - label: I searched existing issues and roadmap items.
+          required: true
