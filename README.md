@@ -6,13 +6,7 @@
 
 ## Play in your browser
 
-The public GitHub Pages deployment has not been confirmed yet. After the repository is published and Pages is enabled, the URL will be:
-
-```text
-https://<github-owner>.github.io/<repository-name>/
-```
-
-The link must be replaced with the verified deployment URL; this README intentionally does not guess it.
+[Play the current MVP on GitHub Pages](https://godongyen.github.io/60-seconds-accomplice/). The deployment is built from `main` by the repository's Pages workflow.
 
 <!-- Replace this block with a compressed gameplay GIF or screenshot after capture. -->
 > Gameplay screenshot/GIF placeholder: Ghost on the pressure plate while the live player crosses the open door.
@@ -112,7 +106,7 @@ The repository includes `.github/workflows/deploy-pages.yml`, which exports `bui
 2. Open **Settings → Pages**.
 3. Under **Build and deployment**, choose **GitHub Actions** as the source.
 4. Run **Deploy GitHub Pages** from the Actions tab, or push to `main`.
-5. Replace the placeholder play URL above only after the deployment reports its verified URL.
+5. Confirm the deployed game at the play link above.
 
 See [docs/release.md](docs/release.md) for CI, release, artifact, and troubleshooting details.
 
