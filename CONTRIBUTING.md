@@ -23,6 +23,7 @@ Read these sources of truth in order:
 1. `AGENTS.md`
 2. `docs/architecture.md`
 3. `docs/game_design.md`
+4. `docs/art_direction.md` and `docs/art_pipeline.md` for visual or asset changes
 
 Preserve the hybrid replay design, stable object IDs, explicit loop reset contract, typed GDScript, and Input Map actions. Do not record node paths or permanent `Node` references in a recording. Do not add a global event bus or unrelated abstraction for hypothetical future features.
 
@@ -41,6 +42,9 @@ Discuss large features in an issue before implementation. Multiplayer, accounts,
 Run the checks relevant to your change before opening a pull request:
 
 ```bash
+python3 -m venv .tools/venv
+.tools/venv/bin/python -m pip install --requirement requirements-tools.txt
+PYTHON_BIN=.tools/venv/bin/python bash tools/validate_assets.sh
 godot --headless --path . --import
 godot --headless --path . --quit
 GODOT_BIN=godot tools/run_tests.sh
@@ -87,6 +91,8 @@ Prefer Godot primitives and original project assets. Before adding any external 
 4. Do not add an asset if its license is missing or unclear.
 
 Avoid unnecessary font binaries and paid-asset dependencies. Keep source assets when they are required to reproduce an export.
+
+Generated art must follow `docs/art_pipeline.md`: preserve immutable sources, regenerate manifests/resources with `process-all`, inspect the candidate previews, and commit the runtime atlases together with their processed metadata. Gameplay must reference only `assets/sprites/`, never source sheets or review previews.
 
 ## Community conduct
 

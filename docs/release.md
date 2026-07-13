@@ -8,6 +8,8 @@
 - Primary target: single-threaded Web
 - Desktop development targets: Windows x86_64, Linux x86_64, macOS universal
 
+The most recent local validation used `4.7.stable.official.5b4e0cb0f`.
+
 The automated workflows download editor and templates from the official `godotengine/godot-builds` 4.7-stable release and verify their published SHA-512 digests. GitHub actions are pinned to immutable commit SHAs.
 
 No gameplay secret or environment variable is required. Desktop signing and notarization are intentionally not configured.
@@ -28,6 +30,9 @@ On macOS, a downloaded application bundle contains its executable under `Godot.a
 Run from the repository root:
 
 ```bash
+python3 -m venv .tools/venv
+.tools/venv/bin/python -m pip install --requirement requirements-tools.txt
+PYTHON_BIN=.tools/venv/bin/python bash tools/validate_assets.sh
 godot --headless --path . --import
 godot --headless --path . --quit
 GODOT_BIN=godot tools/run_tests.sh
@@ -42,6 +47,7 @@ The `Web` preset must remain single-threaded and must not require cross-origin i
 ```bash
 mkdir -p build/web
 godot --headless --path . --export-release "Web" build/web/index.html
+bash tools/copy_notices.sh build/web/licenses
 test -f build/web/index.html
 find build/web -maxdepth 1 -name '*.wasm' -print
 find build/web -maxdepth 1 -name '*.pck' -print
@@ -63,7 +69,8 @@ build/web/
 ├── index.html
 ├── index.js
 ├── index.wasm
-└── index.pck
+├── index.pck
+└── licenses/
 ```
 
 Godot can add icons or worker-related support files; the validation requires at least the HTML, JavaScript, WebAssembly, and PCK files. A single-threaded preset must not rely on custom `Cross-Origin-Opener-Policy` or `Cross-Origin-Embedder-Policy` headers.
@@ -72,13 +79,14 @@ Godot can add icons or worker-related support files; the validation requires at 
 
 `.github/workflows/ci.yml` runs on pull requests, pushes to `main`, and manual dispatch. It performs:
 
-1. official Godot editor/template download with checksum verification;
-2. project import;
-3. headless boot and GDScript parse validation;
-4. the Godot test harness;
-5. a Web release smoke export;
-6. required artifact-file checks;
-7. upload of the Web smoke build for diagnostics.
+1. pinned Python setup, asset validation, regeneration, and semantic fingerprint comparison;
+2. official Godot editor/template download with checksum verification;
+3. project import;
+4. headless boot and GDScript parse validation;
+5. the Godot test harness;
+6. a Web release smoke export with redistributable notices;
+7. required artifact-file checks;
+8. upload of the Web smoke build for diagnostics.
 
 CI has `contents: read` permission only. Do not add a success badge until a run has actually passed in the public repository.
 
@@ -96,10 +104,9 @@ Repository setup:
 6. Open the deployment URL shown by the `deploy` job and perform the browser smoke test.
 7. Update the README play link with that verified URL.
 
-The workflow uses only these permissions:
+The build job uses `contents: read` and `pages: read`. Only the deploy job receives:
 
 ```yaml
-contents: read
 pages: write
 id-token: write
 ```
@@ -115,6 +122,8 @@ mkdir -p build/windows build/linux build/macos
 godot --headless --path . --export-release "Windows Desktop" build/windows/Sixty-Second-Accomplice.exe
 godot --headless --path . --export-release "Linux" build/linux/Sixty-Second-Accomplice.x86_64
 godot --headless --path . --export-release "macOS" build/macos/Sixty-Second-Accomplice.zip
+bash tools/copy_notices.sh build/windows/licenses
+bash tools/copy_notices.sh build/linux/licenses
 ```
 
 The release workflow packages:
@@ -137,10 +146,10 @@ These are unsigned development builds. In particular, the macOS artifact is not 
    git push origin v0.1.0
    ```
 
-4. `.github/workflows/release.yml` exports all desktop targets, generates SHA-256 checksums, and creates or updates the matching GitHub Release.
+4. `.github/workflows/release.yml` exports all desktop targets, embeds redistributable notices, generates SHA-256 checksums, and creates the matching immutable GitHub Release.
 5. Download every asset from the release and verify its checksum on a clean machine.
 
-The workflow can also be dispatched manually with a required `v*` tag value. Manual dispatch creates the release tag at the selected branch if it does not already exist, so use it only for an intentionally reviewed release commit.
+The workflow can also be dispatched manually with a required `v*` tag value. An existing release is never overwritten. If the tag already exists, it must resolve to the exact commit that was built; otherwise publishing fails.
 
 ## Pre-release checklist
 
@@ -148,12 +157,14 @@ The workflow can also be dispatched manually with a required `v*` tag value. Man
 - `export_presets.cfg` contains `Web`, `Windows Desktop`, `Linux`, and `macOS` presets.
 - Web export is single-threaded and its artifact root contains `index.html`.
 - Automated tests pass without skips added to hide failures.
+- Asset derivatives validate and reproduce to the same semantic fingerprint.
 - The two-loop tutorial acceptance path passes after timeout and manual restart.
 - Pause stops timeline, recording, and playback clocks.
 - Victory wins the race against timeout and blocks further gameplay input.
 - The browser console has no unexplained errors.
 - README commands match the actual preset and test names.
 - `THIRD_PARTY_NOTICES.md` covers every redistributed dependency or asset.
+- Web and desktop packages contain project, third-party, and Godot license notices.
 - No `.godot/`, `build/`, local cache, secret, signing identity, or machine path is tracked.
 - macOS artifacts are labeled unsigned.
 

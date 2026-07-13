@@ -39,17 +39,19 @@ In a browser, click the game once before using the keyboard. If the tab loses fo
 
 - [Godot Engine 4.7 stable](https://godotengine.org/download/archive/4.7-stable/) (standard GDScript build, not Mono)
 - Git, for source control
-- Python 3, only for the local Web smoke server
+- Python 3, for the reproducible art pipeline and local Web smoke server
 
 The project uses the Compatibility renderer, a 1280×720 reference viewport, responsive 16:9 stretching, and a single-threaded Web export. No account, server, secret, analytics SDK, or network access is required to play.
+
+The local import, test, and export results documented for this revision were produced with `4.7.stable.official.5b4e0cb0f`.
 
 ## Run locally
 
 Clone the repository, then open the project in the editor:
 
 ```bash
-git clone <repository-url>
-cd <repository-directory>
+git clone https://github.com/GODONGYEN/60-seconds-accomplice.git
+cd 60-seconds-accomplice
 godot --editor --path .
 ```
 
@@ -61,6 +63,31 @@ For a headless boot:
 godot --headless --path . --import
 godot --headless --path . --quit
 ```
+
+## Art asset pipeline
+
+The committed player, Ghost, guard, and facility art is derived from project-supplied AI-generated concept sheets. Gameplay never loads a concept sheet or preview directly: Godot resources reference only the normalized atlases under `assets/sprites/`.
+
+Create an isolated tools environment and reproduce every derivative:
+
+```bash
+python3 -m venv .tools/venv
+.tools/venv/bin/python -m pip install --requirement requirements-tools.txt
+.tools/venv/bin/python tools/asset_pipeline.py inspect
+.tools/venv/bin/python tools/asset_pipeline.py process-all
+```
+
+Validate committed derivatives without rewriting them:
+
+```bash
+.tools/venv/bin/python tools/asset_pipeline.py validate
+```
+
+The tool verifies immutable source hashes, real RGBA transparency, 48×64 character frames with a `(24, 62)` bottom-center pivot, frame metadata, SpriteFrames/TileSet agreement, and the runtime-only asset boundary. Individual commands are also available: `process-player`, `process-guard`, and `process-tileset`.
+
+CI additionally compares `fingerprint` output before and after `process-all`, so stale generated assets fail without relying on PNG compression bytes being identical across operating systems.
+
+See [docs/art_pipeline.md](docs/art_pipeline.md) for setup, extraction, replacement, and validation details; [docs/asset_manifest.md](docs/asset_manifest.md) for exact frame counts and fallbacks; and [docs/art_direction.md](docs/art_direction.md) for the scale and palette contract.
 
 ## Run tests
 
@@ -79,6 +106,7 @@ Install the matching Godot 4.7 stable export templates, then run:
 ```bash
 mkdir -p build/web
 godot --headless --path . --export-release "Web" build/web/index.html
+bash tools/copy_notices.sh build/web/licenses
 test -f build/web/index.html
 python3 -m http.server --directory build/web 8000
 ```
@@ -94,6 +122,8 @@ mkdir -p build/windows build/linux build/macos
 godot --headless --path . --export-release "Windows Desktop" build/windows/Sixty-Second-Accomplice.exe
 godot --headless --path . --export-release "Linux" build/linux/Sixty-Second-Accomplice.x86_64
 godot --headless --path . --export-release "macOS" build/macos/Sixty-Second-Accomplice.zip
+bash tools/copy_notices.sh build/windows/licenses
+bash tools/copy_notices.sh build/linux/licenses
 ```
 
 Unsigned macOS builds can trigger Gatekeeper. No signing or notarization is claimed without a configured Apple signing identity.
@@ -112,15 +142,15 @@ See [docs/release.md](docs/release.md) for CI, release, artifact, and troublesho
 
 ## Current status
 
-This repository targets a focused MVP: one tutorial room, one pressure plate and linked door, one objective, one exit, a 20-second deterministic loop, and up to eight in-memory Ghost recordings. The acceptance path requires at least two timelines.
+This repository targets a focused MVP: one 30×16-tile tutorial room, one pressure plate and linked door, one objective, one exit, a 20-second deterministic loop, and up to eight in-memory Ghost recordings. The acceptance path requires at least two timelines. The live player and Ghost share a directional animated sprite set; a non-colliding deterministic guard patrol demonstrates the processed guard art without adding detection or combat scope.
 
 Known limitations:
 
-- One tutorial level; no campaign, enemies, combat, progression, or procedural generation.
+- One tutorial level; the guard is presentation-only, with no detection, navigation, combat, campaign, progression, or procedural generation.
 - Recordings live only for the current level session and are not saved to disk.
 - Keyboard and mouse are the primary input devices; mobile touch controls are out of scope.
 - Desktop artifacts are unsigned development builds.
-- Placeholder visuals prioritize gameplay readability over final art.
+- Character interaction/alert cycles and the seamless facility base still use documented prototype fallbacks; the original AI concept sheets are not production-ready tiles or complete animation sets.
 
 See [docs/roadmap.md](docs/roadmap.md) for the deliberately narrow next steps.
 
@@ -130,4 +160,4 @@ Read [CONTRIBUTING.md](CONTRIBUTING.md) before opening a pull request. Bug repor
 
 ## License and third-party notices
 
-Project-authored code and content are available under the [MIT License](LICENSE). See [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md) for the Godot Engine notice and the current no-external-assets statement.
+Project-authored code and content are available under the [MIT License](LICENSE). See [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md) for the Godot Engine notice, build-only dependencies, AI-source disclosure, and the current no-external-authored-assets statement.
