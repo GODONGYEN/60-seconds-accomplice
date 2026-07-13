@@ -83,6 +83,7 @@ func _run_all_tests() -> void:
 	await _test_player_visual_states()
 	await _test_ghost_visual_replay()
 	await _test_guard_visual_states_and_reset()
+	await _test_guard_ai_systems()
 	await _test_facility_tileset_and_map()
 	_test_recording_sampling_and_timestamps()
 	_test_recording_deep_copy_isolation()
@@ -91,6 +92,8 @@ func _run_all_tests() -> void:
 	await _test_registry_validation_and_missing_target()
 	await _test_resettable_gameplay_objects()
 	await _test_pause_restart_and_victory_priority()
+	await _test_capture_timeline_protocol()
+	await _test_two_loop_stealth_distraction_acceptance()
 	await _test_full_level_acceptance_flow()
 
 	if _failure_count == 0:
@@ -247,6 +250,21 @@ func _test_player_visual_states() -> void:
 		not visual.objective_indicator.visible,
 		"Player visual reset hides the objective indicator"
 	)
+	var restart_count := {"value": 0}
+	player.restart_requested.connect(
+		func() -> void:
+			restart_count["value"] = int(restart_count["value"]) + 1
+	)
+	player.set_gameplay_input_enabled(true)
+	var repeated_restart := InputEventKey.new()
+	repeated_restart.physical_keycode = KEY_R
+	repeated_restart.pressed = true
+	repeated_restart.echo = true
+	player._unhandled_input(repeated_restart)
+	_expect(
+		int(restart_count["value"]) == 0,
+		"Player ignores browser key-repeat restart events"
+	)
 	fixture.free()
 	await process_frame
 
@@ -369,17 +387,17 @@ func _test_guard_visual_states_and_reset() -> void:
 		var idle_animation := StringName("idle_%s" % direction_name)
 		var walk_animation := StringName("walk_%s" % direction_name)
 		var alert_animation := StringName("alert_%s" % direction_name)
-		visual.update_state(direction, Vector2.ZERO, false)
+		visual.update_state(direction, Vector2.ZERO, &"idle", 0.0)
 		_expect(
 			visual.get_current_animation() == idle_animation,
 			"Guard selects %s while stationary" % idle_animation
 		)
-		visual.update_state(direction, direction * 20.0, false)
+		visual.update_state(direction, direction * 20.0, &"patrol", 0.0)
 		_expect(
 			visual.get_current_animation() == walk_animation,
 			"Guard selects %s while patrolling" % walk_animation
 		)
-		visual.update_state(direction, Vector2.ZERO, true)
+		visual.update_state(direction, Vector2.ZERO, &"chase", 1.0)
 		_expect(
 			visual.get_current_animation() == alert_animation
 			and visual.is_alerted()
@@ -390,13 +408,13 @@ func _test_guard_visual_states_and_reset() -> void:
 	var initial_position: Vector2 = guard.position
 	guard.position += Vector2(25.0, 12.0)
 	guard.velocity = Vector2.RIGHT * 20.0
-	guard.set_guard_state(GuardController.GuardState.ALERT)
+	guard.transition_to(GuardController.GuardState.CHASE)
 	guard.reset_for_loop()
 	_expect(
-		guard.state == GuardController.GuardState.PATROL
+		guard.state == GuardController.GuardState.IDLE
 		and guard.position.is_equal_approx(initial_position)
 		and guard.velocity.is_zero_approx(),
-		"Guard reset restores patrol state, position, and zero velocity"
+		"Guard reset restores idle state, position, and zero velocity"
 	)
 	_expect(
 		visual.get_current_animation() == &"idle_right"
@@ -406,6 +424,14 @@ func _test_guard_visual_states_and_reset() -> void:
 		"Guard reset restores authored facing idle and hides alert feedback"
 	)
 	fixture.free()
+	await process_frame
+
+
+func _test_guard_ai_systems() -> void:
+	var suite := GuardAITestSuite.new()
+	root.add_child(suite)
+	await suite.run(self, Callable(self, &"_expect"))
+	suite.free()
 	await process_frame
 
 
@@ -773,13 +799,16 @@ func _test_resettable_gameplay_objects() -> void:
 	var door := SECURITY_DOOR_SCENE.instantiate() as SecurityDoor
 	var objective := OBJECTIVE_ITEM_SCENE.instantiate() as ObjectiveItem
 	var exit_zone := EXIT_ZONE_SCENE.instantiate() as ExitZone
+	var guard := GUARD_SCENE.instantiate() as GuardController
 	var actor := Node2D.new()
 	actor.add_to_group(&"player_actor")
 	fixture.add_child(plate)
 	fixture.add_child(door)
 	fixture.add_child(objective)
 	fixture.add_child(exit_zone)
+	fixture.add_child(guard)
 	fixture.add_child(actor)
+	guard.set_simulation_enabled(false)
 
 	plate.body_entered.emit(actor)
 	_expect(plate.is_active and plate.get_occupant_count() == 1, "pressure plate tracks occupying actors")
@@ -792,6 +821,22 @@ func _test_resettable_gameplay_objects() -> void:
 	door.reset_for_loop()
 	await process_frame
 	_expect(not door.is_open and not door.blocker.disabled, "door reset restores the closed blocker")
+	door.set_open(true)
+	await _wait_physics_frames(2)
+	guard.global_position = door.global_position
+	await _wait_physics_frames(2)
+	door.set_open(false)
+	await _wait_physics_frames(2)
+	_expect(
+		door.is_open and door.blocker.disabled,
+		"door defers closing while the Guard occupies its clearance"
+	)
+	guard.global_position = door.global_position + Vector2(120.0, 0.0)
+	await _wait_physics_frames(3)
+	_expect(
+		not door.is_open and not door.blocker.disabled,
+		"door closes after the Guard leaves its clearance"
+	)
 
 	_expect(objective.interact(actor), "live-player actor can collect the objective")
 	await process_frame
@@ -855,7 +900,179 @@ func _test_pause_restart_and_victory_priority() -> void:
 	_expect(timeline.recordings.size() == 1, "victory-timeout race does not save a timeout recording")
 	_expect(
 		not level.training_guard.is_simulation_enabled(),
-		"victory freezes presentation-only guard simulation with the timeline"
+		"victory freezes Guard AI simulation with the timeline"
+	)
+	fixture.free()
+	await process_frame
+
+
+func _test_capture_timeline_protocol() -> void:
+	print("[TEST] Capture recording, priority, and stale-transition protocol")
+	var fixture := Node2D.new()
+	root.add_child(fixture)
+	var level := LEVEL_SCENE.instantiate() as PrototypeLevel
+	var timeline := TIMELINE_SCENE.instantiate() as TimelineManager
+	timeline.capture_feedback_seconds = 0.0
+	fixture.add_child(level)
+	fixture.add_child(timeline)
+	await process_frame
+	var ended_reasons: Array[StringName] = []
+	timeline.loop_ended.connect(
+		func(_loop_index: int, reason: StringName) -> void:
+			ended_reasons.append(reason)
+	)
+	_expect(timeline.configure(level), "capture fixture configures the tutorial level")
+	_expect(timeline.start_session(), "capture fixture starts loop 1")
+	timeline._physics_process(0.35)
+	var captured_player: PlayerController = level.current_player
+	level.player_captured.emit(captured_player)
+	timeline.request_loop_end(TimelineManager.REASON_TIMEOUT)
+	timeline.request_loop_end(TimelineManager.REASON_RESTART)
+	await _wait_process_frames(2)
+	_expect(
+		timeline.current_loop_index == 2
+		and timeline.is_loop_running()
+		and timeline.recordings.size() == 1
+		and level.get_ghost_count() == 1,
+		"captured loop is saved once and spawns one Ghost in the next loop"
+	)
+	_expect(
+		ended_reasons == [TimelineManager.REASON_CAPTURED],
+		"captured reason beats simultaneous restart and timeout requests"
+	)
+	_expect(
+		_is_equal(timeline.recordings[0].duration, 0.35),
+		"capture finalizes the recording at the capture timestamp"
+	)
+
+	level.player_captured.emit(level.current_player)
+	timeline.complete_level()
+	await _wait_process_frames(2)
+	_expect(timeline.is_victory(), "victory supersedes a pending capture")
+	_expect(
+		timeline.recordings.size() == 1
+		and ended_reasons.back() == TimelineManager.REASON_VICTORY,
+		"victory-capture race commits one reason and does not save a capture recording"
+	)
+
+	_expect(timeline.reset_timeline(), "capture fixture resets after victory")
+	level.player_captured.emit(level.current_player)
+	_expect(timeline.reset_timeline(), "full reset invalidates a pending capture callback")
+	await _wait_process_frames(2)
+	_expect(
+		timeline.current_loop_index == 1
+		and timeline.is_loop_running()
+		and timeline.recordings.is_empty()
+		and level.get_ghost_count() == 0,
+		"stale capture callback cannot end a newly reset timeline"
+	)
+	fixture.free()
+	await process_frame
+
+
+func _test_two_loop_stealth_distraction_acceptance() -> void:
+	print("[TEST] Two-loop Ghost distraction stealth acceptance")
+	var fixture := Node2D.new()
+	root.add_child(fixture)
+	var level := LEVEL_SCENE.instantiate() as PrototypeLevel
+	var timeline := TIMELINE_SCENE.instantiate() as TimelineManager
+	timeline.capture_feedback_seconds = 0.0
+	fixture.add_child(level)
+	fixture.add_child(timeline)
+	await _wait_physics_frames(3)
+	var ended_reasons: Array[StringName] = []
+	timeline.loop_ended.connect(
+		func(_loop_index: int, reason: StringName) -> void:
+			ended_reasons.append(reason)
+	)
+	_expect(timeline.configure(level), "stealth acceptance fixture configures")
+	_expect(timeline.start_session(), "stealth acceptance starts loop 1")
+
+	var loop_one_player: PlayerController = level.current_player
+	await _move_player_realtime_until(
+		timeline,
+		loop_one_player,
+		level.pressure_plate.global_position,
+		0.7
+	)
+	await _wait_physics_frames(3)
+	await _wait_timeline_until(timeline, 2.5)
+	_expect(
+		level.pressure_plate.is_active and level.security_door.is_open,
+		"loop 1 records a usable plate-hold window"
+	)
+	await _move_player_realtime_until(timeline, loop_one_player, Vector2(548.0, 240.0), 3.35)
+	await _wait_for_loop_physics(timeline, 2, 180)
+	_expect(
+		timeline.recordings.size() == 1
+		and level.get_ghost_count() == 1
+		and timeline.recordings[0].duration > 3.35
+		and timeline.recordings[0].duration < 6.0
+		and ended_reasons == [TimelineManager.REASON_CAPTURED],
+		"default-tuned moving Guard captures and saves the physical upper-corridor lure"
+	)
+
+	var loop_two_player: PlayerController = level.current_player
+	await _move_player_realtime_until(
+		timeline,
+		loop_two_player,
+		level.pressure_plate.global_position,
+		0.7
+	)
+	await _wait_physics_frames(3)
+	await _move_player_realtime_until(timeline, loop_two_player, Vector2(704.0, 376.0), 1.9)
+	_expect(
+		loop_two_player.global_position.x > 680.0
+		and level.pressure_plate.is_active
+		and level.security_door.is_open,
+		"loop 2 Player physically crosses while the Ghost repeats the plate hold"
+	)
+	await _move_player_realtime_until(timeline, loop_two_player, Vector2(736.0, 520.0), 2.7)
+	for _frame: int in range(120):
+		if level.training_guard.get_current_target_id() == &"ghost_001":
+			break
+		await physics_frame
+		await process_frame
+	_expect(
+		level.training_guard.get_current_target_id() == &"ghost_001"
+		and (
+			level.training_guard.state == GuardController.GuardState.SUSPICIOUS
+			or level.training_guard.state == GuardController.GuardState.CHASE
+		),
+		"moving Guard visibly acquires the replaying Ghost as its distraction target"
+	)
+	_expect(
+		loop_two_player.global_position.y > 480.0,
+		"live Player remains available on the lower vault lane during the distraction"
+	)
+
+	await _move_player_realtime_until(
+		timeline,
+		loop_two_player,
+		level.objective_item.global_position,
+		timeline.elapsed_time + 0.6
+	)
+	await _wait_physics_frames(3)
+	var interact_input := InputEventAction.new()
+	interact_input.action = &"interact"
+	interact_input.pressed = true
+	loop_two_player._unhandled_input(interact_input)
+	await process_frame
+	_expect(
+		level.objective_item.is_collected and loop_two_player.has_objective_item(),
+		"lower-lane Player collects the objective while the Ghost distracts the Guard"
+	)
+	await _move_player_realtime_until(
+		timeline,
+		loop_two_player,
+		level.exit_zone.global_position,
+		timeline.elapsed_time + 0.9
+	)
+	await _wait_physics_frames(5)
+	await _wait_process_frames(2)
+	_expect(
+		timeline.is_victory(),
+		"two-loop stealth route preserves objective, exit, and victory behavior"
 	)
 	fixture.free()
 	await process_frame
@@ -993,6 +1210,52 @@ func _disable_timeline_processing(
 func _advance_timeline_to(timeline: TimelineManager, target_time: float) -> void:
 	var delta: float = maxf(0.0, target_time - timeline.elapsed_time)
 	timeline._physics_process(delta)
+
+
+func _move_player_realtime_until(
+	timeline: TimelineManager,
+	player: PlayerController,
+	target_position: Vector2,
+	target_time: float
+) -> void:
+	player.set_physics_process(false)
+	while (
+		timeline.is_loop_running()
+		and timeline.elapsed_time + FLOAT_EPSILON < target_time
+	):
+		var to_target := target_position - player.global_position
+		if to_target.length() > 0.5:
+			var motion := to_target.normalized() * minf(
+				player.move_speed / 60.0,
+				to_target.length()
+			)
+			player.velocity = motion * 60.0
+			player.move_and_collide(motion)
+		else:
+			player.velocity = Vector2.ZERO
+		await physics_frame
+		await process_frame
+	player.velocity = Vector2.ZERO
+
+
+func _wait_timeline_until(timeline: TimelineManager, target_time: float) -> void:
+	for _frame: int in range(600):
+		if not timeline.is_loop_running() or timeline.elapsed_time >= target_time:
+			return
+		await physics_frame
+		await process_frame
+
+
+func _wait_for_loop_physics(
+	timeline: TimelineManager,
+	expected_loop_index: int,
+	maximum_frames: int
+) -> void:
+	for _frame: int in range(maximum_frames):
+		if timeline.current_loop_index == expected_loop_index and timeline.is_loop_running():
+			return
+		await physics_frame
+		await process_frame
 
 
 func _wait_for_loop(timeline: TimelineManager, expected_loop_index: int) -> void:
