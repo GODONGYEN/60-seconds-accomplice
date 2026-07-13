@@ -21,6 +21,21 @@ const GUARD_SPRITE_FRAMES: SpriteFrames = preload(
 	"res://resources/characters/guard_sprite_frames.tres"
 )
 const FACILITY_TILESET: TileSet = preload("res://resources/tilesets/facility_tileset.tres")
+const CHRONO_RECALL_TEST_SUITE: Script = preload("res://tests/chrono_recall_test_suite.gd")
+const HEIST_SYSTEMS_TEST_SUITE: Script = preload("res://tests/heist_systems_test_suite.gd")
+const GUARD_ZONE_TEST_SUITE: Script = preload("res://tests/guard_zone_test_suite.gd")
+const PATROL_SCHEDULER_TEST_SUITE: Script = preload(
+	"res://tests/patrol_scheduler_test_suite.gd"
+)
+const OPERATION_BLUEPRINT_TEST_SUITE: Script = preload(
+	"res://tests/operation_black_minute_blueprint_test_suite.gd"
+)
+const OPERATION_RUNTIME_TEST_SUITE: Script = preload(
+	"res://tests/operation_black_minute_runtime_test_suite.gd"
+)
+const OPERATION_PHYSICAL_ACCEPTANCE_TEST_SUITE: Script = preload(
+	"res://tests/operation_black_minute_physical_acceptance_test_suite.gd"
+)
 
 const CHARACTER_FRAME_SIZE: Vector2 = Vector2(48.0, 64.0)
 const FACILITY_TILE_SIZE: Vector2i = Vector2i(32, 32)
@@ -96,6 +111,13 @@ func _run_all_tests() -> void:
 	await _test_capture_timeline_protocol()
 	await _test_two_loop_stealth_distraction_acceptance()
 	await _test_full_level_acceptance_flow()
+	await _run_modular_suite(OPERATION_BLUEPRINT_TEST_SUITE)
+	await _run_modular_suite(OPERATION_RUNTIME_TEST_SUITE)
+	await _run_modular_suite(OPERATION_PHYSICAL_ACCEPTANCE_TEST_SUITE)
+	await _run_modular_suite(HEIST_SYSTEMS_TEST_SUITE)
+	await _run_modular_suite(GUARD_ZONE_TEST_SUITE)
+	await _run_modular_suite(PATROL_SCHEDULER_TEST_SUITE)
+	await _run_modular_suite(CHRONO_RECALL_TEST_SUITE)
 
 	if _failure_count == 0:
 		print("[TEST] PASS: %d assertions" % _assertion_count)
@@ -1297,6 +1319,17 @@ func _wait_physics_frames(count: int) -> void:
 func _wait_process_frames(count: int) -> void:
 	for _frame: int in range(count):
 		await process_frame
+
+
+func _run_modular_suite(suite_script: Script) -> void:
+	var suite := suite_script.new() as Node
+	_expect(suite != null, "Modular heist test suite instantiates: %s" % suite_script.resource_path)
+	if suite == null:
+		return
+	root.add_child(suite)
+	await suite.call(&"run", self, Callable(self, &"_expect"))
+	suite.queue_free()
+	await process_frame
 
 
 func _capture_tile_layer(layer: TileMapLayer) -> PackedStringArray:
