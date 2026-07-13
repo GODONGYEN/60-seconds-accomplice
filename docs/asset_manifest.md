@@ -15,7 +15,7 @@ All three art-pipeline inputs and the separate map blueprint reference were supp
 
 `assets/concept/player_design_reference.png` is a separate 1536×1024 RGBA player design reference (SHA-256 `48d5fbf6e2646ed1f749a40a4a34c257fad1496d73c5b80a38ce93e957cbe2c1`). It is retained as an unused concept reference and is not an input to `tools/asset_pipeline.py` or a runtime dependency.
 
-No externally authored stock, commercial, font, audio, or shader asset was added by this art pass. AI-source disclosure and remaining provenance information are recorded in `THIRD_PARTY_NOTICES.md`.
+That character/environment art pass added no external stock or commercial art, audio, font, or shader. The later Operation briefing adds one open-source Noto Sans KR subset; its provenance and SIL OFL 1.1 terms are recorded below and in `THIRD_PARTY_NOTICES.md`.
 
 ## Player derivatives
 
