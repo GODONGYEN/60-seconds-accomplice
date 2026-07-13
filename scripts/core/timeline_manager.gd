@@ -151,6 +151,7 @@ func _start_loop() -> bool:
 	run_state = RunState.RESETTING
 	set_physics_process(false)
 	_level.set_live_input_enabled(false)
+	_level.set_level_simulation_enabled(false)
 	action_recorder.cancel_recording()
 	_level.clear_runtime_actors()
 	_level.reset_objects_for_loop()
@@ -185,6 +186,7 @@ func _start_loop() -> bool:
 	_pending_reason = StringName()
 	run_state = RunState.RUNNING
 	set_physics_process(true)
+	_level.set_level_simulation_enabled(true)
 	_level.set_live_input_enabled(true)
 	loop_started.emit(current_loop_index, _active_ghosts.size())
 	loop_time_updated.emit(loop_duration_seconds)
@@ -204,6 +206,7 @@ func _commit_transition() -> void:
 
 	if reason == REASON_VICTORY:
 		action_recorder.cancel_recording()
+		_level.set_level_simulation_enabled(false)
 		run_state = RunState.VICTORY
 		loop_ended.emit(current_loop_index, reason)
 		level_completed.emit(current_loop_index, elapsed_time)

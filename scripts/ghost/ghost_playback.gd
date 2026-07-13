@@ -7,6 +7,7 @@ const GHOST_COLLISION_LAYER: int = 4
 var display_loop_index: int = 0
 var playback_time: float = 0.0
 var facing_direction: Vector2 = Vector2.RIGHT
+var playback_velocity: Vector2 = Vector2.ZERO
 
 var _recording: LoopRecording
 var _registry: ObjectRegistry
@@ -15,7 +16,7 @@ var _sample_index: int = 0
 var _has_advanced: bool = false
 var _warned_non_monotonic_time: bool = false
 
-@onready var _visual: Node2D = get_node_or_null(^"Visual") as Node2D
+@onready var _visual: PlayerVisual = %VisualRoot
 @onready var _loop_label: Label = get_node_or_null(^"LoopLabel") as Label
 
 
@@ -29,7 +30,7 @@ func _ready() -> void:
 	collision_mask = 0
 	sync_to_physics = false
 	_update_label()
-	_apply_visual_facing()
+	_visual.reset_visual(Vector2.DOWN)
 	if _recording != null and not _recording.samples.is_empty():
 		_apply_sample(_recording.samples[0])
 
@@ -58,6 +59,8 @@ func reset_playback() -> void:
 	_sample_index = 0
 	_has_advanced = false
 	_warned_non_monotonic_time = false
+	playback_velocity = Vector2.ZERO
+	_visual.reset_visual(Vector2.DOWN)
 	if _recording == null or _recording.samples.is_empty():
 		return
 	_apply_sample(_recording.samples[0])
@@ -90,6 +93,10 @@ func get_facing_direction() -> Vector2:
 	return facing_direction
 
 
+func get_visual() -> PlayerVisual:
+	return _visual
+
+
 func is_playback_complete() -> bool:
 	if _recording == null:
 		return true
@@ -110,7 +117,7 @@ func _apply_transform_at(target_time: float) -> void:
 
 	var from_sample: TransformSample = _recording.samples[_sample_index]
 	if _sample_index + 1 >= _recording.samples.size():
-		_apply_sample(from_sample)
+		_apply_terminal_sample(from_sample)
 		return
 	var to_sample: TransformSample = _recording.samples[_sample_index + 1]
 	var span: float = to_sample.timestamp - from_sample.timestamp
@@ -124,19 +131,25 @@ func _apply_transform_at(target_time: float) -> void:
 		to_sample.facing_direction,
 		weight
 	)
-	_apply_visual_facing()
+	playback_velocity = from_sample.velocity.lerp(to_sample.velocity, weight)
+	var animation_state := (
+		to_sample.animation_state if weight >= 0.5 else from_sample.animation_state
+	)
+	_visual.update_motion(facing_direction, playback_velocity, animation_state)
 
 
 func _apply_sample(sample: TransformSample) -> void:
 	global_position = sample.position
 	facing_direction = sample.facing_direction
-	_apply_visual_facing()
+	playback_velocity = sample.velocity
+	_visual.update_motion(facing_direction, playback_velocity, sample.animation_state)
 
 
-func _apply_visual_facing() -> void:
-	if _visual == null:
-		return
-	_visual.rotation = facing_direction.angle()
+func _apply_terminal_sample(sample: TransformSample) -> void:
+	global_position = sample.position
+	facing_direction = sample.facing_direction
+	playback_velocity = Vector2.ZERO
+	_visual.update_motion(facing_direction, playback_velocity, &"idle")
 
 
 func _dispatch_events_through(target_time: float) -> void:
@@ -150,6 +163,8 @@ func _dispatch_events_through(target_time: float) -> void:
 
 
 func _dispatch_event(event: RecordedEvent) -> void:
+	if RecordedEvent.is_interaction_event(event.event_type):
+		_visual.play_interaction()
 	if _registry == null or not is_instance_valid(_registry):
 		push_warning(
 			"GhostPlayback loop %d skipped event '%s': ObjectRegistry is unavailable."

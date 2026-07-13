@@ -18,6 +18,7 @@ const GHOST_SCENE: PackedScene = preload("res://scenes/ghost/ghost.tscn")
 @onready var security_door: SecurityDoor = %SecurityDoor
 @onready var objective_item: ObjectiveItem = %ObjectiveItem
 @onready var exit_zone: ExitZone = %ExitZone
+@onready var training_guard: GuardController = %TrainingGuard
 
 var current_player: PlayerController = null
 var _resettables: Array[Node] = []
@@ -96,6 +97,11 @@ func set_live_input_enabled(enabled: bool) -> void:
 		current_player.set_gameplay_input_enabled(enabled)
 
 
+func set_level_simulation_enabled(enabled: bool) -> void:
+	if is_instance_valid(training_guard):
+		training_guard.set_simulation_enabled(enabled)
+
+
 func get_registry() -> ObjectRegistry:
 	return object_registry
 
@@ -146,11 +152,7 @@ func _on_interaction_prompt_changed(message: String) -> void:
 
 
 func _draw() -> void:
-	draw_rect(Rect2(34.0, 126.0, 1212.0, 548.0), Color("0b1628"), true)
-	for x: float in range(60, 1241, 40):
-		draw_line(Vector2(x, 126.0), Vector2(x, 674.0), Color(0.15, 0.24, 0.36, 0.18), 1.0)
-	for y: float in range(140, 675, 40):
-		draw_line(Vector2(34.0, y), Vector2(1246.0, y), Color(0.15, 0.24, 0.36, 0.18), 1.0)
+	draw_rect(Rect2(160.0, 128.0, 960.0, 512.0), Color("4b6780"), false, 3.0)
 	draw_dashed_line(
 		pressure_plate.position + Vector2(52.0, 0.0),
 		security_door.position - Vector2(28.0, 0.0),

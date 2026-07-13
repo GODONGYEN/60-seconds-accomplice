@@ -1,4 +1,4 @@
-[gd_scene load_steps=17 format=3]
+[gd_scene load_steps=18 format=3]
 
 [ext_resource type="Script" path="res://scripts/core/prototype_level.gd" id="1_level"]
 [ext_resource type="Script" path="res://scripts/core/object_registry.gd" id="2_registry"]
@@ -6,24 +6,21 @@
 [ext_resource type="PackedScene" path="res://scenes/objects/security_door.tscn" id="4_door"]
 [ext_resource type="PackedScene" path="res://scenes/objects/objective_item.tscn" id="5_objective"]
 [ext_resource type="PackedScene" path="res://scenes/objects/exit_zone.tscn" id="6_exit"]
+[ext_resource type="TileSet" path="res://resources/tilesets/facility_tileset.tres" id="7_tileset"]
+[ext_resource type="Script" path="res://scripts/presentation/facility_map_presenter.gd" id="8_map"]
+[ext_resource type="PackedScene" path="res://scenes/enemies/guard.tscn" id="9_guard"]
 
 [sub_resource type="RectangleShape2D" id="Shape_top_bottom"]
-size = Vector2(1280, 28)
+size = Vector2(960, 32)
 
 [sub_resource type="RectangleShape2D" id="Shape_side"]
-size = Vector2(28, 580)
+size = Vector2(32, 480)
 
 [sub_resource type="RectangleShape2D" id="Shape_divider_top"]
-size = Vector2(32, 158)
+size = Vector2(32, 140)
 
 [sub_resource type="RectangleShape2D" id="Shape_divider_bottom"]
-size = Vector2(32, 238)
-
-[sub_resource type="RectangleShape2D" id="Shape_inner_block"]
-size = Vector2(180, 38)
-
-[sub_resource type="RectangleShape2D" id="Shape_label_back"]
-size = Vector2(150, 26)
+size = Vector2(32, 156)
 
 [sub_resource type="StyleBoxFlat" id="StyleBox_zone"]
 bg_color = Color(0.035, 0.078, 0.137, 0.88)
@@ -53,119 +50,112 @@ outline_color = Color(0.02, 0.035, 0.065, 1)
 process_mode = 1
 script = ExtResource("1_level")
 
+[node name="FacilityMap" type="Node2D" parent="."]
+unique_name_in_owner = true
+z_index = -20
+position = Vector2(160, 128)
+script = ExtResource("8_map")
+
+[node name="FloorTiles" type="TileMapLayer" parent="FacilityMap"]
+unique_name_in_owner = true
+tile_set = ExtResource("7_tileset")
+collision_enabled = false
+navigation_enabled = false
+
+[node name="DetailTiles" type="TileMapLayer" parent="FacilityMap"]
+unique_name_in_owner = true
+z_index = 1
+tile_set = ExtResource("7_tileset")
+collision_enabled = false
+navigation_enabled = false
+
+[node name="WallArtTiles" type="TileMapLayer" parent="FacilityMap"]
+unique_name_in_owner = true
+z_index = 2
+tile_set = ExtResource("7_tileset")
+collision_enabled = false
+navigation_enabled = false
+
 [node name="Environment" type="Node2D" parent="."]
 
 [node name="TopWall" type="StaticBody2D" parent="Environment"]
-position = Vector2(640, 112)
+position = Vector2(640, 144)
 collision_layer = 1
 collision_mask = 0
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="Environment/TopWall"]
 shape = SubResource("Shape_top_bottom")
 
-[node name="Visual" type="Polygon2D" parent="Environment/TopWall"]
-polygon = PackedVector2Array(-640, -14, 640, -14, 640, 14, -640, 14)
-color = Color(0.145, 0.2, 0.29, 1)
-
 [node name="BottomWall" type="StaticBody2D" parent="Environment"]
-position = Vector2(640, 688)
+position = Vector2(640, 624)
 collision_layer = 1
 collision_mask = 0
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="Environment/BottomWall"]
 shape = SubResource("Shape_top_bottom")
 
-[node name="Visual" type="Polygon2D" parent="Environment/BottomWall"]
-polygon = PackedVector2Array(-640, -14, 640, -14, 640, 14, -640, 14)
-color = Color(0.145, 0.2, 0.29, 1)
-
 [node name="LeftWall" type="StaticBody2D" parent="Environment"]
-position = Vector2(20, 400)
+position = Vector2(176, 384)
 collision_layer = 1
 collision_mask = 0
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="Environment/LeftWall"]
 shape = SubResource("Shape_side")
 
-[node name="Visual" type="Polygon2D" parent="Environment/LeftWall"]
-polygon = PackedVector2Array(-14, -290, 14, -290, 14, 290, -14, 290)
-color = Color(0.145, 0.2, 0.29, 1)
-
 [node name="RightWall" type="StaticBody2D" parent="Environment"]
-position = Vector2(1260, 400)
+position = Vector2(1104, 384)
 collision_layer = 1
 collision_mask = 0
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="Environment/RightWall"]
 shape = SubResource("Shape_side")
 
-[node name="Visual" type="Polygon2D" parent="Environment/RightWall"]
-polygon = PackedVector2Array(-14, -290, 14, -290, 14, 290, -14, 290)
-color = Color(0.145, 0.2, 0.29, 1)
-
 [node name="DividerTop" type="StaticBody2D" parent="Environment"]
-position = Vector2(640, 205)
+position = Vector2(656, 230)
 collision_layer = 1
 collision_mask = 0
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="Environment/DividerTop"]
 shape = SubResource("Shape_divider_top")
 
-[node name="Visual" type="Polygon2D" parent="Environment/DividerTop"]
-polygon = PackedVector2Array(-16, -79, 16, -79, 16, 79, -16, 79)
-color = Color(0.23, 0.3, 0.4, 1)
-
 [node name="DividerBottom" type="StaticBody2D" parent="Environment"]
-position = Vector2(640, 555)
+position = Vector2(656, 530)
 collision_layer = 1
 collision_mask = 0
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="Environment/DividerBottom"]
 shape = SubResource("Shape_divider_bottom")
 
-[node name="Visual" type="Polygon2D" parent="Environment/DividerBottom"]
-polygon = PackedVector2Array(-16, -119, 16, -119, 16, 119, -16, 119)
-color = Color(0.23, 0.3, 0.4, 1)
-
-[node name="CoverBlock" type="StaticBody2D" parent="Environment"]
-position = Vector2(930, 405)
-collision_layer = 1
-collision_mask = 0
-
-[node name="CollisionShape2D" type="CollisionShape2D" parent="Environment/CoverBlock"]
-shape = SubResource("Shape_inner_block")
-
-[node name="Visual" type="Polygon2D" parent="Environment/CoverBlock"]
-polygon = PackedVector2Array(-90, -19, 90, -19, 90, 19, -90, 19)
-color = Color(0.115, 0.18, 0.27, 1)
-
 [node name="PlayerSpawn" type="Marker2D" parent="."]
 unique_name_in_owner = true
-position = Vector2(165, 360)
+position = Vector2(240, 376)
 
 [node name="SpawnLabel" type="Label" parent="."]
-offset_left = 95.0
-offset_top = 408.0
-offset_right = 235.0
-offset_bottom = 438.0
+z_index = 2
+offset_left = 194.0
+offset_top = 420.0
+offset_right = 286.0
+offset_bottom = 450.0
 text = "START"
 label_settings = SubResource("LabelSettings_zone")
 horizontal_alignment = 1
 
 [node name="PlateLabel" type="Label" parent="."]
-offset_left = 320.0
-offset_top = 404.0
-offset_right = 480.0
-offset_bottom = 434.0
+z_index = 2
+offset_left = 340.0
+offset_top = 420.0
+offset_right = 492.0
+offset_bottom = 450.0
 text = "PRESSURE PLATE"
 label_settings = SubResource("LabelSettings_small")
 horizontal_alignment = 1
 
 [node name="VaultLabel" type="Label" parent="."]
-offset_left = 755.0
-offset_top = 150.0
-offset_right = 1045.0
-offset_bottom = 184.0
+z_index = 2
+offset_left = 745.0
+offset_top = 164.0
+offset_right = 1035.0
+offset_bottom = 198.0
 theme_override_styles/normal = SubResource("StyleBox_zone")
 text = "TIME CORE VAULT"
 label_settings = SubResource("LabelSettings_zone")
@@ -184,16 +174,22 @@ script = ExtResource("2_registry")
 
 [node name="PressurePlate" parent="." instance=ExtResource("3_plate")]
 unique_name_in_owner = true
-position = Vector2(400, 360)
+position = Vector2(416, 376)
 
 [node name="SecurityDoor" parent="." instance=ExtResource("4_door")]
 unique_name_in_owner = true
-position = Vector2(640, 360)
+position = Vector2(656, 376)
 
 [node name="ObjectiveItem" parent="." instance=ExtResource("5_objective")]
 unique_name_in_owner = true
-position = Vector2(840, 300)
+position = Vector2(848, 320)
 
 [node name="ExitZone" parent="." instance=ExtResource("6_exit")]
 unique_name_in_owner = true
-position = Vector2(1110, 535)
+position = Vector2(1040, 528)
+
+[node name="TrainingGuard" parent="." instance=ExtResource("9_guard")]
+unique_name_in_owner = true
+position = Vector2(912, 240)
+patrol_speed = 30.0
+patrol_half_distance = 40.0

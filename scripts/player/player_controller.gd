@@ -9,14 +9,10 @@ signal interaction_recorded(
 )
 signal interaction_prompt_changed(message: String)
 
-const PLAYER_COLOR := Color("58a6ff")
-const PLAYER_OUTLINE_COLOR := Color("e9f4ff")
-const BODY_RADIUS := 18.0
-const FACING_LENGTH := 29.0
-
 @export_range(50.0, 800.0, 10.0) var move_speed: float = 260.0
 
 @onready var interaction_area: Area2D = %InteractionArea
+@onready var visual: PlayerVisual = %VisualRoot
 
 var _gameplay_input_enabled: bool = false
 var _has_objective: bool = false
@@ -28,12 +24,13 @@ func _ready() -> void:
 	add_to_group("timeline_actor")
 	add_to_group("player_actor")
 	motion_mode = CharacterBody2D.MOTION_MODE_FLOATING
-	queue_redraw()
+	visual.reset_visual(Vector2.DOWN)
 
 
 func _physics_process(_delta: float) -> void:
 	if not _gameplay_input_enabled:
 		velocity = Vector2.ZERO
+		visual.update_motion(Vector2.from_angle(_facing_angle), velocity, &"idle")
 		_update_interaction_prompt()
 		return
 
@@ -46,6 +43,7 @@ func _physics_process(_delta: float) -> void:
 	velocity = input_direction * move_speed
 	move_and_slide()
 	_update_facing()
+	visual.update_motion(Vector2.from_angle(_facing_angle), velocity)
 	_update_interaction_prompt()
 
 
@@ -64,15 +62,16 @@ func initialize_at(spawn_position: Vector2) -> void:
 	global_position = spawn_position
 	velocity = Vector2.ZERO
 	_has_objective = false
-	_facing_angle = 0.0
+	_facing_angle = Vector2.DOWN.angle()
 	rotation = 0.0
-	queue_redraw()
+	visual.reset_visual(Vector2.DOWN)
 
 
 func set_gameplay_input_enabled(enabled: bool) -> void:
 	_gameplay_input_enabled = enabled
 	if not enabled:
 		velocity = Vector2.ZERO
+		visual.update_motion(Vector2.from_angle(_facing_angle), velocity, &"idle")
 
 
 func is_gameplay_input_enabled() -> bool:
@@ -81,7 +80,7 @@ func is_gameplay_input_enabled() -> bool:
 
 func grant_objective() -> void:
 	_has_objective = true
-	queue_redraw()
+	visual.set_objective_visible(true)
 
 
 func has_objective_item() -> bool:
@@ -100,9 +99,15 @@ func get_recorded_velocity() -> Vector2:
 	return velocity
 
 
+func get_visual() -> PlayerVisual:
+	return visual
+
+
 func _notification(what: int) -> void:
 	if what == NOTIFICATION_APPLICATION_FOCUS_OUT:
 		velocity = Vector2.ZERO
+		if is_instance_valid(visual):
+			visual.update_motion(Vector2.from_angle(_facing_angle), velocity, &"idle")
 
 
 func _update_facing() -> void:
@@ -110,7 +115,6 @@ func _update_facing() -> void:
 	if to_mouse.length_squared() <= 1.0:
 		return
 	_facing_angle = to_mouse.angle()
-	queue_redraw()
 
 
 func _try_interact() -> void:
@@ -132,6 +136,7 @@ func _try_interact() -> void:
 	if target_id == StringName():
 		push_error("Successful interaction target has an empty stable object ID: %s" % target.name)
 		return
+	visual.play_interaction()
 	interaction_recorded.emit(target_id, &"interact", {})
 
 
@@ -157,12 +162,3 @@ func _update_interaction_prompt() -> void:
 		return
 	_last_prompt = prompt
 	interaction_prompt_changed.emit(prompt)
-
-
-func _draw() -> void:
-	draw_circle(Vector2.ZERO, BODY_RADIUS + 3.0, PLAYER_OUTLINE_COLOR)
-	draw_circle(Vector2.ZERO, BODY_RADIUS, PLAYER_COLOR)
-	var facing_vector := Vector2.from_angle(_facing_angle) * FACING_LENGTH
-	draw_line(Vector2.ZERO, facing_vector, PLAYER_OUTLINE_COLOR, 5.0, true)
-	if _has_objective:
-		draw_circle(Vector2(0.0, -29.0), 7.0, Color("ffcf4a"))

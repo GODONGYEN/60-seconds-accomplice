@@ -1,20 +1,30 @@
-[gd_scene load_steps=4 format=3]
+[gd_scene load_steps=7 format=3]
 
 [ext_resource type="Script" path="res://scripts/player/player_controller.gd" id="1_player"]
+[ext_resource type="Script" path="res://scripts/presentation/player_visual.gd" id="2_visual"]
+[ext_resource type="SpriteFrames" path="res://resources/characters/player_sprite_frames.tres" id="3_frames"]
 
-[sub_resource type="CircleShape2D" id="CircleShape2D_body"]
-radius = 18.0
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_body"]
+size = Vector2(18, 12)
 
 [sub_resource type="CircleShape2D" id="CircleShape2D_interaction"]
 radius = 62.0
 
+[sub_resource type="LabelSettings" id="LabelSettings_objective"]
+font_size = 15
+font_color = Color(0.42, 1, 0.94, 1)
+outline_size = 4
+outline_color = Color(0.01, 0.06, 0.1, 1)
+
 [node name="Player" type="CharacterBody2D"]
+z_index = 4
 collision_layer = 2
 collision_mask = 1
 script = ExtResource("1_player")
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="."]
-shape = SubResource("CircleShape2D_body")
+position = Vector2(0, -6)
+shape = SubResource("RectangleShape2D_body")
 
 [node name="InteractionArea" type="Area2D" parent="."]
 unique_name_in_owner = true
@@ -23,5 +33,34 @@ collision_mask = 8
 monitorable = false
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="InteractionArea"]
+position = Vector2(0, -16)
 shape = SubResource("CircleShape2D_interaction")
 
+[node name="VisualRoot" type="Node2D" parent="."]
+unique_name_in_owner = true
+script = ExtResource("2_visual")
+
+[node name="Shadow" type="Polygon2D" parent="VisualRoot"]
+z_index = -1
+polygon = PackedVector2Array(-14, -5, -9, -9, 9, -9, 14, -5, 9, -1, -9, -1)
+color = Color(0.005, 0.012, 0.02, 0.55)
+
+[node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="VisualRoot"]
+unique_name_in_owner = true
+texture_filter = 1
+sprite_frames = ExtResource("3_frames")
+animation = &"idle_down"
+autoplay = "idle_down"
+offset = Vector2(0, -30)
+
+[node name="ObjectiveIndicator" type="Label" parent="VisualRoot"]
+visible = false
+z_index = 2
+offset_left = -18.0
+offset_top = -80.0
+offset_right = 18.0
+offset_bottom = -58.0
+mouse_filter = 2
+text = "CORE"
+label_settings = SubResource("LabelSettings_objective")
+horizontal_alignment = 1
