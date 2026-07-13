@@ -85,6 +85,7 @@ func _run_all_tests() -> void:
 	await _test_guard_visual_states_and_reset()
 	await _test_guard_ai_systems()
 	await _test_facility_tileset_and_map()
+	await _test_facility_level_01_systems()
 	_test_recording_sampling_and_timestamps()
 	_test_recording_deep_copy_isolation()
 	await _test_ghost_interpolation_boundaries()
@@ -435,6 +436,14 @@ func _test_guard_ai_systems() -> void:
 	await process_frame
 
 
+func _test_facility_level_01_systems() -> void:
+	var suite := FacilityMapTestSuite.new()
+	root.add_child(suite)
+	await suite.run(self, Callable(self, &"_expect"))
+	suite.free()
+	await process_frame
+
+
 func _test_facility_tileset_and_map() -> void:
 	print("[TEST] Facility TileSet and 30x16 tutorial map")
 	_expect(FACILITY_TILESET.tile_size == FACILITY_TILE_SIZE, "Facility TileSet uses 32x32 tiles")
@@ -607,6 +616,16 @@ func _test_recording_sampling_and_timestamps() -> void:
 			timestamps_are_monotonic = false
 	_expect(timestamps_are_monotonic, "sample timestamps never decrease")
 	_expect(timestamps_are_in_bounds, "sample timestamps stay within the loop duration")
+	var endpoint_drift_recording := LoopRecording.new(
+		1.0,
+		[TransformSample.new(1.0 + LoopRecording.TIMESTAMP_EPSILON * 0.5)],
+		[],
+		1
+	)
+	_expect(
+		_is_equal(endpoint_drift_recording.samples[0].timestamp, 1.0),
+		"sub-epsilon endpoint drift clamps silently to the recording duration"
+	)
 	fixture.free()
 
 
@@ -816,6 +835,10 @@ func _test_resettable_gameplay_objects() -> void:
 	_expect(not plate.is_active and plate.get_occupant_count() == 0, "pressure plate reset clears occupancy")
 
 	door.set_open(true)
+	_expect(
+		not door.is_open and not door.blocker.disabled and door.light_occluder.visible,
+		"door keeps collision, LOS, and light state coherent until its deferred commit"
+	)
 	await process_frame
 	_expect(door.is_open and door.blocker.disabled, "door opens and disables its blocker")
 	door.reset_for_loop()
