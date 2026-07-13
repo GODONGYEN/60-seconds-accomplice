@@ -5,6 +5,8 @@ const DETECTION_ID: StringName = &"player_live"
 const DETECTION_PRIORITY: int = 0
 
 signal restart_requested
+signal chrono_recall_requested
+signal map_requested
 signal interaction_recorded(
 	target_object_id: StringName,
 	event_type: StringName,
@@ -13,6 +15,8 @@ signal interaction_recorded(
 signal interaction_prompt_changed(message: String)
 
 @export_range(50.0, 800.0, 10.0) var move_speed: float = 260.0
+@export var heist_controls_enabled: bool = false
+@export var restart_loop_enabled: bool = true
 
 @onready var interaction_area: Area2D = %InteractionArea
 @onready var visual: PlayerVisual = %VisualRoot
@@ -63,7 +67,13 @@ func _unhandled_input(event: InputEvent) -> void:
 	if event.is_action_pressed("interact"):
 		_try_interact()
 		get_viewport().set_input_as_handled()
-	elif event.is_action_pressed("restart_loop"):
+	elif heist_controls_enabled and event.is_action_pressed("chrono_recall"):
+		chrono_recall_requested.emit()
+		get_viewport().set_input_as_handled()
+	elif heist_controls_enabled and event.is_action_pressed("open_map"):
+		map_requested.emit()
+		get_viewport().set_input_as_handled()
+	elif restart_loop_enabled and event.is_action_pressed("restart_loop"):
 		restart_requested.emit()
 		get_viewport().set_input_as_handled()
 
@@ -82,6 +92,11 @@ func set_gameplay_input_enabled(enabled: bool) -> void:
 	if not enabled:
 		velocity = Vector2.ZERO
 		visual.update_motion(Vector2.from_angle(_facing_angle), velocity, &"idle")
+
+
+func configure_heist_controls(enabled: bool) -> void:
+	heist_controls_enabled = enabled
+	restart_loop_enabled = not enabled
 
 
 func is_gameplay_input_enabled() -> bool:
@@ -162,6 +177,35 @@ func is_detectable_by_guard() -> bool:
 	return true
 
 
+func get_proximity_awareness_radius() -> float:
+	return 88.0 if velocity.length_squared() > 100.0 else 46.0
+
+
+func capture_recall_state() -> Dictionary:
+	return {
+		"global_position": global_position,
+		"facing_angle": _facing_angle,
+		"has_objective": _has_objective,
+	}
+
+
+func restore_recall_state(snapshot: Dictionary) -> bool:
+	var position_variant: Variant = snapshot.get("global_position", global_position)
+	if typeof(position_variant) != TYPE_VECTOR2:
+		return false
+	global_position = position_variant as Vector2
+	velocity = Vector2.ZERO
+	_facing_angle = float(snapshot.get("facing_angle", Vector2.DOWN.angle()))
+	_has_objective = bool(snapshot.get("has_objective", false))
+	visual.set_objective_visible(_has_objective)
+	visual.update_motion(Vector2.from_angle(_facing_angle), velocity, &"idle")
+	return true
+
+
+func get_recall_state_id() -> StringName:
+	return DETECTION_ID
+
+
 func _notification(what: int) -> void:
 	if what == NOTIFICATION_APPLICATION_FOCUS_OUT:
 		velocity = Vector2.ZERO
@@ -196,7 +240,12 @@ func _try_interact() -> void:
 		push_error("Successful interaction target has an empty stable object ID: %s" % target.name)
 		return
 	visual.play_interaction()
-	interaction_recorded.emit(target_id, &"interact", {})
+	var payload: Dictionary = {}
+	if target.has_method(&"get_recording_payload"):
+		var payload_variant: Variant = target.call(&"get_recording_payload", self)
+		if payload_variant is Dictionary:
+			payload = (payload_variant as Dictionary).duplicate(true)
+	interaction_recorded.emit(target_id, &"interact", payload)
 
 
 func _find_nearest_interactable() -> Area2D:

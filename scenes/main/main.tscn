@@ -1,29 +1,25 @@
 [gd_scene load_steps=7 format=3]
 
-[ext_resource type="Script" path="res://scripts/core/game_manager.gd" id="1_game"]
-[ext_resource type="PackedScene" path="res://scenes/levels/facility_level_01.tscn" id="2_level"]
-[ext_resource type="PackedScene" path="res://scenes/main/timeline_manager.tscn" id="3_timeline"]
-[ext_resource type="Script" path="res://scripts/ui/audio_feedback.gd" id="4_audio"]
-[ext_resource type="PackedScene" path="res://scenes/ui/hud.tscn" id="5_hud"]
+[ext_resource type="Script" path="res://scripts/core/app_controller.gd" id="1_app"]
+[ext_resource type="PackedScene" path="res://scenes/main/prototype_loop_session.tscn" id="2_prototype"]
+[ext_resource type="PackedScene" path="res://scenes/main/facility_regression_session.tscn" id="3_facility"]
+[ext_resource type="PackedScene" path="res://scenes/ui/main_menu.tscn" id="4_menu"]
+[ext_resource type="PackedScene" path="res://scenes/ui/mission_briefing.tscn" id="5_briefing"]
+[ext_resource type="MissionDefinition" path="res://resources/missions/operation_black_minute.tres" id="6_mission"]
 
-[node name="Main" type="Node2D"]
+[node name="Application" type="Node"]
 process_mode = 3
-script = ExtResource("1_game")
+script = ExtResource("1_app")
+prototype_scene = ExtResource("2_prototype")
+facility_regression_scene = ExtResource("3_facility")
+mission_definition = ExtResource("6_mission")
 
-[node name="CurrentLevel" parent="." instance=ExtResource("2_level")]
+[node name="SessionContainer" type="Node" parent="."]
 unique_name_in_owner = true
 
-[node name="TimelineManager" parent="." instance=ExtResource("3_timeline")]
+[node name="MainMenu" parent="." instance=ExtResource("4_menu")]
 unique_name_in_owner = true
 
-[node name="AudioFeedback" type="Node" parent="."]
+[node name="MissionBriefing" parent="." instance=ExtResource("5_briefing")]
 unique_name_in_owner = true
-process_mode = 1
-script = ExtResource("4_audio")
-
-[node name="AudioStreamPlayer" type="AudioStreamPlayer" parent="AudioFeedback"]
-unique_name_in_owner = true
-volume_db = -4.0
-
-[node name="HUD" parent="." instance=ExtResource("5_hud")]
-unique_name_in_owner = true
+visible = false

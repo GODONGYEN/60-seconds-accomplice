@@ -1,0 +1,29 @@
+[gd_scene load_steps=7 format=3]
+
+[ext_resource type="Script" path="res://scripts/core/game_manager.gd" id="1_game"]
+[ext_resource type="PackedScene" path="res://scenes/levels/prototype_level.tscn" id="2_level"]
+[ext_resource type="PackedScene" path="res://scenes/main/timeline_manager.tscn" id="3_timeline"]
+[ext_resource type="Script" path="res://scripts/ui/audio_feedback.gd" id="4_audio"]
+[ext_resource type="PackedScene" path="res://scenes/ui/hud.tscn" id="5_hud"]
+
+[node name="PrototypeLoopSession" type="Node2D"]
+process_mode = 3
+script = ExtResource("1_game")
+
+[node name="CurrentLevel" parent="." instance=ExtResource("2_level")]
+unique_name_in_owner = true
+
+[node name="TimelineManager" parent="." instance=ExtResource("3_timeline")]
+unique_name_in_owner = true
+
+[node name="AudioFeedback" type="Node" parent="."]
+unique_name_in_owner = true
+process_mode = 1
+script = ExtResource("4_audio")
+
+[node name="AudioStreamPlayer" type="AudioStreamPlayer" parent="AudioFeedback"]
+unique_name_in_owner = true
+volume_db = -4.0
+
+[node name="HUD" parent="." instance=ExtResource("5_hud")]
+unique_name_in_owner = true

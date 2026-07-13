@@ -3,11 +3,19 @@ extends Area2D
 
 signal candidate_count_changed(candidate_count: int)
 
+enum DetectionMode {
+	NONE,
+	VISION,
+	PROXIMITY,
+	CONTACT,
+}
+
 const WORLD_COLLISION_MASK: int = 1
 const TARGET_HEIGHT_OFFSET: Vector2 = Vector2(0.0, -18.0)
 
 @export_range(32.0, 640.0, 1.0) var vision_distance: float = 220.0
 @export_range(5.0, 89.0, 1.0) var vision_half_angle_degrees: float = 38.0
+@export_range(8.0, 64.0, 1.0) var direct_contact_distance: float = 18.0
 
 var _candidates: Array[Node2D] = []
 var _detection_enabled: bool = true
@@ -52,7 +60,7 @@ func get_visible_targets(facing_direction: Vector2) -> Array[Node2D]:
 		return visible_targets
 	_prune_invalid_candidates()
 	for candidate: Node2D in _candidates:
-		if is_target_visible(candidate, facing_direction):
+		if get_detection_mode(candidate, facing_direction) != DetectionMode.NONE:
 			visible_targets.append(candidate)
 	visible_targets.sort_custom(_candidate_less_than)
 	return visible_targets
@@ -71,6 +79,39 @@ func is_target_visible(target: Node2D, facing_direction: Vector2) -> bool:
 	):
 		return false
 	return has_clear_line_of_sight(target)
+
+
+func get_detection_mode(target: Node2D, facing_direction: Vector2) -> DetectionMode:
+	if not _detection_enabled or not _is_detectable_actor(target):
+		return DetectionMode.NONE
+	var target_position := target.global_position + TARGET_HEIGHT_OFFSET
+	var distance := global_position.distance_to(target_position)
+	if distance > vision_distance:
+		return DetectionMode.NONE
+	if not has_clear_line_of_sight(target):
+		return DetectionMode.NONE
+	if distance <= direct_contact_distance:
+		return DetectionMode.CONTACT
+	if is_point_in_view(
+		global_position,
+		target_position,
+		facing_direction,
+		vision_distance,
+		vision_half_angle_degrees
+	):
+		return DetectionMode.VISION
+	var proximity_radius := 42.0
+	if target.has_method(&"get_proximity_awareness_radius"):
+		proximity_radius = maxf(
+			0.0,
+			float(target.call(&"get_proximity_awareness_radius"))
+		)
+	return DetectionMode.PROXIMITY if distance <= proximity_radius else DetectionMode.NONE
+
+
+func is_target_in_proximity(target: Node2D, facing_direction: Vector2) -> bool:
+	var mode := get_detection_mode(target, facing_direction)
+	return mode == DetectionMode.PROXIMITY or mode == DetectionMode.CONTACT
 
 
 func has_clear_line_of_sight(target: Node2D) -> bool:

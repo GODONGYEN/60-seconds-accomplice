@@ -44,6 +44,9 @@ const SUSPICION_EPSILON: float = 0.0001
 @export var initial_facing: Vector2 = Vector2.RIGHT
 @export var patrol_route_path: NodePath
 @export var debug_overlay_enabled: bool = false
+@export var zone_id: StringName = &"prototype_zone"
+@export_range(0.0, 20.0, 0.1) var start_phase_seconds: float = 0.0
+@export_range(1.0, 8.0, 0.1) var proximity_suspicion_multiplier: float = 3.0
 
 @onready var visual: GuardVisual = %VisualRoot
 @onready var perception: GuardPerception = %Perception
@@ -59,8 +62,12 @@ var last_seen_position: Vector2 = Vector2.ZERO
 var _initial_global_position: Vector2 = Vector2.ZERO
 var _facing_direction: Vector2 = Vector2.RIGHT
 var _patrol_points: Array[Vector2] = []
+var _patrol_waits: Array[float] = []
+var _uses_authored_patrol_waits: bool = false
 var _patrol_index: int = 0
 var _return_patrol_index: int = 0
+var _route_direction: int = 1
+var _route_mode: StringName = &"LOOP"
 var _idle_timer: float = 0.0
 var _lose_target_timer: float = 0.0
 var _search_timer: float = 0.0
@@ -74,6 +81,8 @@ var _capture_committed: bool = false
 var _entered_chase_this_tick: bool = false
 var _last_reported_suspicion: float = -1.0
 var _last_reported_target_id: StringName = &"__unset"
+var _zone_manager: GuardZoneManager = null
+var _patrol_scheduler: PatrolScheduler = null
 
 
 func _ready() -> void:
@@ -176,10 +185,10 @@ func reset_for_loop() -> void:
 	state = GuardState.IDLE
 	suspicion = 0.0
 	current_target = null
-	last_seen_position = _initial_global_position
 	_facing_direction = _normalized_facing(initial_facing)
 	_patrol_index = 0
 	_return_patrol_index = 0
+	_route_direction = 1
 	_idle_timer = 0.0
 	_lose_target_timer = 0.0
 	_search_timer = 0.0
@@ -193,6 +202,11 @@ func reset_for_loop() -> void:
 	_last_reported_suspicion = -1.0
 	_last_reported_target_id = &"__unset"
 	navigation.clear_target()
+	_apply_authored_start_phase()
+	last_seen_position = global_position
+	if state == GuardState.PATROL:
+		navigation.set_target_position(_patrol_points[_patrol_index])
+	navigation.sync_scheduler_position()
 	perception.set_detection_enabled(false)
 	capture_area.monitoring = _simulation_enabled
 	visual.reset_visual(_facing_direction)
@@ -265,6 +279,141 @@ func get_capture_timer() -> float:
 	return _capture_timer
 
 
+func get_zone_id() -> StringName:
+	return zone_id
+
+
+func configure_mission_zone(
+	zone_manager: GuardZoneManager,
+	patrol_scheduler: PatrolScheduler
+) -> void:
+	_zone_manager = zone_manager
+	_patrol_scheduler = patrol_scheduler
+	if _zone_manager != null:
+		_zone_manager.register_guard(self, zone_id)
+	if _patrol_scheduler != null:
+		navigation.configure_scheduler(object_id, _patrol_scheduler)
+
+
+func configure_patrol_pattern(
+	points: Array[Vector2],
+	waits: Array[float],
+	route_mode: StringName,
+	phase_seconds: float,
+	movement_speed: float
+) -> bool:
+	if points.is_empty():
+		push_warning("Guard '%s' rejected an empty mission patrol route" % object_id)
+		return false
+	_patrol_points = points.duplicate()
+	_patrol_waits.clear()
+	for index: int in range(_patrol_points.size()):
+		_patrol_waits.append(
+			maxf(0.0, waits[index]) if index < waits.size() else idle_duration
+		)
+	_route_mode = route_mode if route_mode != StringName() else &"LOOP"
+	_uses_authored_patrol_waits = true
+	start_phase_seconds = maxf(0.0, phase_seconds)
+	patrol_speed = maxf(0.0, movement_speed)
+	_patrol_index = 0
+	_route_direction = 1
+	return true
+
+
+func capture_recall_state() -> Dictionary:
+	return {
+		"global_position": global_position,
+		"facing_direction": _facing_direction,
+		"state": state,
+		"suspicion": suspicion,
+		"patrol_index": _patrol_index,
+		"return_patrol_index": _return_patrol_index,
+		"route_direction": _route_direction,
+		"idle_timer": _idle_timer,
+		"lose_target_timer": _lose_target_timer,
+		"search_timer": _search_timer,
+		"capture_timer": _capture_timer,
+		"last_seen_position": last_seen_position,
+		"capture_committed": _capture_committed,
+	}
+
+
+func restore_recall_state(snapshot: Dictionary) -> bool:
+	var position_variant: Variant = snapshot.get("global_position", global_position)
+	var facing_variant: Variant = snapshot.get("facing_direction", _facing_direction)
+	var last_seen_variant: Variant = snapshot.get("last_seen_position", global_position)
+	if (
+		typeof(position_variant) != TYPE_VECTOR2
+		or typeof(facing_variant) != TYPE_VECTOR2
+		or typeof(last_seen_variant) != TYPE_VECTOR2
+	):
+		return false
+	global_position = position_variant as Vector2
+	_facing_direction = _normalized_facing(facing_variant as Vector2)
+	state = clampi(
+		int(snapshot.get("state", GuardState.IDLE)),
+		GuardState.IDLE,
+		GuardState.RETURN
+	)
+	suspicion = clampf(float(snapshot.get("suspicion", 0.0)), 0.0, 1.0)
+	_patrol_index = clampi(
+		int(snapshot.get("patrol_index", 0)),
+		0,
+		maxi(0, _patrol_points.size() - 1)
+	)
+	_return_patrol_index = clampi(
+		int(snapshot.get("return_patrol_index", _patrol_index)),
+		0,
+		maxi(0, _patrol_points.size() - 1)
+	)
+	_route_direction = -1 if int(snapshot.get("route_direction", 1)) < 0 else 1
+	_idle_timer = float(snapshot.get("idle_timer", 0.0))
+	_lose_target_timer = float(snapshot.get("lose_target_timer", 0.0))
+	_search_timer = float(snapshot.get("search_timer", 0.0))
+	_capture_timer = float(snapshot.get("capture_timer", 0.0))
+	last_seen_position = last_seen_variant as Vector2
+	_capture_committed = bool(snapshot.get("capture_committed", false))
+	velocity = Vector2.ZERO
+	current_target = null
+	_target_visible = false
+	_perception_accumulator = perception_update_interval
+	_navigation_refresh_timer = 0.0
+	perception.clear_candidates()
+	navigation.clear_target()
+	navigation.sync_scheduler_position()
+	visual.update_state(_facing_direction, velocity, get_state_name(), suspicion)
+	_emit_status(true)
+	return true
+
+
+func get_recall_state_id() -> StringName:
+	return object_id
+
+
+func investigate_position(position: Vector2) -> void:
+	if not _simulation_enabled:
+		return
+	last_seen_position = (
+		_zone_manager.clamp_guard_to_chase_bounds(object_id, position)
+		if _zone_manager != null
+		else position
+	)
+	suspicion = maxf(suspicion, 0.35)
+	current_target = null
+	_target_visible = false
+	transition_to(GuardState.SEARCH)
+
+
+func receive_zone_alert(
+	position: Vector2,
+	_source_id: StringName = StringName(),
+	_alert_zone_id: StringName = StringName()
+) -> void:
+	if state == GuardState.CHASE or (_target_visible and current_target != null):
+		return
+	investigate_position(position)
+
+
 func has_valid_patrol_route() -> bool:
 	return _patrol_points.size() >= 2
 
@@ -306,9 +455,16 @@ func _update_idle(delta: float) -> void:
 		transition_to(GuardState.SUSPICIOUS)
 		return
 	_idle_timer += delta
-	if _idle_timer < idle_duration:
+	var waypoint_wait := (
+		_get_patrol_wait(_patrol_index)
+	)
+	if _idle_timer < waypoint_wait:
 		return
-	_patrol_index = (_patrol_index + 1) % _patrol_points.size()
+	if _route_mode == &"STATIONARY_ROTATION" or _patrol_points.size() < 2:
+		_idle_timer = 0.0
+		_facing_direction = _facing_direction.rotated(PI * 0.5)
+		return
+	_patrol_index = _next_patrol_index()
 	transition_to(GuardState.PATROL)
 
 
@@ -326,7 +482,16 @@ func _update_suspicious(delta: float) -> void:
 	if _target_visible and current_target != null:
 		_face_position(current_target.global_position)
 		last_seen_position = current_target.global_position
-		suspicion = clampf(suspicion + suspicion_gain_per_second * delta, 0.0, 1.0)
+		var gain_multiplier := (
+			proximity_suspicion_multiplier
+			if perception.is_target_in_proximity(current_target, _facing_direction)
+			else 1.0
+		)
+		suspicion = clampf(
+			suspicion + suspicion_gain_per_second * gain_multiplier * delta,
+			0.0,
+			1.0
+		)
 		if suspicion >= 1.0 - SUSPICION_EPSILON:
 			transition_to(GuardState.CHASE)
 		return
@@ -380,6 +545,10 @@ func _update_return(delta: float) -> void:
 
 
 func _update_chase_target(delta: float, target_position: Vector2) -> void:
+	if _zone_manager != null:
+		target_position = _zone_manager.clamp_guard_to_chase_bounds(
+			object_id, target_position
+		)
 	_navigation_refresh_timer -= delta
 	if (
 		not navigation.has_target()
@@ -439,6 +608,8 @@ func _face_position(target_position: Vector2) -> void:
 
 func _resolve_patrol_route() -> void:
 	_patrol_points.clear()
+	_patrol_waits.clear()
+	_uses_authored_patrol_waits = false
 	var route := get_node_or_null(patrol_route_path) as Node2D
 	if route != null:
 		for child: Node in route.get_children():
@@ -446,6 +617,8 @@ func _resolve_patrol_route() -> void:
 				_patrol_points.append((child as Marker2D).global_position)
 	if _patrol_points.is_empty():
 		_patrol_points.append(_initial_global_position)
+	for _point: Vector2 in _patrol_points:
+		_patrol_waits.append(idle_duration)
 	if _patrol_points.size() < 2 and not patrol_route_path.is_empty():
 		push_warning(
 			"Guard '%s' patrol route '%s' requires at least two Marker2D children."
@@ -462,6 +635,90 @@ func _find_nearest_patrol_index(from_position: Vector2) -> int:
 			nearest_distance = distance
 			nearest_index = index
 	return nearest_index
+
+
+func _next_patrol_index() -> int:
+	if _patrol_points.size() <= 1:
+		return 0
+	if _route_mode == &"PING_PONG" or _route_mode == &"SHORT_SWEEP":
+		if _patrol_index >= _patrol_points.size() - 1:
+			_route_direction = -1
+		elif _patrol_index <= 0:
+			_route_direction = 1
+		return clampi(
+			_patrol_index + _route_direction,
+			0,
+			_patrol_points.size() - 1
+		)
+	return (_patrol_index + 1) % _patrol_points.size()
+
+
+func _apply_authored_start_phase() -> void:
+	var effective_waits: Array[float] = []
+	for index: int in range(_patrol_points.size()):
+		effective_waits.append(_get_patrol_wait(index))
+	var phase_state := PatrolScheduler.build_route_phase_state(
+		_patrol_points,
+		effective_waits,
+		_route_mode,
+		patrol_speed,
+		start_phase_seconds
+	)
+	if phase_state.is_empty():
+		return
+	var position_variant: Variant = phase_state.get("position", _initial_global_position)
+	if typeof(position_variant) == TYPE_VECTOR2:
+		global_position = position_variant as Vector2
+	var reached_index := clampi(
+		int(phase_state.get("waypoint_index", 0)),
+		0,
+		maxi(0, _patrol_points.size() - 1)
+	)
+	_route_direction = -1 if int(phase_state.get("route_direction", 1)) < 0 else 1
+	var wait_duration := _get_patrol_wait(reached_index)
+	var wait_remaining := clampf(
+		float(phase_state.get("wait_remaining", wait_duration)),
+		0.0,
+		wait_duration
+	)
+	var in_transit := bool(phase_state.get("in_transit", false))
+	var waiting_finished := wait_remaining <= SUSPICION_EPSILON
+	if (
+		_patrol_points.size() >= 2
+		and _route_mode != &"STATIONARY_ROTATION"
+		and (in_transit or waiting_finished)
+	):
+		var next_and_direction := PatrolScheduler.next_route_index(
+			reached_index,
+			_route_direction,
+			_patrol_points.size(),
+			_route_mode
+		)
+		_patrol_index = next_and_direction.x
+		_route_direction = next_and_direction.y
+		state = GuardState.PATROL
+		_idle_timer = 0.0
+		_face_position(_patrol_points[_patrol_index])
+		return
+	_patrol_index = reached_index
+	state = GuardState.IDLE
+	_idle_timer = maxf(0.0, wait_duration - wait_remaining)
+	var completed_legs := int(phase_state.get("phase_counter", 0))
+	if _route_mode == &"STATIONARY_ROTATION":
+		_facing_direction = _normalized_facing(initial_facing).rotated(
+			float(completed_legs % 4) * PI * 0.5
+		)
+	elif completed_legs > 0 and _patrol_points.size() >= 2:
+		var previous_index := posmod(_patrol_index - _route_direction, _patrol_points.size())
+		var arrival_direction := _patrol_points[_patrol_index] - _patrol_points[previous_index]
+		if not arrival_direction.is_zero_approx():
+			_facing_direction = arrival_direction.normalized()
+
+
+func _get_patrol_wait(index: int) -> float:
+	if _uses_authored_patrol_waits and index >= 0 and index < _patrol_waits.size():
+		return _patrol_waits[index]
+	return idle_duration
 
 
 func _sync_capture_radius() -> void:

@@ -1,0 +1,18 @@
+[gd_scene load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://scripts/items/access_card.gd" id="1_card"]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_card"]
+size = Vector2(38, 24)
+
+[node name="AccessCard" type="Area2D"]
+z_index = 3
+collision_layer = 8
+collision_mask = 0
+monitoring = false
+script = ExtResource("1_card")
+object_id = &"keycard_level_1"
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+unique_name_in_owner = true
+shape = SubResource("RectangleShape2D_card")

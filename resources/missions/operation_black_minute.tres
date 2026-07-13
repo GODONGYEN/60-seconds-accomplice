@@ -1,0 +1,17 @@
+[gd_resource type="Resource" script_class="MissionDefinition" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/missions/mission_definition.gd" id="1_definition"]
+
+[resource]
+script = ExtResource("1_definition")
+mission_id = &"operation_black_minute"
+operation_name = "OPERATION: BLACK MINUTE"
+operation_name_ko = "작전명: 검은 1분"
+facility_name = "HELIX TEMPORAL RESEARCH FACILITY"
+facility_name_ko = "헬릭스 시간 연구시설"
+target_name = "CHRONOS CORE"
+target_name_ko = "크로노스 코어"
+briefing = "Infiltrate Helix Temporal Research Facility. Neutralize its layered security, steal the Chronos Core from the deep vault, and return to the external extraction point."
+recall_charges = 3
+rewind_duration_seconds = 10.0
+blueprint_path = "res://resources/maps/operation_black_minute_blueprint.json"

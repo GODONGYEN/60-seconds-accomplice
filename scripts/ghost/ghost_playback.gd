@@ -6,6 +6,8 @@ const GHOST_COLLISION_LAYER: int = 4
 const DETECTION_PRIORITY: int = 1
 
 var display_loop_index: int = 0
+var detection_prefix: StringName = &"ghost"
+var display_prefix: String = "GHOST"
 var playback_time: float = 0.0
 var facing_direction: Vector2 = Vector2.RIGHT
 var playback_velocity: Vector2 = Vector2.ZERO
@@ -53,6 +55,16 @@ func configure(
 	_update_label()
 	reset_playback()
 	return true
+
+
+func configure_echo_segment(
+		recording: LoopRecording,
+		registry: ObjectRegistry,
+		echo_sequence: int
+) -> bool:
+	detection_prefix = &"echo"
+	display_prefix = "ECHO"
+	return configure(recording, registry, echo_sequence)
 
 
 func reset_playback() -> void:
@@ -104,7 +116,7 @@ func get_visibility_sample_position() -> Vector2:
 
 
 func get_detection_id() -> StringName:
-	return StringName("ghost_%03d" % display_loop_index)
+	return StringName("%s_%03d" % [detection_prefix, display_loop_index])
 
 
 func get_detection_priority() -> int:
@@ -222,7 +234,7 @@ func _dispatch_event(event: RecordedEvent) -> void:
 
 func _update_label() -> void:
 	if _loop_label != null:
-		_loop_label.text = "GHOST %d" % display_loop_index
+		_loop_label.text = "%s %d" % [display_prefix, display_loop_index]
 
 
 static func _interpolate_facing(from: Vector2, to: Vector2, weight: float) -> Vector2:

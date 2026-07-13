@@ -1,0 +1,16 @@
+[gd_scene load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://scripts/objects/mission_extraction_zone.gd" id="1_exit"]
+
+[sub_resource type="CircleShape2D" id="CircleShape2D_exit"]
+radius = 48.0
+
+[node name="MissionExtractionZone" type="Area2D"]
+z_index = 2
+collision_layer = 16
+collision_mask = 2
+script = ExtResource("1_exit")
+object_id = &"extraction_yard_01"
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+shape = SubResource("CircleShape2D_exit")

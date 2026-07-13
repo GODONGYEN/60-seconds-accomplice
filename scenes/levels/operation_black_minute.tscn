@@ -1,0 +1,124 @@
+[gd_scene load_steps=15 format=3]
+
+[ext_resource type="Script" path="res://scripts/missions/operation_black_minute_level.gd" id="1_level"]
+[ext_resource type="Script" path="res://scripts/presentation/operation_black_minute_map.gd" id="2_map"]
+[ext_resource type="Script" path="res://scripts/core/object_registry.gd" id="3_registry"]
+[ext_resource type="Script" path="res://scripts/visibility/world_visibility_controller.gd" id="4_visibility"]
+[ext_resource type="Script" path="res://scripts/missions/mission_director.gd" id="5_director"]
+[ext_resource type="MissionDefinition" path="res://resources/missions/operation_black_minute.tres" id="6_definition"]
+[ext_resource type="Script" path="res://scripts/security/access_control_manager.gd" id="7_access"]
+[ext_resource type="Script" path="res://scripts/security/security_system_manager.gd" id="8_security"]
+[ext_resource type="Script" path="res://scripts/enemies/guard_zone_manager.gd" id="9_zones"]
+[ext_resource type="Script" path="res://scripts/enemies/patrol_scheduler.gd" id="10_scheduler"]
+[ext_resource type="Script" path="res://scripts/recording/chrono_recall_manager.gd" id="11_recall"]
+[ext_resource type="PackedScene" path="res://scenes/ui/heist_hud.tscn" id="12_hud"]
+[ext_resource type="PackedScene" path="res://scenes/ui/facility_map_overlay.tscn" id="13_overlay"]
+
+[node name="OperationBlackMinute" type="Node2D"]
+process_mode = 3
+script = ExtResource("1_level")
+
+[node name="CanvasModulate" type="CanvasModulate" parent="."]
+color = Color(0.48, 0.58, 0.68, 1)
+
+[node name="OperationMap" type="Node2D" parent="."]
+unique_name_in_owner = true
+process_mode = 1
+script = ExtResource("2_map")
+
+[node name="Floor" type="TileMapLayer" parent="OperationMap"]
+unique_name_in_owner = true
+z_index = -6
+
+[node name="FloorDetails" type="TileMapLayer" parent="OperationMap"]
+unique_name_in_owner = true
+z_index = -5
+
+[node name="Walls" type="TileMapLayer" parent="OperationMap"]
+unique_name_in_owner = true
+z_index = 1
+
+[node name="PropsBelow" type="TileMapLayer" parent="OperationMap"]
+unique_name_in_owner = true
+z_index = -1
+
+[node name="PropsAbove" type="TileMapLayer" parent="OperationMap"]
+unique_name_in_owner = true
+z_index = 2
+
+[node name="RoomLabels" type="Node2D" parent="OperationMap"]
+unique_name_in_owner = true
+z_index = 1
+
+[node name="ObservationWindows" type="Node2D" parent="OperationMap"]
+unique_name_in_owner = true
+z_index = 2
+
+[node name="ActorLayer" type="Node2D" parent="."]
+unique_name_in_owner = true
+process_mode = 1
+y_sort_enabled = true
+
+[node name="PlayerContainer" type="Node2D" parent="ActorLayer"]
+unique_name_in_owner = true
+
+[node name="EchoContainer" type="Node2D" parent="ActorLayer"]
+unique_name_in_owner = true
+
+[node name="GuardContainer" type="Node2D" parent="ActorLayer"]
+unique_name_in_owner = true
+
+[node name="DynamicObjects" type="Node2D" parent="."]
+unique_name_in_owner = true
+process_mode = 1
+y_sort_enabled = true
+
+[node name="ProgressionTriggers" type="Node2D" parent="."]
+unique_name_in_owner = true
+process_mode = 1
+
+[node name="Systems" type="Node" parent="."]
+process_mode = 1
+
+[node name="ObjectRegistry" type="Node" parent="Systems"]
+unique_name_in_owner = true
+script = ExtResource("3_registry")
+
+[node name="VisibilityController" type="Node" parent="Systems"]
+unique_name_in_owner = true
+script = ExtResource("4_visibility")
+
+[node name="MissionDirector" type="Node" parent="Systems"]
+unique_name_in_owner = true
+script = ExtResource("5_director")
+mission_definition = ExtResource("6_definition")
+
+[node name="AccessControlManager" type="Node" parent="Systems"]
+unique_name_in_owner = true
+script = ExtResource("7_access")
+
+[node name="SecuritySystemManager" type="Node" parent="Systems"]
+unique_name_in_owner = true
+script = ExtResource("8_security")
+
+[node name="GuardZoneManager" type="Node" parent="Systems"]
+unique_name_in_owner = true
+script = ExtResource("9_zones")
+
+[node name="PatrolScheduler" type="Node" parent="Systems"]
+unique_name_in_owner = true
+script = ExtResource("10_scheduler")
+
+[node name="ChronoRecallManager" type="Node" parent="Systems"]
+unique_name_in_owner = true
+script = ExtResource("11_recall")
+rewind_duration_seconds = 10.0
+recording_frequency_hz = 20.0
+maximum_charges = 3
+maximum_echoes = 3
+
+[node name="HeistHUD" parent="." instance=ExtResource("12_hud")]
+unique_name_in_owner = true
+
+[node name="FacilityMapOverlay" parent="." instance=ExtResource("13_overlay")]
+unique_name_in_owner = true

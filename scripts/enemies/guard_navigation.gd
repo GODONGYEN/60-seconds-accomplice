@@ -7,11 +7,26 @@ var _body: CharacterBody2D = null
 var _target_position: Vector2 = Vector2.ZERO
 var _has_target: bool = false
 var _blocked_time: float = 0.0
+var _guard_id: StringName = StringName()
+var _patrol_scheduler: PatrolScheduler = null
 
 
 func configure(body: CharacterBody2D) -> void:
 	_body = body
 	clear_target()
+
+
+func configure_scheduler(guard_id: StringName, scheduler: PatrolScheduler) -> void:
+	_guard_id = guard_id
+	_patrol_scheduler = scheduler
+	if _patrol_scheduler != null and _body != null:
+		_patrol_scheduler.register_guard(_guard_id, _body.global_position)
+		_patrol_scheduler.commit_guard_position(_guard_id, _body.global_position)
+
+
+func sync_scheduler_position() -> void:
+	if _patrol_scheduler != null and _body != null:
+		_patrol_scheduler.commit_guard_position(_guard_id, _body.global_position)
 
 
 func set_target_position(target_position: Vector2) -> void:
@@ -24,6 +39,8 @@ func clear_target() -> void:
 	_blocked_time = 0.0
 	if _body != null:
 		_body.velocity = Vector2.ZERO
+	if _patrol_scheduler != null:
+		_patrol_scheduler.release_guard_reservation(_guard_id)
 
 
 func move_toward_target(delta: float, speed: float, arrival_distance: float) -> bool:
@@ -40,8 +57,23 @@ func move_toward_target(delta: float, speed: float, arrival_distance: float) -> 
 		return false
 	var before := _body.global_position
 	var step_speed := minf(speed, distance / delta)
-	_body.velocity = to_target.normalized() * step_speed
+	var intended_velocity := to_target.normalized() * step_speed
+	var proposed_position := before + intended_velocity * delta
+	if (
+		_patrol_scheduler != null
+		and not _patrol_scheduler.request_world_reservation(
+			_guard_id,
+			proposed_position,
+			delta
+		)
+	):
+		_body.velocity = Vector2.ZERO
+		_blocked_time += delta
+		return false
+	_body.velocity = intended_velocity
 	_body.move_and_slide()
+	if _patrol_scheduler != null:
+		_patrol_scheduler.commit_guard_position(_guard_id, _body.global_position)
 	var progress := before.distance_to(_target_position) - _body.global_position.distance_to(
 		_target_position
 	)

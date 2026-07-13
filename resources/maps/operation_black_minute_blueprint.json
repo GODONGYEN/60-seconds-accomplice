@@ -1,0 +1,812 @@
+{
+  "schema_version": 2,
+  "level_id": "operation_black_minute",
+  "display_name": "OPERATION: BLACK MINUTE",
+  "display_name_ko": "작전명: 검은 1분",
+  "facility_name": "HELIX TEMPORAL RESEARCH FACILITY",
+  "game_mode": "HEIST_MISSION",
+  "size": [64, 42],
+  "tile_size": 32,
+  "world_size": [2048, 1344],
+  "coordinate_convention": "zero_based_rect_xywh_cell_center_world",
+  "rooms": {
+    "external_infiltration_yard": {
+      "display_name": "External Infiltration Yard",
+      "map_label": "External Yard",
+      "rect": [1, 28, 11, 13],
+      "initial_map_visibility": "FULL",
+      "minimum_access": "PUBLIC"
+    },
+    "reception_checkpoint": {
+      "display_name": "Reception Checkpoint",
+      "map_label": "Reception",
+      "rect": [14, 28, 10, 9],
+      "initial_map_visibility": "FULL",
+      "minimum_access": "PUBLIC"
+    },
+    "staff_office": {
+      "display_name": "Staff Office",
+      "rect": [14, 15, 10, 9],
+      "initial_map_visibility": "FULL",
+      "minimum_access": "LEVEL_1"
+    },
+    "locker_room": {
+      "display_name": "Locker Room",
+      "rect": [2, 15, 9, 8],
+      "initial_map_visibility": "FULL",
+      "minimum_access": "PUBLIC"
+    },
+    "security_office": {
+      "display_name": "Security Office",
+      "map_label": "Security",
+      "rect": [27, 28, 10, 9],
+      "initial_map_visibility": "FULL",
+      "minimum_access": "LEVEL_1"
+    },
+    "cctv_control_room": {
+      "display_name": "CCTV Control Room",
+      "map_label": "CCTV Control",
+      "rect": [14, 4, 10, 8],
+      "initial_map_visibility": "FULL",
+      "minimum_access": "LEVEL_1"
+    },
+    "electrical_room": {
+      "display_name": "Electrical Room",
+      "map_label": "Electrical",
+      "rect": [27, 15, 10, 9],
+      "initial_map_visibility": "FULL",
+      "minimum_access": "LEVEL_1"
+    },
+    "server_room": {
+      "display_name": "Server Room",
+      "rect": [27, 4, 10, 8],
+      "initial_map_visibility": "FULL",
+      "minimum_access": "LEVEL_2"
+    },
+    "research_laboratory": {
+      "display_name": "Research Laboratory",
+      "map_label": "Research Lab",
+      "rect": [40, 4, 12, 9],
+      "initial_map_visibility": "FULL",
+      "minimum_access": "LEVEL_2"
+    },
+    "guard_break_room": {
+      "display_name": "Guard Break Room",
+      "map_label": "Guard Break",
+      "rect": [2, 4, 9, 8],
+      "initial_map_visibility": "FULL",
+      "minimum_access": "PUBLIC"
+    },
+    "laser_corridor": {
+      "display_name": "Laser Corridor",
+      "rect": [40, 16, 12, 5],
+      "initial_map_visibility": "FULL",
+      "minimum_access": "LEVEL_1"
+    },
+    "vault_antechamber": {
+      "display_name": "Vault Antechamber",
+      "map_label": "Vault Entry",
+      "rect": [55, 15, 8, 10],
+      "initial_map_visibility": "FULL",
+      "minimum_access": "LEVEL_2"
+    },
+    "chronos_vault": {
+      "display_name": "Chronos Vault",
+      "map_label": "Core Vault",
+      "rect": [54, 4, 9, 9],
+      "initial_map_visibility": "APPROXIMATE",
+      "minimum_access": "VAULT"
+    },
+    "maintenance_passage": {
+      "display_name": "Maintenance Passage",
+      "map_label": "Maintenance",
+      "rect": [40, 24, 12, 8],
+      "initial_map_visibility": "HIDDEN",
+      "minimum_access": "LEVEL_2"
+    },
+    "extraction_route": {
+      "display_name": "Extraction Route",
+      "rect": [40, 34, 23, 7],
+      "initial_map_visibility": "FULL",
+      "minimum_access": "PUBLIC"
+    }
+  },
+  "connectors": [
+    {"id": "yard_reception_gate", "rect": [12, 32, 2, 3], "connects": ["external_infiltration_yard", "reception_checkpoint"]},
+    {"id": "reception_west_service", "rect": [6, 25, 13, 3], "connects": ["reception_checkpoint", "locker_room", "staff_office"]},
+    {"id": "locker_service_spur", "rect": [6, 23, 3, 2], "connects": ["locker_room", "reception_checkpoint"]},
+    {"id": "staff_service_spur", "rect": [18, 23, 3, 2], "connects": ["staff_office", "reception_checkpoint"]},
+    {"id": "guard_break_locker_stair", "rect": [5, 12, 3, 3], "connects": ["guard_break_room", "locker_room"]},
+    {"id": "guard_break_cctv_link", "rect": [11, 7, 3, 2], "connects": ["guard_break_room", "cctv_control_room"]},
+    {"id": "locker_staff_doorway", "rect": [11, 18, 3, 2], "connects": ["locker_room", "staff_office"]},
+    {"id": "cctv_staff_doorway", "rect": [18, 12, 3, 3], "connects": ["cctv_control_room", "staff_office"]},
+    {"id": "cctv_server_link", "rect": [24, 7, 3, 2], "connects": ["cctv_control_room", "server_room"]},
+    {"id": "staff_electrical_link", "rect": [24, 18, 3, 2], "connects": ["staff_office", "electrical_room"]},
+    {"id": "server_electrical_link", "rect": [31, 12, 3, 3], "connects": ["server_room", "electrical_room"]},
+    {"id": "server_research_link", "rect": [37, 7, 3, 3], "connects": ["server_room", "research_laboratory"]},
+    {"id": "reception_security_link", "rect": [24, 32, 3, 2], "connects": ["reception_checkpoint", "security_office"]},
+    {"id": "electrical_security_link", "rect": [31, 24, 3, 4], "connects": ["electrical_room", "security_office"]},
+    {"id": "electrical_laser_link", "rect": [37, 18, 3, 2], "connects": ["electrical_room", "laser_corridor"]},
+    {"id": "research_laser_link", "rect": [45, 13, 3, 3], "connects": ["research_laboratory", "laser_corridor"]},
+    {"id": "laser_vault_link", "rect": [52, 18, 3, 3], "connects": ["laser_corridor", "vault_antechamber"]},
+    {"id": "laser_maintenance_link", "rect": [45, 21, 3, 3], "connects": ["laser_corridor", "maintenance_passage"]},
+    {"id": "security_maintenance_link", "rect": [37, 28, 3, 3], "connects": ["security_office", "maintenance_passage"]},
+    {"id": "maintenance_extraction_link", "rect": [45, 32, 3, 2], "connects": ["maintenance_passage", "extraction_route"]},
+    {"id": "vault_ante_vault_link", "rect": [58, 13, 3, 2], "connects": ["vault_antechamber", "chronos_vault"]},
+    {"id": "vault_extraction_link", "rect": [58, 25, 3, 9], "connects": ["vault_antechamber", "extraction_route"]},
+    {"id": "extraction_yard_link", "rect": [12, 38, 28, 2], "connects": ["extraction_route", "external_infiltration_yard"]}
+  ],
+  "dynamic_portals": [
+    {
+      "id": "door_reception_checkpoint_01",
+      "type": "security_door",
+      "anchor": [13, 33],
+      "span_rect": [13, 32, 1, 3],
+      "connects": ["external_infiltration_yard", "reception_checkpoint"],
+      "required_access": "PUBLIC",
+      "initially_open": false,
+      "blocks_movement_when_closed": true,
+      "blocks_guard_los_when_closed": true,
+      "blocks_camera_los_when_closed": true,
+      "blocks_player_visibility_when_closed": true
+    },
+    {
+      "id": "door_staff_l1_01",
+      "type": "security_door",
+      "anchor": [19, 24],
+      "span_rect": [18, 24, 3, 1],
+      "connects": ["reception_checkpoint", "staff_office"],
+      "required_access": "LEVEL_1",
+      "initially_open": false
+    },
+    {
+      "id": "door_cctv_l1_01",
+      "type": "security_door",
+      "anchor": [19, 13],
+      "span_rect": [18, 13, 3, 1],
+      "connects": ["staff_office", "cctv_control_room"],
+      "required_access": "LEVEL_1",
+      "initially_open": false
+    },
+    {
+      "id": "door_staff_locker_l1_01",
+      "type": "security_door",
+      "anchor": [12, 19],
+      "span_rect": [12, 18, 1, 2],
+      "connects": ["locker_room", "staff_office"],
+      "required_access": "LEVEL_1",
+      "initially_open": false
+    },
+    {
+      "id": "door_cctv_service_l1_01",
+      "type": "security_door",
+      "anchor": [12, 7],
+      "span_rect": [12, 7, 1, 2],
+      "connects": ["guard_break_room", "cctv_control_room"],
+      "required_access": "LEVEL_1",
+      "initially_open": false
+    },
+    {
+      "id": "door_electrical_l1_01",
+      "type": "security_door",
+      "anchor": [25, 19],
+      "span_rect": [25, 18, 1, 2],
+      "connects": ["staff_office", "electrical_room"],
+      "required_access": "LEVEL_1",
+      "initially_open": false
+    },
+    {
+      "id": "door_security_l1_01",
+      "type": "security_door",
+      "anchor": [25, 33],
+      "span_rect": [25, 32, 1, 2],
+      "connects": ["reception_checkpoint", "security_office"],
+      "required_access": "LEVEL_1",
+      "initially_open": false
+    },
+    {
+      "id": "door_server_l2_01",
+      "type": "security_door",
+      "anchor": [32, 13],
+      "span_rect": [31, 13, 3, 1],
+      "connects": ["electrical_room", "server_room"],
+      "required_access": "LEVEL_2",
+      "initially_open": false
+    },
+    {
+      "id": "door_server_cctv_l2_01",
+      "type": "security_door",
+      "anchor": [25, 7],
+      "span_rect": [25, 7, 1, 2],
+      "connects": ["cctv_control_room", "server_room"],
+      "required_access": "LEVEL_2",
+      "initially_open": false
+    },
+    {
+      "id": "door_research_l2_01",
+      "type": "security_door",
+      "anchor": [39, 8],
+      "span_rect": [39, 7, 1, 3],
+      "connects": ["server_room", "research_laboratory"],
+      "required_access": "LEVEL_2",
+      "initially_open": false
+    },
+    {
+      "id": "door_vault_ante_l2_01",
+      "type": "security_door",
+      "anchor": [53, 19],
+      "span_rect": [53, 18, 1, 3],
+      "connects": ["laser_corridor", "vault_antechamber"],
+      "required_access": "LEVEL_2",
+      "required_flags_all": ["laser_network_offline"],
+      "initially_open": false
+    },
+    {
+      "id": "door_vault_authorization_01",
+      "type": "security_door",
+      "anchor": [59, 14],
+      "span_rect": [58, 14, 3, 1],
+      "connects": ["vault_antechamber", "chronos_vault"],
+      "required_access": "VAULT",
+      "required_flags_all": ["laser_network_offline", "vault_authorized"],
+      "initially_open": false
+    },
+    {
+      "id": "door_maintenance_l2_01",
+      "type": "security_door",
+      "anchor": [39, 29],
+      "span_rect": [39, 28, 1, 3],
+      "connects": ["security_office", "maintenance_passage"],
+      "required_access": "LEVEL_2",
+      "required_flags_all": ["maintenance_passage_discovered"],
+      "initially_open": false,
+      "initially_hidden": true
+    },
+    {
+      "id": "door_vault_extraction_01",
+      "type": "security_door",
+      "anchor": [59, 32],
+      "span_rect": [58, 32, 3, 1],
+      "connects": ["vault_antechamber", "extraction_route"],
+      "required_access": "PUBLIC",
+      "required_flags_all": ["chronos_core_stolen"],
+      "initially_open": false
+    },
+    {
+      "id": "door_extraction_yard_01",
+      "type": "security_door",
+      "anchor": [39, 38],
+      "span_rect": [39, 38, 1, 2],
+      "connects": ["extraction_route", "external_infiltration_yard"],
+      "required_access": "PUBLIC",
+      "required_flags_all": ["chronos_core_stolen"],
+      "initially_open": false
+    }
+  ],
+  "objects": {
+    "player_spawn": {"position": [7, 38], "zone_id": "external_infiltration_yard"},
+    "checkpoint_infiltration_01": {"position": [15, 33], "zone_id": "reception_checkpoint"},
+    "keycard_level_1_01": {"position": [6, 19], "zone_id": "locker_room", "grants_access": "LEVEL_1"},
+    "keycard_level_2_01": {"position": [32, 32], "zone_id": "security_office", "grants_access": "LEVEL_2"},
+    "terminal_staff_intel_01": {"position": [17, 21], "zone_id": "staff_office", "sets_flag": "locker_clue_read"},
+    "terminal_guard_distraction_01": {"position": [5, 6], "zone_id": "guard_break_room", "optional": true},
+    "terminal_security_map_01": {"position": [34, 33], "zone_id": "security_office", "sets_flag": "maintenance_passage_discovered"},
+    "objective_chronos_core_01": {"position": [58, 8], "zone_id": "chronos_vault", "interaction_seconds": 1.2},
+    "extraction_yard_01": {"position": [4, 39], "zone_id": "external_infiltration_yard", "requires_flags_all": ["chronos_core_stolen"]}
+  },
+  "access_control": {
+    "levels": [
+      {"id": "PUBLIC", "rank": 0},
+      {"id": "LEVEL_1", "rank": 1},
+      {"id": "LEVEL_2", "rank": 2},
+      {"id": "VAULT", "rank": 3}
+    ],
+    "physical_cards": ["keycard_level_1_01", "keycard_level_2_01"],
+    "vault_credential_sources_any": ["terminal_server_override_01", "terminal_research_biometric_01"],
+    "timeline_rules": {
+      "player_inventory": "REWINDABLE_SNAPSHOT",
+      "card_world_state": "REWINDABLE_SNAPSHOT",
+      "recall_charge_consumption": "MISSION_PERSISTENT",
+      "echo_may_replay_authorized_door_interaction": true,
+      "echo_may_pick_up_cards": false,
+      "echo_may_grant_access": false,
+      "echo_may_transfer_inventory": false,
+      "echo_may_collect_chronos_core": false
+    }
+  },
+  "security": {
+    "cctv_network": {
+      "id": "cctv_network_helix_01",
+      "initially_online": true,
+      "terminal": {
+        "id": "terminal_cctv_network_01",
+        "position": [18, 7],
+        "zone_id": "cctv_control_room",
+        "interaction_seconds": 3.0,
+        "required_access": "LEVEL_1",
+        "sets_flag": "cctv_network_offline"
+      },
+      "detection_targets": ["player_live", "echo"],
+      "echo_rule": "VISIBLE_DISTRACTION_ONLY",
+      "detection_threshold_seconds": 0.8,
+      "on_threshold": "RAISE_ZONE_ALERT_AND_INVESTIGATE_LAST_SEEN",
+      "offline_behavior": "STOP_SWEEP_AND_DETECTION",
+      "rewind_state": "REWINDABLE_SNAPSHOT",
+      "cameras": [
+        {"id": "camera_reception_01", "position": [23, 30], "zone_id": "zone_reception", "center_facing_degrees": 180.0, "sweep_half_angle_degrees": 45.0, "angular_speed_degrees_per_second": 22.0, "start_phase_seconds": 0.0, "vision_distance": 224.0, "vision_half_angle_degrees": 30.0},
+        {"id": "camera_staff_01", "position": [23, 17], "zone_id": "zone_office", "center_facing_degrees": 180.0, "sweep_half_angle_degrees": 38.0, "angular_speed_degrees_per_second": 20.0, "start_phase_seconds": 3.0, "vision_distance": 224.0, "vision_half_angle_degrees": 30.0},
+        {"id": "camera_cctv_01", "position": [23, 6], "zone_id": "zone_cctv", "center_facing_degrees": 180.0, "sweep_half_angle_degrees": 42.0, "angular_speed_degrees_per_second": 18.0, "start_phase_seconds": 6.0, "vision_distance": 224.0, "vision_half_angle_degrees": 30.0},
+        {"id": "camera_security_01", "position": [36, 34], "zone_id": "zone_reception", "center_facing_degrees": 180.0, "sweep_half_angle_degrees": 36.0, "angular_speed_degrees_per_second": 20.0, "start_phase_seconds": 2.0, "vision_distance": 224.0, "vision_half_angle_degrees": 30.0},
+        {"id": "camera_electrical_01", "position": [36, 20], "zone_id": "zone_electrical", "center_facing_degrees": 180.0, "sweep_half_angle_degrees": 40.0, "angular_speed_degrees_per_second": 18.0, "start_phase_seconds": 8.0, "vision_distance": 224.0, "vision_half_angle_degrees": 30.0},
+        {"id": "camera_research_01", "position": [51, 7], "zone_id": "zone_research", "center_facing_degrees": 180.0, "sweep_half_angle_degrees": 45.0, "angular_speed_degrees_per_second": 16.0, "start_phase_seconds": 5.0, "vision_distance": 224.0, "vision_half_angle_degrees": 30.0},
+        {"id": "camera_laser_01", "position": [51, 17], "zone_id": "zone_vault", "center_facing_degrees": 180.0, "sweep_half_angle_degrees": 32.0, "angular_speed_degrees_per_second": 20.0, "start_phase_seconds": 9.0, "vision_distance": 192.0, "vision_half_angle_degrees": 28.0},
+        {"id": "camera_vault_ante_01", "position": [62, 22], "zone_id": "zone_vault", "center_facing_degrees": 270.0, "sweep_half_angle_degrees": 35.0, "angular_speed_degrees_per_second": 18.0, "start_phase_seconds": 4.0, "vision_distance": 192.0, "vision_half_angle_degrees": 28.0}
+      ]
+    },
+    "laser_network": {
+      "id": "laser_network_vault_01",
+      "initially_online": true,
+      "terminal": {
+        "id": "terminal_laser_network_01",
+        "position": [32, 19],
+        "zone_id": "electrical_room",
+        "interaction_seconds": 3.0,
+        "required_access": "LEVEL_1",
+        "sets_flag": "laser_network_offline"
+      },
+      "active_contact_result": "ALARM_AND_CAPTURE_REQUEST",
+      "blocks_movement": false,
+      "blocks_guard_los": false,
+      "blocks_player_visibility": false,
+      "rewind_state": "REWINDABLE_SNAPSHOT",
+      "barriers": [
+        {"id": "laser_vault_01", "anchor": [44, 18], "span_rect": [44, 16, 1, 5]},
+        {"id": "laser_vault_02", "anchor": [47, 18], "span_rect": [47, 16, 1, 5]},
+        {"id": "laser_vault_03", "anchor": [50, 18], "span_rect": [50, 16, 1, 5]}
+      ]
+    },
+    "vault_authorization": {
+      "completion_logic": "ANY",
+      "sets_flag": "vault_authorized",
+      "sources": [
+        {
+          "id": "terminal_server_override_01",
+          "position": [32, 7],
+          "zone_id": "server_room",
+          "interaction_seconds": 3.5,
+          "required_access": "LEVEL_2",
+          "sets_flag": "server_override_completed"
+        },
+        {
+          "id": "terminal_research_biometric_01",
+          "position": [46, 8],
+          "zone_id": "research_laboratory",
+          "interaction_seconds": 2.5,
+          "required_access": "LEVEL_2",
+          "sets_flag": "biometric_sample_acquired"
+        }
+      ]
+    }
+  },
+  "objectives": {
+    "initial_active": ["objective_infiltrate"],
+    "topological_order": [
+      "objective_infiltrate",
+      "objective_acquire_level_1",
+      "objective_neutralize_or_bypass_cctv",
+      "objective_disable_lasers",
+      "objective_acquire_level_2",
+      "objective_acquire_vault_authorization",
+      "objective_enter_vault",
+      "objective_steal_chronos_core",
+      "objective_extract"
+    ],
+    "nodes": {
+      "objective_infiltrate": {
+        "initial_state": "ACTIVE",
+        "prerequisites_all": [],
+        "completion_flags_all": ["facility_infiltrated"]
+      },
+      "objective_acquire_level_1": {
+        "initial_state": "LOCKED",
+        "prerequisites_all": ["objective_infiltrate"],
+        "completion_flags_all": ["access_level_1_acquired"]
+      },
+      "objective_neutralize_or_bypass_cctv": {
+        "initial_state": "LOCKED",
+        "prerequisites_all": ["objective_acquire_level_1"],
+        "completion_flags_any": ["cctv_network_offline", "cctv_safe_route_confirmed"]
+      },
+      "objective_disable_lasers": {
+        "initial_state": "LOCKED",
+        "prerequisites_all": ["objective_acquire_level_1"],
+        "completion_flags_all": ["laser_network_offline"]
+      },
+      "objective_acquire_level_2": {
+        "initial_state": "LOCKED",
+        "prerequisites_all": ["objective_acquire_level_1"],
+        "completion_flags_all": ["access_level_2_acquired"]
+      },
+      "objective_acquire_vault_authorization": {
+        "initial_state": "LOCKED",
+        "prerequisites_all": ["objective_acquire_level_2"],
+        "completion_flags_any": ["biometric_sample_acquired", "server_override_completed"]
+      },
+      "objective_enter_vault": {
+        "initial_state": "LOCKED",
+        "prerequisites_all": ["objective_disable_lasers", "objective_acquire_level_2", "objective_acquire_vault_authorization"],
+        "completion_flags_all": ["vault_door_open"]
+      },
+      "objective_steal_chronos_core": {
+        "initial_state": "LOCKED",
+        "prerequisites_all": ["objective_enter_vault"],
+        "completion_flags_all": ["laser_network_offline", "vault_authorized", "vault_door_open", "chronos_core_stolen"]
+      },
+      "objective_extract": {
+        "initial_state": "LOCKED",
+        "prerequisites_all": ["objective_steal_chronos_core"],
+        "completion_flags_all": ["mission_extracted"]
+      }
+    }
+  },
+  "internal_solid_rects": [
+    {"id": "reception_desk", "rect": [18, 31, 3, 1], "collision": true, "occludes_guard_los": true},
+    {"id": "locker_bank_north", "rect": [3, 16, 6, 1], "collision": true, "occludes_guard_los": true},
+    {"id": "locker_bank_south", "rect": [3, 21, 6, 1], "collision": true, "occludes_guard_los": true},
+    {"id": "staff_desk_west", "rect": [16, 16, 2, 1], "collision": true, "occludes_guard_los": true},
+    {"id": "staff_desk_east", "rect": [21, 21, 2, 1], "collision": true, "occludes_guard_los": true},
+    {"id": "guard_break_table", "rect": [7, 8, 2, 1], "collision": true, "occludes_guard_los": false},
+    {"id": "cctv_monitor_bank", "rect": [20, 7, 2, 2], "collision": true, "occludes_guard_los": true},
+    {"id": "security_desk", "rect": [29, 30, 4, 1], "collision": true, "occludes_guard_los": true},
+    {"id": "electrical_cabinet_west", "rect": [29, 17, 1, 4], "collision": true, "occludes_guard_los": true},
+    {"id": "electrical_cabinet_east", "rect": [34, 18, 1, 3], "collision": true, "occludes_guard_los": true},
+    {"id": "server_rack_west", "rect": [29, 6, 1, 4], "collision": true, "occludes_guard_los": true},
+    {"id": "server_rack_east", "rect": [34, 6, 1, 4], "collision": true, "occludes_guard_los": true},
+    {"id": "research_bench_north", "rect": [43, 7, 3, 1], "collision": true, "occludes_guard_los": true},
+    {"id": "research_bench_south", "rect": [47, 10, 3, 1], "collision": true, "occludes_guard_los": true},
+    {"id": "maintenance_machine_west", "rect": [42, 26, 2, 4], "collision": true, "occludes_guard_los": true},
+    {"id": "maintenance_machine_east", "rect": [48, 27, 2, 3], "collision": true, "occludes_guard_los": true}
+  ],
+  "observation_windows": [
+    {"id": "window_cctv_staff_01", "rect": [15, 13, 3, 1], "blocks_movement": true, "blocks_guard_los": false, "blocks_camera_los": false, "blocks_player_visibility": false},
+    {"id": "window_lab_vault_01", "rect": [52, 7, 2, 3], "blocks_movement": true, "blocks_guard_los": false, "blocks_camera_los": false, "blocks_player_visibility": false}
+  ],
+  "guard_zones": [
+    {
+      "id": "zone_outer_yard",
+      "allowed_rect": [1, 28, 13, 13],
+      "anchor": [6, 34],
+      "max_active_guards": 2,
+      "assigned_guards": ["guard_yard_01", "guard_yard_02"],
+      "adjacent_chase_zones": ["zone_reception"],
+      "choke_points": ["choke_yard_reception", "choke_extraction_yard"],
+      "safe_windows": ["window_yard_reception", "window_extraction_yard"]
+    },
+    {
+      "id": "zone_reception",
+      "allowed_rect": [13, 27, 14, 11],
+      "anchor": [18, 33],
+      "max_active_guards": 1,
+      "assigned_guards": ["guard_reception_01"],
+      "adjacent_chase_zones": ["zone_outer_yard", "zone_office"],
+      "choke_points": ["choke_yard_reception", "choke_reception_security"],
+      "safe_windows": ["window_yard_reception", "window_reception_security"]
+    },
+    {
+      "id": "zone_office",
+      "allowed_rect": [1, 14, 24, 14],
+      "anchor": [17, 19],
+      "max_active_guards": 1,
+      "assigned_guards": ["guard_office_01"],
+      "adjacent_chase_zones": ["zone_reception", "zone_cctv", "zone_electrical"],
+      "choke_points": ["choke_locker_staff", "choke_staff_electrical"],
+      "safe_windows": ["window_locker_staff", "window_staff_electrical"]
+    },
+    {
+      "id": "zone_cctv",
+      "allowed_rect": [1, 3, 26, 12],
+      "anchor": [18, 8],
+      "max_active_guards": 1,
+      "assigned_guards": ["guard_cctv_01"],
+      "adjacent_chase_zones": ["zone_office", "zone_research"],
+      "choke_points": ["choke_cctv_terminal"],
+      "safe_windows": ["window_cctv_terminal"]
+    },
+    {
+      "id": "zone_electrical",
+      "allowed_rect": [26, 14, 14, 14],
+      "anchor": [32, 20],
+      "max_active_guards": 1,
+      "assigned_guards": ["guard_electrical_01"],
+      "adjacent_chase_zones": ["zone_office", "zone_reception", "zone_research", "zone_vault"],
+      "choke_points": ["choke_staff_electrical", "choke_electrical_laser", "choke_laser_terminal"],
+      "safe_windows": ["window_staff_electrical", "window_electrical_laser", "window_laser_terminal"]
+    },
+    {
+      "id": "zone_research",
+      "allowed_rect": [26, 3, 27, 12],
+      "anchor": [39, 8],
+      "max_active_guards": 2,
+      "assigned_guards": ["guard_server_01", "guard_research_01"],
+      "adjacent_chase_zones": ["zone_cctv", "zone_electrical", "zone_vault"],
+      "choke_points": ["choke_server_research", "choke_server_terminal", "choke_research_terminal"],
+      "safe_windows": ["window_server_research", "window_server_terminal", "window_research_terminal"]
+    },
+    {
+      "id": "zone_vault",
+      "allowed_rect": [52, 3, 11, 31],
+      "anchor": [58, 19],
+      "max_active_guards": 2,
+      "assigned_guards": ["guard_vault_ante_01", "guard_vault_01"],
+      "adjacent_chase_zones": ["zone_research", "zone_electrical"],
+      "choke_points": ["choke_laser_vault", "choke_vault_door", "choke_vault_extraction"],
+      "safe_windows": ["window_laser_vault", "window_core_pedestal", "window_vault_extraction"]
+    }
+  ],
+  "guards": [
+    {
+      "id": "guard_yard_01",
+      "zone_id": "zone_outer_yard",
+      "spawn": [3, 30],
+      "initial_facing": [1, 0],
+      "route_mode": "LOOP",
+      "waypoints": [[3, 30], [10, 30], [10, 36], [3, 36]],
+      "waypoint_wait_seconds": [0.8, 0.8, 0.8, 0.8],
+      "start_phase_seconds": 0.0,
+      "movement_speed": 42.0,
+      "allowed_chase_zones": ["zone_outer_yard", "zone_reception"],
+      "return_point": [3, 30],
+      "reservation_group": "yard_north"
+    },
+    {
+      "id": "guard_yard_02",
+      "zone_id": "zone_outer_yard",
+      "spawn": [2, 39],
+      "initial_facing": [-1, 0],
+      "route_mode": "PING_PONG",
+      "waypoints": [[2, 39], [10, 39]],
+      "waypoint_wait_seconds": [1.0, 8.0],
+      "start_phase_seconds": 7.5,
+      "movement_speed": 40.0,
+      "allowed_chase_zones": ["zone_outer_yard"],
+      "return_point": [2, 39],
+      "reservation_group": "yard_south"
+    },
+    {
+      "id": "guard_reception_01",
+      "zone_id": "zone_reception",
+      "spawn": [16, 30],
+      "initial_facing": [1, 0],
+      "route_mode": "LOOP",
+      "waypoints": [[16, 30], [22, 30], [22, 35], [16, 35]],
+      "waypoint_wait_seconds": [0.7, 1.0, 0.7, 1.0],
+      "start_phase_seconds": 3.0,
+      "movement_speed": 44.0,
+      "allowed_chase_zones": ["zone_reception", "zone_outer_yard", "zone_office"],
+      "return_point": [16, 30],
+      "reservation_group": "reception"
+    },
+    {
+      "id": "guard_office_01",
+      "zone_id": "zone_office",
+      "spawn": [16, 19],
+      "initial_facing": [1, 0],
+      "route_mode": "LOOP",
+      "waypoints": [[16, 19], [22, 19], [16, 19], [12, 19], [9, 19], [5, 19], [9, 19], [12, 19]],
+      "waypoint_wait_seconds": [0.6, 1.2, 0.6, 0.4, 0.4, 1.4, 0.4, 0.4],
+      "start_phase_seconds": 0.0,
+      "movement_speed": 42.0,
+      "allowed_chase_zones": ["zone_office", "zone_reception", "zone_cctv", "zone_electrical"],
+      "return_point": [16, 19],
+      "reservation_group": "office_locker"
+    },
+    {
+      "id": "guard_cctv_01",
+      "zone_id": "zone_cctv",
+      "spawn": [15, 5],
+      "initial_facing": [1, 0],
+      "route_mode": "LOOP",
+      "waypoints": [[15, 5], [22, 5], [22, 10], [15, 10]],
+      "waypoint_wait_seconds": [0.8, 1.2, 0.8, 1.2],
+      "start_phase_seconds": 1.5,
+      "movement_speed": 40.0,
+      "allowed_chase_zones": ["zone_cctv", "zone_office", "zone_research"],
+      "return_point": [15, 5],
+      "reservation_group": "cctv_room"
+    },
+    {
+      "id": "guard_electrical_01",
+      "zone_id": "zone_electrical",
+      "spawn": [28, 16],
+      "initial_facing": [1, 0],
+      "route_mode": "LOOP",
+      "waypoints": [[28, 16], [35, 16], [35, 22], [28, 22]],
+      "waypoint_wait_seconds": [0.8, 1.0, 0.8, 1.0],
+      "start_phase_seconds": 5.0,
+      "movement_speed": 42.0,
+      "allowed_chase_zones": ["zone_electrical", "zone_office", "zone_reception", "zone_research", "zone_vault"],
+      "return_point": [28, 16],
+      "reservation_group": "electrical_room"
+    },
+    {
+      "id": "guard_server_01",
+      "zone_id": "zone_research",
+      "spawn": [28, 5],
+      "initial_facing": [1, 0],
+      "route_mode": "LOOP",
+      "waypoints": [[28, 5], [35, 5], [35, 10], [28, 10]],
+      "waypoint_wait_seconds": [1.0, 0.8, 1.0, 0.8],
+      "start_phase_seconds": 2.0,
+      "movement_speed": 40.0,
+      "allowed_chase_zones": ["zone_research", "zone_cctv", "zone_electrical"],
+      "return_point": [28, 5],
+      "reservation_group": "server_room"
+    },
+    {
+      "id": "guard_research_01",
+      "zone_id": "zone_research",
+      "spawn": [41, 5],
+      "initial_facing": [1, 0],
+      "route_mode": "LOOP",
+      "waypoints": [[41, 5], [50, 5], [50, 11], [41, 11]],
+      "waypoint_wait_seconds": [0.8, 1.2, 0.8, 1.2],
+      "start_phase_seconds": 9.0,
+      "movement_speed": 44.0,
+      "allowed_chase_zones": ["zone_research", "zone_vault", "zone_electrical"],
+      "return_point": [41, 5],
+      "reservation_group": "research_lab"
+    },
+    {
+      "id": "guard_vault_ante_01",
+      "zone_id": "zone_vault",
+      "spawn": [56, 17],
+      "initial_facing": [1, 0],
+      "route_mode": "LOOP",
+      "waypoints": [[56, 17], [61, 17], [61, 23], [56, 23]],
+      "waypoint_wait_seconds": [1.0, 0.8, 1.0, 0.8],
+      "start_phase_seconds": 4.0,
+      "movement_speed": 42.0,
+      "allowed_chase_zones": ["zone_vault", "zone_research", "zone_electrical"],
+      "return_point": [56, 17],
+      "reservation_group": "vault_ante"
+    },
+    {
+      "id": "guard_vault_01",
+      "zone_id": "zone_vault",
+      "spawn": [55, 5],
+      "initial_facing": [1, 0],
+      "route_mode": "LOOP",
+      "waypoints": [[55, 5], [61, 5], [61, 11], [55, 11]],
+      "waypoint_wait_seconds": [0.8, 1.2, 0.8, 1.2],
+      "start_phase_seconds": 11.0,
+      "movement_speed": 40.0,
+      "allowed_chase_zones": ["zone_vault"],
+      "return_point": [55, 5],
+      "reservation_group": "chronos_vault"
+    }
+  ],
+  "guard_perception_defaults": {
+    "vision_distance": 220.0,
+    "vision_half_angle_degrees": 38.0,
+    "walking_proximity_radius": 48.0,
+    "running_proximity_radius": 88.0,
+    "stationary_proximity_radius": 40.0,
+    "echo_proximity_multiplier": 0.9,
+    "direct_contact_distance": 18.0,
+    "proximity_requires_clear_los": true,
+    "closed_doors_block_proximity": true,
+    "suspicion_gain_vision_per_second": 1.4,
+    "suspicion_gain_proximity_per_second": 2.6,
+    "suspicion_loss_per_second": 0.8
+  },
+  "choke_points": [
+    {"id": "choke_yard_reception", "rect": [12, 32, 2, 3], "capacity": 1, "reservation_hold_cells": [[10, 33], [15, 33]], "blocking_guard_ids": ["guard_yard_01", "guard_reception_01"], "cycle_seconds": 30.0, "safe_windows": [{"id": "window_yard_reception", "start_seconds": 6.0, "duration_seconds": 4.5}, {"id": "window_yard_reception_b", "start_seconds": 20.0, "duration_seconds": 5.0}]},
+    {"id": "choke_locker_staff", "rect": [11, 18, 3, 2], "capacity": 1, "reservation_hold_cells": [[9, 19], [15, 19]], "blocking_guard_ids": ["guard_office_01"], "cycle_seconds": 30.0, "safe_windows": [{"id": "window_locker_staff", "start_seconds": 4.0, "duration_seconds": 5.0}, {"id": "window_locker_staff_b", "start_seconds": 18.0, "duration_seconds": 4.0}]},
+    {"id": "choke_reception_security", "rect": [24, 32, 3, 2], "capacity": 1, "reservation_hold_cells": [[22, 33], [28, 33]], "blocking_guard_ids": ["guard_reception_01"], "cycle_seconds": 30.0, "safe_windows": [{"id": "window_reception_security", "start_seconds": 8.0, "duration_seconds": 5.0}]},
+    {"id": "choke_staff_electrical", "rect": [24, 18, 3, 2], "capacity": 1, "reservation_hold_cells": [[22, 19], [28, 19]], "blocking_guard_ids": ["guard_office_01", "guard_electrical_01"], "cycle_seconds": 30.0, "safe_windows": [{"id": "window_staff_electrical", "start_seconds": 10.0, "duration_seconds": 4.0}]},
+    {"id": "choke_cctv_terminal", "rect": [17, 6, 3, 3], "capacity": 1, "reservation_hold_cells": [[16, 8]], "blocking_guard_ids": ["guard_cctv_01"], "cycle_seconds": 30.0, "safe_windows": [{"id": "window_cctv_terminal", "start_seconds": 9.0, "duration_seconds": 4.5}]},
+    {"id": "choke_laser_terminal", "rect": [31, 18, 3, 3], "capacity": 1, "reservation_hold_cells": [[31, 21]], "blocking_guard_ids": ["guard_electrical_01"], "cycle_seconds": 30.0, "safe_windows": [{"id": "window_laser_terminal", "start_seconds": 13.0, "duration_seconds": 4.0}]},
+    {"id": "choke_server_research", "rect": [37, 7, 3, 3], "capacity": 1, "reservation_hold_cells": [[35, 8], [41, 8]], "blocking_guard_ids": ["guard_server_01", "guard_research_01"], "cycle_seconds": 30.0, "safe_windows": [{"id": "window_server_research", "start_seconds": 6.0, "duration_seconds": 5.0}]},
+    {"id": "choke_server_terminal", "rect": [31, 6, 3, 3], "capacity": 1, "reservation_hold_cells": [[31, 10]], "blocking_guard_ids": ["guard_server_01"], "cycle_seconds": 30.0, "safe_windows": [{"id": "window_server_terminal", "start_seconds": 12.0, "duration_seconds": 4.5}]},
+    {"id": "choke_research_terminal", "rect": [45, 7, 3, 3], "capacity": 1, "reservation_hold_cells": [[45, 11]], "blocking_guard_ids": ["guard_research_01"], "cycle_seconds": 30.0, "safe_windows": [{"id": "window_research_terminal", "start_seconds": 15.0, "duration_seconds": 4.0}]},
+    {"id": "choke_electrical_laser", "rect": [37, 18, 3, 2], "capacity": 1, "reservation_hold_cells": [[35, 19], [41, 19]], "blocking_guard_ids": ["guard_electrical_01"], "cycle_seconds": 30.0, "safe_windows": [{"id": "window_electrical_laser", "start_seconds": 5.0, "duration_seconds": 6.0}]},
+    {"id": "choke_laser_vault", "rect": [52, 18, 3, 3], "capacity": 1, "reservation_hold_cells": [[50, 19], [56, 19]], "blocking_guard_ids": ["guard_vault_ante_01"], "cycle_seconds": 30.0, "safe_windows": [{"id": "window_laser_vault", "start_seconds": 11.0, "duration_seconds": 4.0}]},
+    {"id": "choke_vault_door", "rect": [58, 13, 3, 2], "capacity": 1, "reservation_hold_cells": [[59, 16], [59, 11]], "blocking_guard_ids": ["guard_vault_ante_01", "guard_vault_01"], "cycle_seconds": 30.0, "safe_windows": [{"id": "window_core_pedestal", "start_seconds": 16.0, "duration_seconds": 3.5}]},
+    {"id": "choke_security_maintenance", "rect": [37, 28, 3, 3], "capacity": 1, "reservation_hold_cells": [[35, 29], [41, 29]], "blocking_guard_ids": [], "cycle_seconds": 30.0, "safe_windows": [{"id": "window_security_maintenance", "start_seconds": 0.0, "duration_seconds": 30.0}]},
+    {"id": "choke_vault_extraction", "rect": [58, 25, 3, 9], "capacity": 1, "reservation_hold_cells": [[59, 23], [59, 35]], "blocking_guard_ids": ["guard_vault_ante_01"], "cycle_seconds": 30.0, "safe_windows": [{"id": "window_vault_extraction", "start_seconds": 7.0, "duration_seconds": 5.0}]},
+    {"id": "choke_extraction_yard", "rect": [12, 38, 28, 2], "capacity": 2, "reservation_hold_cells": [[10, 38], [41, 38]], "blocking_guard_ids": ["guard_yard_02"], "cycle_seconds": 30.0, "safe_windows": [{"id": "window_extraction_yard", "start_seconds": 14.0, "duration_seconds": 6.0}]}
+  ],
+  "patrol_scheduler": {
+    "deterministic": true,
+    "randomness_allowed": false,
+    "default_narrow_capacity": 1,
+    "default_corridor_capacity": 2,
+    "minimum_declared_safe_window_seconds": 3.0,
+    "reservation_timeout_seconds": 4.0,
+    "blocked_guard_behavior": "WAIT_AT_AUTHORED_HOLD_CELL",
+    "overlap_resolution": "LOWER_STABLE_GUARD_ID_KEEPS_RESERVATION",
+    "simulation_validation_seconds": 180.0
+  },
+  "collision": {
+    "wall_rule": "every in-bounds cell outside rooms, connectors, and dynamic portal underlays, plus internal_solid_rects",
+    "boundary_closed": true,
+    "dynamic_portal_floor_underlay": true,
+    "floor_collision": false,
+    "wall_collision_layer": "World|PlayerVisionBlocker",
+    "decorative_prop_collision": false
+  },
+  "occlusion": {
+    "wall_rule": "same static cell set as collision walls",
+    "closed_security_doors_dynamic": true,
+    "active_lasers_occlude": false,
+    "observation_windows_occlude": false,
+    "internal_solids_occlude_when_flagged": true
+  },
+  "camera": {
+    "limits": [0, 0, 2048, 1344],
+    "recommended_zoom": [2.0, 2.0],
+    "rotation_degrees": 0.0,
+    "player_visibility_radius": 240.0
+  },
+  "mission_rules": {
+    "chrono_recall_charges": 3,
+    "chrono_recall_duration_seconds": 10.0,
+    "maximum_echoes": 3,
+    "recall_required_for_completion": false,
+    "chronos_core_pickup_actor": "player_live_only",
+    "core_theft_alert_delta": 1,
+    "core_theft_reveals_player_globally": false,
+    "pre_core_checkpoint": "MISSION_START",
+    "post_core_checkpoint_enabled": false
+  },
+  "solvability": {
+    "mandatory_room_path": [
+      "external_infiltration_yard",
+      "reception_checkpoint",
+      "locker_room",
+      "security_office",
+      "electrical_room",
+      "server_room|research_laboratory",
+      "laser_corridor",
+      "vault_antechamber",
+      "chronos_vault",
+      "extraction_route",
+      "external_infiltration_yard"
+    ],
+    "no_recall_solution": [
+      "facility_infiltrated",
+      "access_level_1_acquired",
+      "cctv_network_offline|cctv_safe_route_confirmed",
+      "laser_network_offline",
+      "access_level_2_acquired",
+      "biometric_sample_acquired|server_override_completed",
+      "vault_door_open",
+      "chronos_core_stolen",
+      "mission_extracted"
+    ],
+    "recall_assisted_solution": "Echo distracts one bounded-zone Guard while the live Player completes the same acyclic access and security progression",
+    "forbidden_circular_dependencies": [
+      "keycard_level_1_01 behind LEVEL_1",
+      "keycard_level_2_01 behind LEVEL_2",
+      "vault authorization behind VAULT",
+      "laser shutdown behind active laser corridor",
+      "extraction activation before Chronos Core theft"
+    ]
+  },
+  "validation_contract": {
+    "required_room_count": 15,
+    "required_guard_count": 10,
+    "required_camera_count": 8,
+    "required_laser_count": 3,
+    "minimum_map_size": [56, 36],
+    "maximum_map_size": [72, 48],
+    "patrol_simulation_seconds": 180.0,
+    "maximum_guard_overlap_count": 0,
+    "maximum_choke_capacity_violations": 0,
+    "maximum_zone_violations": 0,
+    "maximum_deadlocks": 0,
+    "minimum_declared_safe_window_seconds": 3.0,
+    "requires_no_recall_solution": true,
+    "requires_recall_assisted_solution": true
+  }
+}

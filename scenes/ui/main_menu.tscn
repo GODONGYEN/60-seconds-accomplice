@@ -1,0 +1,167 @@
+[gd_scene load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://scripts/ui/main_menu.gd" id="1_menu"]
+
+[sub_resource type="StyleBoxFlat" id="Style_card"]
+bg_color = Color(0.014, 0.039, 0.068, 0.97)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(0.18, 0.68, 0.72, 0.9)
+corner_radius_top_left = 12
+corner_radius_top_right = 12
+corner_radius_bottom_right = 12
+corner_radius_bottom_left = 12
+content_margin_left = 30.0
+content_margin_top = 24.0
+content_margin_right = 30.0
+content_margin_bottom = 24.0
+
+[node name="MainMenu" type="CanvasLayer"]
+process_mode = 3
+script = ExtResource("1_menu")
+
+[node name="Background" type="ColorRect" parent="."]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0.004, 0.012, 0.024, 1)
+
+[node name="Accent" type="ColorRect" parent="."]
+anchors_preset = 10
+anchor_right = 1.0
+offset_bottom = 6.0
+color = Color(0.18, 0.87, 0.83, 1)
+
+[node name="Center" type="CenterContainer" parent="."]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="Card" type="PanelContainer" parent="Center"]
+custom_minimum_size = Vector2(740, 0)
+layout_mode = 2
+theme_override_styles/panel = SubResource("Style_card")
+
+[node name="Content" type="VBoxContainer" parent="Center/Card"]
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="Title" type="Label" parent="Center/Card/Content"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.3, 0.95, 0.9, 1)
+theme_override_font_sizes/font_size = 46
+text = "SIXTY-SECOND ACCOMPLICE"
+horizontal_alignment = 1
+
+[node name="Subtitle" type="Label" parent="Center/Card/Content"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.62, 0.73, 0.84, 1)
+theme_override_font_sizes/font_size = 17
+text = "A STEALTH HEIST WITH LIMITED TIME RECALL"
+horizontal_alignment = 1
+
+[node name="Divider" type="HSeparator" parent="Center/Card/Content"]
+layout_mode = 2
+
+[node name="NewOperationButton" type="Button" parent="Center/Card/Content"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 56)
+layout_mode = 2
+theme_override_font_sizes/font_size = 21
+text = "NEW OPERATION"
+
+[node name="MissionTitle" type="Label" parent="Center/Card/Content"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.74, 0.55, 0.96, 1)
+theme_override_font_sizes/font_size = 15
+text = "MISSION SELECT"
+
+[node name="BlackMinuteButton" type="Button" parent="Center/Card/Content"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "OPERATION: BLACK MINUTE  //  HEIST MISSION"
+
+[node name="PrototypeButton" type="Button" parent="Center/Card/Content"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "PROTOTYPE LAB  //  20s LOOP REGRESSION"
+
+[node name="FacilityButton" type="Button" parent="Center/Card/Content"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "FACILITY 01  //  60s LOOP REGRESSION"
+
+[node name="UtilityRow" type="HBoxContainer" parent="Center/Card/Content"]
+layout_mode = 2
+alignment = 1
+theme_override_constants/separation = 10
+
+[node name="HowButton" type="Button" parent="Center/Card/Content/UtilityRow"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(180, 42)
+layout_mode = 2
+text = "HOW TO PLAY"
+
+[node name="SettingsButton" type="Button" parent="Center/Card/Content/UtilityRow"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(150, 42)
+layout_mode = 2
+text = "SETTINGS"
+
+[node name="CreditsButton" type="Button" parent="Center/Card/Content/UtilityRow"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(150, 42)
+layout_mode = 2
+text = "CREDITS"
+
+[node name="Footer" type="Label" parent="Center/Card/Content"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.42, 0.53, 0.63, 1)
+theme_override_font_sizes/font_size = 12
+text = "OFFLINE SINGLE PLAYER  •  NO ACCOUNT  •  NO TRACKING"
+horizontal_alignment = 1
+
+[node name="InfoPanel" type="PanelContainer" parent="."]
+unique_name_in_owner = true
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -310.0
+offset_top = -150.0
+offset_right = 310.0
+offset_bottom = 150.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_styles/panel = SubResource("Style_card")
+
+[node name="Content" type="VBoxContainer" parent="InfoPanel"]
+layout_mode = 2
+theme_override_constants/separation = 16
+
+[node name="InfoTitle" type="Label" parent="InfoPanel/Content"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_colors/font_color = Color(0.32, 0.94, 0.9, 1)
+theme_override_font_sizes/font_size = 25
+text = "INFO"
+
+[node name="InfoBody" type="Label" parent="InfoPanel/Content"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_vertical = 3
+theme_override_font_sizes/font_size = 16
+text = "Information"
+autowrap_mode = 2
+
+[node name="CloseInfoButton" type="Button" parent="InfoPanel/Content"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "CLOSE"

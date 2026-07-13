@@ -143,6 +143,10 @@ func _reset_timeline_from_ui() -> void:
 
 
 func _toggle_fullscreen() -> void:
+	var global_owner := _get_global_utility_input_owner()
+	if global_owner != null:
+		global_owner.call(&"toggle_global_fullscreen")
+		return
 	var current_mode := DisplayServer.window_get_mode()
 	if current_mode == DisplayServer.WINDOW_MODE_FULLSCREEN:
 		DisplayServer.window_set_mode(DisplayServer.WINDOW_MODE_WINDOWED)
@@ -151,6 +155,11 @@ func _toggle_fullscreen() -> void:
 
 
 func _toggle_mute() -> void:
+	var global_owner := _get_global_utility_input_owner()
+	if global_owner != null:
+		var muted: bool = bool(global_owner.call(&"toggle_global_mute"))
+		hud.set_muted(muted)
+		return
 	_muted = not _muted
 	var master_bus := AudioServer.get_bus_index(&"Master")
 	if master_bus >= 0:
@@ -167,3 +176,13 @@ func _set_volume(linear_volume: float) -> void:
 		master_bus,
 		-80.0 if safe_volume <= 0.001 else linear_to_db(safe_volume)
 	)
+
+
+func _get_global_utility_input_owner() -> Node:
+	var ancestor: Node = get_parent()
+	while ancestor != null:
+		if ancestor.has_method(&"owns_global_utility_input"):
+			if bool(ancestor.call(&"owns_global_utility_input")):
+				return ancestor
+		ancestor = ancestor.get_parent()
+	return null

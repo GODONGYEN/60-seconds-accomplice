@@ -1,0 +1,165 @@
+[gd_scene load_steps=5 format=3]
+
+[ext_resource type="Script" path="res://scripts/ui/mission_briefing.gd" id="1_briefing"]
+[ext_resource type="Script" path="res://scripts/ui/facility_map_view.gd" id="2_map"]
+[ext_resource type="FontFile" path="res://assets/fonts/noto_sans_kr_ui_subset.ttf" id="3_ko_font"]
+
+[sub_resource type="StyleBoxFlat" id="Style_card"]
+bg_color = Color(0.018, 0.045, 0.078, 0.98)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(0.21, 0.77, 0.8, 0.9)
+corner_radius_top_left = 12
+corner_radius_top_right = 12
+corner_radius_bottom_right = 12
+corner_radius_bottom_left = 12
+content_margin_left = 28.0
+content_margin_top = 22.0
+content_margin_right = 28.0
+content_margin_bottom = 22.0
+
+[node name="MissionBriefing" type="CanvasLayer"]
+process_mode = 3
+script = ExtResource("1_briefing")
+
+[node name="Shade" type="ColorRect" parent="."]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0.005, 0.012, 0.025, 0.98)
+
+[node name="Margin" type="MarginContainer" parent="."]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 30.0
+offset_top = 24.0
+offset_right = -30.0
+offset_bottom = -24.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="Card" type="PanelContainer" parent="Margin"]
+layout_mode = 2
+theme_override_styles/panel = SubResource("Style_card")
+
+[node name="Root" type="VBoxContainer" parent="Margin/Card"]
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="OperationLabel" type="Label" parent="Margin/Card/Root"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_colors/font_color = Color(0.31, 0.95, 0.91, 1)
+theme_override_fonts/font = ExtResource("3_ko_font")
+theme_override_font_sizes/font_size = 30
+text = "OPERATION: BLACK MINUTE\n작전명: 검은 1분"
+
+[node name="FacilityLabel" type="Label" parent="Margin/Card/Root"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_colors/font_color = Color(0.6, 0.72, 0.83, 1)
+theme_override_fonts/font = ExtResource("3_ko_font")
+theme_override_font_sizes/font_size = 15
+text = "HELIX TEMPORAL RESEARCH FACILITY  //  헬릭스 시간 연구시설"
+
+[node name="Divider" type="HSeparator" parent="Margin/Card/Root"]
+layout_mode = 2
+
+[node name="Columns" type="HBoxContainer" parent="Margin/Card/Root"]
+layout_mode = 2
+size_flags_vertical = 3
+theme_override_constants/separation = 24
+
+[node name="Left" type="VBoxContainer" parent="Margin/Card/Root/Columns"]
+custom_minimum_size = Vector2(340, 0)
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 12
+
+[node name="TargetLabel" type="Label" parent="Margin/Card/Root/Columns/Left"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_colors/font_color = Color(0.78, 0.57, 1, 1)
+theme_override_fonts/font = ExtResource("3_ko_font")
+theme_override_font_sizes/font_size = 21
+text = "PRIMARY TARGET  //  CHRONOS CORE  //  크로노스 코어"
+
+[node name="CoreIcon" type="Control" parent="Margin/Card/Root/Columns/Left"]
+custom_minimum_size = Vector2(0, 82)
+layout_mode = 2
+
+[node name="Outer" type="ColorRect" parent="Margin/Card/Root/Columns/Left/CoreIcon"]
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -34.0
+offset_top = -34.0
+offset_right = 34.0
+offset_bottom = 34.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0.48, 0.24, 0.82, 0.6)
+
+[node name="Inner" type="ColorRect" parent="Margin/Card/Root/Columns/Left/CoreIcon"]
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -17.0
+offset_top = -17.0
+offset_right = 17.0
+offset_bottom = 17.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0.25, 0.94, 0.9, 1)
+
+[node name="BriefingLabel" type="Label" parent="Margin/Card/Root/Columns/Left"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_vertical = 3
+theme_override_colors/font_color = Color(0.86, 0.92, 0.97, 1)
+theme_override_font_sizes/font_size = 15
+text = "Mission briefing"
+autowrap_mode = 2
+
+[node name="RecallLabel" type="Label" parent="Margin/Card/Root/Columns/Left"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_colors/font_color = Color(0.32, 0.91, 0.95, 1)
+theme_override_font_sizes/font_size = 17
+text = "CHRONO RECALL  3 CHARGES"
+
+[node name="FacilityMapView" type="Control" parent="Margin/Card/Root/Columns"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(460, 390)
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+mouse_filter = 2
+script = ExtResource("2_map")
+
+[node name="Buttons" type="HBoxContainer" parent="Margin/Card/Root"]
+layout_mode = 2
+alignment = 2
+theme_override_constants/separation = 12
+
+[node name="BackButton" type="Button" parent="Margin/Card/Root/Buttons"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(150, 48)
+layout_mode = 2
+text = "BACK"
+
+[node name="StartButton" type="Button" parent="Margin/Card/Root/Buttons"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(260, 48)
+layout_mode = 2
+theme_override_font_sizes/font_size = 19
+text = "START MISSION"

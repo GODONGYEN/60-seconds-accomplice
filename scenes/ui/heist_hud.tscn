@@ -1,0 +1,366 @@
+[gd_scene load_steps=4 format=3]
+
+[ext_resource type="Script" path="res://scripts/ui/heist_hud.gd" id="1_hud"]
+
+[sub_resource type="StyleBoxFlat" id="Style_panel"]
+bg_color = Color(0.015, 0.042, 0.072, 0.94)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(0.16, 0.52, 0.61, 0.85)
+corner_radius_top_left = 8
+corner_radius_top_right = 8
+corner_radius_bottom_right = 8
+corner_radius_bottom_left = 8
+content_margin_left = 12.0
+content_margin_top = 8.0
+content_margin_right = 12.0
+content_margin_bottom = 8.0
+
+[sub_resource type="StyleBoxFlat" id="Style_modal"]
+bg_color = Color(0.018, 0.043, 0.072, 0.985)
+border_width_left = 3
+border_width_top = 3
+border_width_right = 3
+border_width_bottom = 3
+border_color = Color(0.31, 0.9, 0.85, 0.95)
+corner_radius_top_left = 14
+corner_radius_top_right = 14
+corner_radius_bottom_right = 14
+corner_radius_bottom_left = 14
+content_margin_left = 30.0
+content_margin_top = 24.0
+content_margin_right = 30.0
+content_margin_bottom = 24.0
+
+[node name="HeistHUD" type="CanvasLayer"]
+process_mode = 3
+script = ExtResource("1_hud")
+
+[node name="TopMargin" type="MarginContainer" parent="."]
+anchors_preset = 10
+anchor_right = 1.0
+offset_left = 16.0
+offset_top = 14.0
+offset_right = -16.0
+offset_bottom = 120.0
+
+[node name="TopRow" type="HBoxContainer" parent="TopMargin"]
+layout_mode = 2
+theme_override_constants/separation = 6
+
+[node name="PrimaryPanel" type="PanelContainer" parent="TopMargin/TopRow"]
+custom_minimum_size = Vector2(185, 0)
+layout_mode = 2
+theme_override_styles/panel = SubResource("Style_panel")
+
+[node name="PrimaryLabel" type="Label" parent="TopMargin/TopRow/PrimaryPanel"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_colors/font_color = Color(0.37, 0.94, 0.92, 1)
+theme_override_font_sizes/font_size = 13
+text = "PRIMARY\nSTEAL THE CHRONOS CORE"
+
+[node name="CurrentPanel" type="PanelContainer" parent="TopMargin/TopRow"]
+custom_minimum_size = Vector2(220, 0)
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_styles/panel = SubResource("Style_panel")
+
+[node name="CurrentLabel" type="Label" parent="TopMargin/TopRow/CurrentPanel"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_colors/font_color = Color(0.88, 0.93, 0.98, 1)
+theme_override_font_sizes/font_size = 12
+text = "CURRENT\n• Enter the reception checkpoint"
+autowrap_mode = 2
+
+[node name="SecurityPanel" type="PanelContainer" parent="TopMargin/TopRow"]
+custom_minimum_size = Vector2(180, 0)
+layout_mode = 2
+theme_override_styles/panel = SubResource("Style_panel")
+
+[node name="SecurityLabel" type="Label" parent="TopMargin/TopRow/SecurityPanel"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 0.68, 0.31, 1)
+theme_override_font_sizes/font_size = 12
+text = "SECURITY\nCCTV ONLINE • LASERS ONLINE\nALERT CLEAR"
+
+[node name="AccessPanel" type="PanelContainer" parent="TopMargin/TopRow"]
+custom_minimum_size = Vector2(82, 0)
+layout_mode = 2
+theme_override_styles/panel = SubResource("Style_panel")
+
+[node name="AccessLabel" type="Label" parent="TopMargin/TopRow/AccessPanel"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_colors/font_color = Color(0.51, 0.84, 0.94, 1)
+theme_override_font_sizes/font_size = 12
+text = "ACCESS\nPUBLIC"
+horizontal_alignment = 1
+
+[node name="RecallButton" type="Button" parent="TopMargin/TopRow"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(82, 0)
+layout_mode = 2
+text = "RECALL  Q\n3 / 3"
+
+[node name="RecallLabel" type="Label" parent="TopMargin/TopRow/RecallButton"]
+unique_name_in_owner = true
+visible = false
+text = "RECALL"
+
+[node name="MapButton" type="Button" parent="TopMargin/TopRow"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(70, 0)
+layout_mode = 2
+text = "MAP\nM / TAB"
+
+[node name="CoreLabel" type="Label" parent="."]
+unique_name_in_owner = true
+offset_left = 18.0
+offset_top = 130.0
+offset_right = 170.0
+offset_bottom = 176.0
+theme_override_colors/font_color = Color(0.72, 0.56, 0.9, 1)
+theme_override_colors/font_outline_color = Color(0.02, 0.03, 0.06, 1)
+theme_override_constants/outline_size = 4
+theme_override_font_sizes/font_size = 14
+text = "CORE\nNOT ACQUIRED"
+
+[node name="ToastLabel" type="Label" parent="."]
+unique_name_in_owner = true
+anchors_preset = 10
+anchor_right = 1.0
+offset_left = 290.0
+offset_top = 132.0
+offset_right = -290.0
+offset_bottom = 181.0
+theme_override_colors/font_color = Color(0.94, 0.98, 1, 1)
+theme_override_colors/font_outline_color = Color(0.01, 0.04, 0.07, 1)
+theme_override_constants/outline_size = 5
+theme_override_font_sizes/font_size = 18
+text = "OBJECTIVE UPDATED"
+horizontal_alignment = 1
+vertical_alignment = 1
+autowrap_mode = 2
+
+[node name="PromptLabel" type="Label" parent="."]
+unique_name_in_owner = true
+anchors_preset = 12
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 300.0
+offset_top = -70.0
+offset_right = -300.0
+offset_bottom = -22.0
+theme_override_colors/font_color = Color(0.04, 0.07, 0.1, 1)
+theme_override_colors/font_outline_color = Color(0.85, 0.8, 0.42, 1)
+theme_override_constants/outline_size = 8
+theme_override_font_sizes/font_size = 19
+text = "E  INTERACT"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="Controls" type="Label" parent="."]
+anchors_preset = 2
+anchor_top = 1.0
+anchor_bottom = 1.0
+offset_left = 18.0
+offset_top = -28.0
+offset_right = 670.0
+offset_bottom = -7.0
+theme_override_colors/font_color = Color(0.59, 0.68, 0.77, 1)
+theme_override_colors/font_outline_color = Color(0.01, 0.02, 0.04, 1)
+theme_override_constants/outline_size = 3
+theme_override_font_sizes/font_size = 13
+text = "WASD MOVE   E INTERACT   Q RECALL   M/TAB MAP   ESC PAUSE   V MUTE"
+
+[node name="PausePanel" type="Control" parent="."]
+unique_name_in_owner = true
+visible = false
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="Shade" type="ColorRect" parent="PausePanel"]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0.004, 0.012, 0.024, 0.82)
+
+[node name="Center" type="CenterContainer" parent="PausePanel"]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="Card" type="PanelContainer" parent="PausePanel/Center"]
+custom_minimum_size = Vector2(440, 0)
+layout_mode = 2
+theme_override_styles/panel = SubResource("Style_modal")
+
+[node name="Content" type="VBoxContainer" parent="PausePanel/Center/Card"]
+layout_mode = 2
+theme_override_constants/separation = 14
+
+[node name="Title" type="Label" parent="PausePanel/Center/Card/Content"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.31, 0.94, 0.91, 1)
+theme_override_font_sizes/font_size = 32
+text = "OPERATION PAUSED"
+horizontal_alignment = 1
+
+[node name="Hint" type="Label" parent="PausePanel/Center/Card/Content"]
+layout_mode = 2
+text = "Patrol, CCTV, Recall history, and mission state are frozen."
+horizontal_alignment = 1
+autowrap_mode = 2
+
+[node name="ResumeButton" type="Button" parent="PausePanel/Center/Card/Content"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 46)
+layout_mode = 2
+text = "RESUME  (ESC)"
+
+[node name="PauseMenuButton" type="Button" parent="PausePanel/Center/Card/Content"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 42)
+layout_mode = 2
+text = "RETURN TO MAIN MENU"
+
+[node name="CapturePanel" type="Control" parent="."]
+unique_name_in_owner = true
+visible = false
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="Shade" type="ColorRect" parent="CapturePanel"]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0.12, 0.008, 0.02, 0.76)
+
+[node name="Center" type="CenterContainer" parent="CapturePanel"]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="Card" type="PanelContainer" parent="CapturePanel/Center"]
+custom_minimum_size = Vector2(620, 0)
+layout_mode = 2
+theme_override_styles/panel = SubResource("Style_modal")
+
+[node name="Content" type="VBoxContainer" parent="CapturePanel/Center/Card"]
+layout_mode = 2
+theme_override_constants/separation = 14
+
+[node name="Title" type="Label" parent="CapturePanel/Center/Card/Content"]
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 0.3, 0.36, 1)
+theme_override_font_sizes/font_size = 42
+text = "CAUGHT"
+horizontal_alignment = 1
+
+[node name="CaptureMessage" type="Label" parent="CapturePanel/Center/Card/Content"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_font_sizes/font_size = 17
+text = "USE RECALL OR RESTART"
+horizontal_alignment = 1
+autowrap_mode = 2
+
+[node name="Buttons" type="HBoxContainer" parent="CapturePanel/Center/Card/Content"]
+layout_mode = 2
+alignment = 1
+theme_override_constants/separation = 12
+
+[node name="CaptureRecallButton" type="Button" parent="CapturePanel/Center/Card/Content/Buttons"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(230, 48)
+layout_mode = 2
+text = "USE RECALL (Q)"
+
+[node name="CheckpointButton" type="Button" parent="CapturePanel/Center/Card/Content/Buttons"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(250, 48)
+layout_mode = 2
+text = "RESTART CHECKPOINT"
+
+[node name="VictoryPanel" type="Control" parent="."]
+unique_name_in_owner = true
+visible = false
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="Shade" type="ColorRect" parent="VictoryPanel"]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0.005, 0.035, 0.045, 0.9)
+
+[node name="Center" type="CenterContainer" parent="VictoryPanel"]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="Card" type="PanelContainer" parent="VictoryPanel/Center"]
+custom_minimum_size = Vector2(580, 0)
+layout_mode = 2
+theme_override_styles/panel = SubResource("Style_modal")
+
+[node name="Content" type="VBoxContainer" parent="VictoryPanel/Center/Card"]
+layout_mode = 2
+theme_override_constants/separation = 14
+
+[node name="Title" type="Label" parent="VictoryPanel/Center/Card/Content"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.34, 1, 0.72, 1)
+theme_override_font_sizes/font_size = 38
+text = "OPERATION COMPLETE"
+horizontal_alignment = 1
+
+[node name="VictorySummary" type="Label" parent="VictoryPanel/Center/Card/Content"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_font_sizes/font_size = 18
+text = "CHRONOS CORE EXTRACTED"
+horizontal_alignment = 1
+
+[node name="Buttons" type="HBoxContainer" parent="VictoryPanel/Center/Card/Content"]
+layout_mode = 2
+alignment = 1
+theme_override_constants/separation = 12
+
+[node name="RestartButton" type="Button" parent="VictoryPanel/Center/Card/Content/Buttons"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(230, 48)
+layout_mode = 2
+text = "REPLAY OPERATION"
+
+[node name="MenuButton" type="Button" parent="VictoryPanel/Center/Card/Content/Buttons"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(180, 48)
+layout_mode = 2
+text = "MAIN MENU"
