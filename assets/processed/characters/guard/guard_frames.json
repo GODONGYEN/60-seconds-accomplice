@@ -1,0 +1,622 @@
+{
+  "schema_version": 1,
+  "pipeline_version": "1.0.0",
+  "character": "guard",
+  "source": "assets/source/generated/guard_animation_source.png",
+  "source_sha256": "a66592ebbd84c19901ea150875ad319a8aa0212e68faae4af3f1d3797bf33f78",
+  "source_size": [
+    1536,
+    1024
+  ],
+  "source_mode": "RGBA",
+  "processed_atlas": "assets/processed/characters/guard/guard_atlas.png",
+  "runtime_atlas": "assets/sprites/characters/guard_atlas.png",
+  "atlas_size": [
+    384,
+    128
+  ],
+  "atlas_pixel_sha256": "98b73c8ca8971f062d1b5a9130348538a12c46b5560e6c46e311765424e75072",
+  "frame_size": [
+    48,
+    64
+  ],
+  "pivot": [
+    24,
+    62
+  ],
+  "normalization": {
+    "resize_filter": "nearest",
+    "actor_fixed_scale": 0.2804878,
+    "alignment": "bottom_center",
+    "maximum_content_size": [
+      46,
+      60
+    ]
+  },
+  "detected_candidate_count": 20,
+  "selected_frame_count": 16,
+  "source_candidates": {
+    "r0c0": [
+      248,
+      66,
+      393,
+      272
+    ],
+    "r0c1": [
+      478,
+      66,
+      613,
+      273
+    ],
+    "r0c2": [
+      694,
+      66,
+      838,
+      272
+    ],
+    "r0c3": [
+      923,
+      65,
+      1063,
+      272
+    ],
+    "r0c4": [
+      1152,
+      64,
+      1289,
+      272
+    ],
+    "r1c0": [
+      245,
+      328,
+      388,
+      531
+    ],
+    "r1c1": [
+      474,
+      329,
+      615,
+      531
+    ],
+    "r1c2": [
+      694,
+      329,
+      840,
+      532
+    ],
+    "r1c3": [
+      923,
+      328,
+      1065,
+      531
+    ],
+    "r1c4": [
+      1152,
+      329,
+      1290,
+      531
+    ],
+    "r2c0": [
+      241,
+      588,
+      405,
+      784
+    ],
+    "r2c1": [
+      474,
+      588,
+      623,
+      784
+    ],
+    "r2c2": [
+      695,
+      588,
+      853,
+      784
+    ],
+    "r2c3": [
+      924,
+      588,
+      1086,
+      784
+    ],
+    "r2c4": [
+      1152,
+      588,
+      1300,
+      784
+    ],
+    "r3c0": [
+      248,
+      823,
+      385,
+      1008
+    ],
+    "r3c1": [
+      475,
+      823,
+      621,
+      1006
+    ],
+    "r3c2": [
+      696,
+      823,
+      847,
+      1006
+    ],
+    "r3c3": [
+      923,
+      823,
+      1073,
+      1006
+    ],
+    "r3c4": [
+      1153,
+      823,
+      1294,
+      1007
+    ]
+  },
+  "frames": [
+    {
+      "index": 0,
+      "source_key": "r0c0",
+      "rect": [
+        0,
+        0,
+        48,
+        64
+      ],
+      "content_bbox": [
+        3,
+        4,
+        44,
+        62
+      ],
+      "horizontal_flip": false
+    },
+    {
+      "index": 1,
+      "source_key": "r0c1",
+      "rect": [
+        48,
+        0,
+        48,
+        64
+      ],
+      "content_bbox": [
+        3,
+        4,
+        41,
+        62
+      ],
+      "horizontal_flip": false
+    },
+    {
+      "index": 2,
+      "source_key": "r0c4",
+      "rect": [
+        96,
+        0,
+        48,
+        64
+      ],
+      "content_bbox": [
+        4,
+        4,
+        42,
+        62
+      ],
+      "horizontal_flip": false
+    },
+    {
+      "index": 3,
+      "source_key": "r0c2",
+      "rect": [
+        144,
+        0,
+        48,
+        64
+      ],
+      "content_bbox": [
+        3,
+        4,
+        43,
+        62
+      ],
+      "horizontal_flip": false
+    },
+    {
+      "index": 4,
+      "source_key": "r1c0",
+      "rect": [
+        192,
+        0,
+        48,
+        64
+      ],
+      "content_bbox": [
+        4,
+        5,
+        44,
+        62
+      ],
+      "horizontal_flip": false
+    },
+    {
+      "index": 5,
+      "source_key": "r1c1",
+      "rect": [
+        240,
+        0,
+        48,
+        64
+      ],
+      "content_bbox": [
+        1,
+        5,
+        41,
+        62
+      ],
+      "horizontal_flip": false
+    },
+    {
+      "index": 6,
+      "source_key": "r1c4",
+      "rect": [
+        288,
+        0,
+        48,
+        64
+      ],
+      "content_bbox": [
+        5,
+        5,
+        44,
+        62
+      ],
+      "horizontal_flip": false
+    },
+    {
+      "index": 7,
+      "source_key": "r1c2",
+      "rect": [
+        336,
+        0,
+        48,
+        64
+      ],
+      "content_bbox": [
+        4,
+        5,
+        45,
+        62
+      ],
+      "horizontal_flip": false
+    },
+    {
+      "index": 8,
+      "source_key": "r2c0",
+      "rect": [
+        0,
+        64,
+        48,
+        64
+      ],
+      "content_bbox": [
+        1,
+        7,
+        47,
+        62
+      ],
+      "horizontal_flip": false
+    },
+    {
+      "index": 9,
+      "source_key": "r2c1",
+      "rect": [
+        48,
+        64,
+        48,
+        64
+      ],
+      "content_bbox": [
+        1,
+        7,
+        43,
+        62
+      ],
+      "horizontal_flip": false
+    },
+    {
+      "index": 10,
+      "source_key": "r2c4",
+      "rect": [
+        96,
+        64,
+        48,
+        64
+      ],
+      "content_bbox": [
+        2,
+        7,
+        44,
+        62
+      ],
+      "horizontal_flip": false
+    },
+    {
+      "index": 11,
+      "source_key": "r2c2",
+      "rect": [
+        144,
+        64,
+        48,
+        64
+      ],
+      "content_bbox": [
+        2,
+        7,
+        46,
+        62
+      ],
+      "horizontal_flip": false
+    },
+    {
+      "index": 12,
+      "source_key": "r3c0",
+      "rect": [
+        192,
+        64,
+        48,
+        64
+      ],
+      "content_bbox": [
+        5,
+        10,
+        43,
+        62
+      ],
+      "horizontal_flip": false
+    },
+    {
+      "index": 13,
+      "source_key": "r3c1",
+      "rect": [
+        240,
+        64,
+        48,
+        64
+      ],
+      "content_bbox": [
+        1,
+        11,
+        42,
+        62
+      ],
+      "horizontal_flip": false
+    },
+    {
+      "index": 14,
+      "source_key": "r3c4",
+      "rect": [
+        288,
+        64,
+        48,
+        64
+      ],
+      "content_bbox": [
+        6,
+        10,
+        46,
+        62
+      ],
+      "horizontal_flip": false
+    },
+    {
+      "index": 15,
+      "source_key": "r3c2",
+      "rect": [
+        336,
+        64,
+        48,
+        64
+      ],
+      "content_bbox": [
+        3,
+        11,
+        45,
+        62
+      ],
+      "horizontal_flip": false
+    }
+  ],
+  "animations": {
+    "idle_down": {
+      "fps": 3.0,
+      "loop": true,
+      "frames": [
+        {
+          "index": 0
+        }
+      ]
+    },
+    "idle_left": {
+      "fps": 3.0,
+      "loop": true,
+      "frames": [
+        {
+          "index": 1
+        }
+      ]
+    },
+    "idle_right": {
+      "fps": 3.0,
+      "loop": true,
+      "frames": [
+        {
+          "index": 2
+        }
+      ]
+    },
+    "idle_up": {
+      "fps": 3.0,
+      "loop": true,
+      "frames": [
+        {
+          "index": 3
+        }
+      ]
+    },
+    "walk_down": {
+      "fps": 6.0,
+      "loop": true,
+      "frames": [
+        {
+          "index": 0
+        },
+        {
+          "index": 4
+        }
+      ]
+    },
+    "walk_left": {
+      "fps": 6.0,
+      "loop": true,
+      "frames": [
+        {
+          "index": 1
+        },
+        {
+          "index": 5
+        }
+      ]
+    },
+    "walk_right": {
+      "fps": 6.0,
+      "loop": true,
+      "frames": [
+        {
+          "index": 2
+        },
+        {
+          "index": 6
+        }
+      ]
+    },
+    "walk_up": {
+      "fps": 6.0,
+      "loop": true,
+      "frames": [
+        {
+          "index": 3
+        },
+        {
+          "index": 7
+        }
+      ]
+    },
+    "alert_down": {
+      "fps": 6.0,
+      "loop": false,
+      "frames": [
+        {
+          "index": 8
+        },
+        {
+          "index": 12
+        }
+      ]
+    },
+    "alert_left": {
+      "fps": 6.0,
+      "loop": false,
+      "frames": [
+        {
+          "index": 9
+        },
+        {
+          "index": 13
+        }
+      ]
+    },
+    "alert_right": {
+      "fps": 6.0,
+      "loop": false,
+      "frames": [
+        {
+          "index": 10
+        },
+        {
+          "index": 14
+        }
+      ]
+    },
+    "alert_up": {
+      "fps": 6.0,
+      "loop": false,
+      "frames": [
+        {
+          "index": 11
+        },
+        {
+          "index": 15
+        }
+      ]
+    }
+  },
+  "fallbacks": {
+    "walk_down": {
+      "kind": "two_pose_walk_placeholder",
+      "target": "idle_down",
+      "reason": "Rows 1 and 2 are subtle alternate poses, not a complete authored walk cycle."
+    },
+    "walk_left": {
+      "kind": "two_pose_walk_placeholder",
+      "target": "idle_left",
+      "reason": "Rows 1 and 2 are subtle alternate poses, not a complete authored walk cycle."
+    },
+    "walk_right": {
+      "kind": "two_pose_walk_placeholder",
+      "target": "idle_right",
+      "reason": "Rows 1 and 2 are subtle alternate poses, not a complete authored walk cycle."
+    },
+    "walk_up": {
+      "kind": "two_pose_walk_placeholder",
+      "target": "idle_up",
+      "reason": "Rows 1 and 2 are subtle alternate poses, not a complete authored walk cycle."
+    },
+    "alert_down": {
+      "kind": "equipment_pose_placeholder",
+      "target": "idle_down",
+      "reason": "Rows 3 and 4 show equipment poses and are used as the clearest available alert cue."
+    },
+    "alert_left": {
+      "kind": "equipment_pose_placeholder",
+      "target": "idle_left",
+      "reason": "Rows 3 and 4 show equipment poses and are used as the clearest available alert cue."
+    },
+    "alert_right": {
+      "kind": "equipment_pose_placeholder",
+      "target": "idle_right",
+      "reason": "Rows 3 and 4 show equipment poses and are used as the clearest available alert cue."
+    },
+    "alert_up": {
+      "kind": "equipment_pose_placeholder",
+      "target": "idle_up",
+      "reason": "Rows 3 and 4 show equipment poses and are used as the clearest available alert cue."
+    }
+  },
+  "horizontal_flip_animations": [],
+  "background_removal": {
+    "method": "source_alpha_threshold_then_largest_component",
+    "alpha_threshold": 16,
+    "source_alpha_is_authoritative": true,
+    "transparent_rgb_zeroed": true
+  },
+  "quality_limits": [
+    "Left and right views are three-quarter poses rather than strict profiles.",
+    "The source does not contain a complete patrol cycle or authored alert sequence.",
+    "Equipment direction is presentation-only and is not used as authoritative vision data."
+  ]
+}

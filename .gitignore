@@ -2,6 +2,7 @@
 .godot/
 .import/
 .mono/
+*.png.import
 
 # Local exports and build products
 .export/
@@ -23,6 +24,10 @@ Desktop.ini
 *.log
 .idea/
 .vscode/
+.tools/
+tools/.asset_cache/
+assets/processed/**/debug_*
+assets/processed/**/tmp_*
 
 # Secrets and signing material
 .env

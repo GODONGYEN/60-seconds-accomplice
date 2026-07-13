@@ -1,0 +1,892 @@
+{
+  "schema_version": 1,
+  "pipeline_version": "1.0.0",
+  "character": "player",
+  "source": "assets/source/generated/player_animation_source.png",
+  "source_sha256": "1f77a8deeae04022a2bff8c91af9829ebb64dfd824d950fcfd56975756ffa7e1",
+  "source_size": [
+    1448,
+    1086
+  ],
+  "source_mode": "RGB",
+  "processed_atlas": "assets/processed/characters/player/player_atlas.png",
+  "runtime_atlas": "assets/sprites/characters/player_atlas.png",
+  "atlas_size": [
+    384,
+    256
+  ],
+  "atlas_pixel_sha256": "4763de8ba8f609c78321d0825a30a315e72c901518bfd641fbaa892e9a0fc70c",
+  "frame_size": [
+    48,
+    64
+  ],
+  "pivot": [
+    24,
+    62
+  ],
+  "normalization": {
+    "resize_filter": "nearest",
+    "actor_fixed_scale": 0.35087719,
+    "alignment": "bottom_center",
+    "maximum_content_size": [
+      46,
+      60
+    ]
+  },
+  "detected_candidate_count": 32,
+  "selected_frame_count": 26,
+  "source_candidates": {
+    "r0c0": [
+      70,
+      83,
+      181,
+      250
+    ],
+    "r0c1": [
+      239,
+      83,
+      357,
+      250
+    ],
+    "r0c2": [
+      425,
+      79,
+      543,
+      251
+    ],
+    "r0c3": [
+      589,
+      78,
+      706,
+      251
+    ],
+    "r0c4": [
+      766,
+      79,
+      879,
+      251
+    ],
+    "r0c5": [
+      935,
+      78,
+      1047,
+      251
+    ],
+    "r0c6": [
+      1102,
+      77,
+      1212,
+      251
+    ],
+    "r0c7": [
+      1267,
+      78,
+      1378,
+      251
+    ],
+    "r1c0": [
+      78,
+      322,
+      181,
+      489
+    ],
+    "r1c1": [
+      247,
+      322,
+      354,
+      489
+    ],
+    "r1c2": [
+      412,
+      318,
+      517,
+      489
+    ],
+    "r1c3": [
+      585,
+      318,
+      690,
+      489
+    ],
+    "r1c4": [
+      755,
+      318,
+      861,
+      489
+    ],
+    "r1c5": [
+      924,
+      318,
+      1032,
+      489
+    ],
+    "r1c6": [
+      1091,
+      318,
+      1197,
+      489
+    ],
+    "r1c7": [
+      1267,
+      318,
+      1365,
+      489
+    ],
+    "r2c0": [
+      73,
+      565,
+      176,
+      729
+    ],
+    "r2c1": [
+      241,
+      566,
+      343,
+      730
+    ],
+    "r2c2": [
+      428,
+      559,
+      532,
+      728
+    ],
+    "r2c3": [
+      593,
+      559,
+      698,
+      730
+    ],
+    "r2c4": [
+      762,
+      559,
+      868,
+      730
+    ],
+    "r2c5": [
+      930,
+      559,
+      1036,
+      728
+    ],
+    "r2c6": [
+      1099,
+      559,
+      1205,
+      729
+    ],
+    "r2c7": [
+      1267,
+      560,
+      1368,
+      729
+    ],
+    "r3c0": [
+      70,
+      814,
+      181,
+      967
+    ],
+    "r3c1": [
+      239,
+      814,
+      354,
+      967
+    ],
+    "r3c2": [
+      417,
+      814,
+      529,
+      967
+    ],
+    "r3c3": [
+      588,
+      814,
+      701,
+      967
+    ],
+    "r3c4": [
+      765,
+      814,
+      875,
+      967
+    ],
+    "r3c5": [
+      933,
+      814,
+      1042,
+      967
+    ],
+    "r3c6": [
+      1102,
+      814,
+      1212,
+      967
+    ],
+    "r3c7": [
+      1267,
+      814,
+      1373,
+      967
+    ]
+  },
+  "frames": [
+    {
+      "index": 0,
+      "source_key": "r0c0",
+      "rect": [
+        0,
+        0,
+        48,
+        64
+      ],
+      "content_bbox": [
+        2,
+        3,
+        41,
+        62
+      ],
+      "horizontal_flip": false
+    },
+    {
+      "index": 1,
+      "source_key": "r0c1",
+      "rect": [
+        48,
+        0,
+        48,
+        64
+      ],
+      "content_bbox": [
+        3,
+        3,
+        44,
+        62
+      ],
+      "horizontal_flip": false
+    },
+    {
+      "index": 2,
+      "source_key": "r1c0",
+      "rect": [
+        96,
+        0,
+        48,
+        64
+      ],
+      "content_bbox": [
+        6,
+        3,
+        42,
+        62
+      ],
+      "horizontal_flip": false
+    },
+    {
+      "index": 3,
+      "source_key": "r1c1",
+      "rect": [
+        144,
+        0,
+        48,
+        64
+      ],
+      "content_bbox": [
+        6,
+        3,
+        44,
+        62
+      ],
+      "horizontal_flip": false
+    },
+    {
+      "index": 4,
+      "source_key": "r1c2",
+      "rect": [
+        192,
+        0,
+        48,
+        64
+      ],
+      "content_bbox": [
+        6,
+        2,
+        43,
+        62
+      ],
+      "horizontal_flip": false
+    },
+    {
+      "index": 5,
+      "source_key": "r1c3",
+      "rect": [
+        240,
+        0,
+        48,
+        64
+      ],
+      "content_bbox": [
+        6,
+        2,
+        43,
+        62
+      ],
+      "horizontal_flip": false
+    },
+    {
+      "index": 6,
+      "source_key": "r1c4",
+      "rect": [
+        288,
+        0,
+        48,
+        64
+      ],
+      "content_bbox": [
+        2,
+        2,
+        39,
+        62
+      ],
+      "horizontal_flip": false
+    },
+    {
+      "index": 7,
+      "source_key": "r1c5",
+      "rect": [
+        336,
+        0,
+        48,
+        64
+      ],
+      "content_bbox": [
+        5,
+        2,
+        43,
+        62
+      ],
+      "horizontal_flip": false
+    },
+    {
+      "index": 8,
+      "source_key": "r1c6",
+      "rect": [
+        0,
+        64,
+        48,
+        64
+      ],
+      "content_bbox": [
+        6,
+        2,
+        43,
+        62
+      ],
+      "horizontal_flip": false
+    },
+    {
+      "index": 9,
+      "source_key": "r1c7",
+      "rect": [
+        48,
+        64,
+        48,
+        64
+      ],
+      "content_bbox": [
+        8,
+        2,
+        42,
+        62
+      ],
+      "horizontal_flip": false
+    },
+    {
+      "index": 10,
+      "source_key": "r2c0",
+      "rect": [
+        96,
+        64,
+        48,
+        64
+      ],
+      "content_bbox": [
+        6,
+        4,
+        42,
+        62
+      ],
+      "horizontal_flip": false
+    },
+    {
+      "index": 11,
+      "source_key": "r2c1",
+      "rect": [
+        144,
+        64,
+        48,
+        64
+      ],
+      "content_bbox": [
+        6,
+        4,
+        42,
+        62
+      ],
+      "horizontal_flip": false
+    },
+    {
+      "index": 12,
+      "source_key": "r2c2",
+      "rect": [
+        192,
+        64,
+        48,
+        64
+      ],
+      "content_bbox": [
+        4,
+        3,
+        40,
+        62
+      ],
+      "horizontal_flip": false
+    },
+    {
+      "index": 13,
+      "source_key": "r2c3",
+      "rect": [
+        240,
+        64,
+        48,
+        64
+      ],
+      "content_bbox": [
+        6,
+        2,
+        43,
+        62
+      ],
+      "horizontal_flip": false
+    },
+    {
+      "index": 14,
+      "source_key": "r2c4",
+      "rect": [
+        288,
+        64,
+        48,
+        64
+      ],
+      "content_bbox": [
+        6,
+        2,
+        43,
+        62
+      ],
+      "horizontal_flip": false
+    },
+    {
+      "index": 15,
+      "source_key": "r2c5",
+      "rect": [
+        336,
+        64,
+        48,
+        64
+      ],
+      "content_bbox": [
+        4,
+        3,
+        41,
+        62
+      ],
+      "horizontal_flip": false
+    },
+    {
+      "index": 16,
+      "source_key": "r2c6",
+      "rect": [
+        0,
+        128,
+        48,
+        64
+      ],
+      "content_bbox": [
+        6,
+        2,
+        43,
+        62
+      ],
+      "horizontal_flip": false
+    },
+    {
+      "index": 17,
+      "source_key": "r2c7",
+      "rect": [
+        48,
+        128,
+        48,
+        64
+      ],
+      "content_bbox": [
+        6,
+        3,
+        41,
+        62
+      ],
+      "horizontal_flip": false
+    },
+    {
+      "index": 18,
+      "source_key": "r3c0",
+      "rect": [
+        96,
+        128,
+        48,
+        64
+      ],
+      "content_bbox": [
+        4,
+        8,
+        43,
+        62
+      ],
+      "horizontal_flip": false
+    },
+    {
+      "index": 19,
+      "source_key": "r3c1",
+      "rect": [
+        144,
+        128,
+        48,
+        64
+      ],
+      "content_bbox": [
+        4,
+        8,
+        44,
+        62
+      ],
+      "horizontal_flip": false
+    },
+    {
+      "index": 20,
+      "source_key": "r3c2",
+      "rect": [
+        192,
+        128,
+        48,
+        64
+      ],
+      "content_bbox": [
+        1,
+        8,
+        40,
+        62
+      ],
+      "horizontal_flip": false
+    },
+    {
+      "index": 21,
+      "source_key": "r3c3",
+      "rect": [
+        240,
+        128,
+        48,
+        64
+      ],
+      "content_bbox": [
+        5,
+        8,
+        45,
+        62
+      ],
+      "horizontal_flip": false
+    },
+    {
+      "index": 22,
+      "source_key": "r3c4",
+      "rect": [
+        288,
+        128,
+        48,
+        64
+      ],
+      "content_bbox": [
+        6,
+        8,
+        45,
+        62
+      ],
+      "horizontal_flip": false
+    },
+    {
+      "index": 23,
+      "source_key": "r3c5",
+      "rect": [
+        336,
+        128,
+        48,
+        64
+      ],
+      "content_bbox": [
+        6,
+        8,
+        44,
+        62
+      ],
+      "horizontal_flip": false
+    },
+    {
+      "index": 24,
+      "source_key": "r3c6",
+      "rect": [
+        0,
+        192,
+        48,
+        64
+      ],
+      "content_bbox": [
+        6,
+        8,
+        45,
+        62
+      ],
+      "horizontal_flip": false
+    },
+    {
+      "index": 25,
+      "source_key": "r3c7",
+      "rect": [
+        48,
+        192,
+        48,
+        64
+      ],
+      "content_bbox": [
+        7,
+        8,
+        44,
+        62
+      ],
+      "horizontal_flip": false
+    }
+  ],
+  "animations": {
+    "idle_down": {
+      "fps": 3.0,
+      "loop": true,
+      "frames": [
+        {
+          "index": 0
+        },
+        {
+          "index": 1
+        }
+      ]
+    },
+    "idle_left": {
+      "fps": 3.0,
+      "loop": true,
+      "frames": [
+        {
+          "index": 2
+        },
+        {
+          "index": 3
+        }
+      ]
+    },
+    "idle_right": {
+      "fps": 3.0,
+      "loop": true,
+      "frames": [
+        {
+          "index": 10
+        },
+        {
+          "index": 11
+        }
+      ]
+    },
+    "idle_up": {
+      "fps": 3.0,
+      "loop": true,
+      "frames": [
+        {
+          "index": 18
+        },
+        {
+          "index": 19
+        }
+      ]
+    },
+    "walk_down": {
+      "fps": 4.0,
+      "loop": true,
+      "frames": [
+        {
+          "index": 0
+        },
+        {
+          "index": 1
+        }
+      ]
+    },
+    "walk_left": {
+      "fps": 8.0,
+      "loop": true,
+      "frames": [
+        {
+          "index": 4
+        },
+        {
+          "index": 5
+        },
+        {
+          "index": 6
+        },
+        {
+          "index": 7
+        },
+        {
+          "index": 8
+        },
+        {
+          "index": 9
+        }
+      ]
+    },
+    "walk_right": {
+      "fps": 8.0,
+      "loop": true,
+      "frames": [
+        {
+          "index": 12
+        },
+        {
+          "index": 13
+        },
+        {
+          "index": 14
+        },
+        {
+          "index": 15
+        },
+        {
+          "index": 16
+        },
+        {
+          "index": 17
+        }
+      ]
+    },
+    "walk_up": {
+      "fps": 8.0,
+      "loop": true,
+      "frames": [
+        {
+          "index": 20
+        },
+        {
+          "index": 21
+        },
+        {
+          "index": 22
+        },
+        {
+          "index": 23
+        },
+        {
+          "index": 24
+        },
+        {
+          "index": 25
+        }
+      ]
+    },
+    "interact_down": {
+      "fps": 6.0,
+      "loop": false,
+      "frames": [
+        {
+          "index": 0
+        }
+      ]
+    },
+    "interact_left": {
+      "fps": 6.0,
+      "loop": false,
+      "frames": [
+        {
+          "index": 8
+        },
+        {
+          "index": 9
+        }
+      ]
+    },
+    "interact_right": {
+      "fps": 6.0,
+      "loop": false,
+      "frames": [
+        {
+          "index": 16
+        },
+        {
+          "index": 17
+        }
+      ]
+    },
+    "interact_up": {
+      "fps": 6.0,
+      "loop": false,
+      "frames": [
+        {
+          "index": 18
+        }
+      ]
+    }
+  },
+  "fallbacks": {
+    "walk_down": {
+      "kind": "idle_pose_reuse",
+      "target": "idle_down",
+      "reason": "Only two stable front-facing poses exist; the remaining first-row poses drift left."
+    },
+    "interact_down": {
+      "kind": "static_pose_placeholder",
+      "target": "idle_down",
+      "reason": "No authored down interaction pose exists."
+    },
+    "interact_left": {
+      "kind": "source_pose_placeholder",
+      "target": "idle_left",
+      "reason": "Late left-facing source poses are reused; they were not authored as interaction frames."
+    },
+    "interact_right": {
+      "kind": "source_pose_placeholder",
+      "target": "idle_right",
+      "reason": "Late right-facing source poses are reused; they were not authored as interaction frames."
+    },
+    "interact_up": {
+      "kind": "static_pose_placeholder",
+      "target": "idle_up",
+      "reason": "No authored up interaction pose exists."
+    }
+  },
+  "horizontal_flip_animations": [],
+  "background_removal": {
+    "method": "border_flood_fill_then_largest_component",
+    "checker_threshold": "min_rgb>=225 and chroma<=8",
+    "fringe_cleanup": "two exposed passes at min_rgb>=185 and chroma<=14",
+    "white_key_used": false,
+    "source_has_baked_checkerboard": true
+  },
+  "quality_limits": [
+    "The front walk uses two near-idle poses and is intentionally limited to 4 FPS.",
+    "Interaction poses are documented fallbacks, not newly authored animation.",
+    "Original frame proportions vary slightly; actor-wide fixed scaling prevents size popping."
+  ]
+}

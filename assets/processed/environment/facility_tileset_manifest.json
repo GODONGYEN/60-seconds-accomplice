@@ -1,0 +1,598 @@
+{
+  "schema_version": 1,
+  "pipeline_version": "1.0.0",
+  "source": "assets/source/generated/facility_map_tileset_source.png",
+  "source_sha256": "c2bb4c0279e5b5de2bbfecd2d199b7ca0ed747189b3df50609e2963c956d0546",
+  "source_size": [
+    1536,
+    1024
+  ],
+  "source_mode": "RGB",
+  "processed_atlas": "assets/processed/environment/facility_tileset.png",
+  "runtime_atlas": "assets/sprites/environment/facility_tileset.png",
+  "atlas_size": [
+    256,
+    128
+  ],
+  "atlas_pixel_sha256": "941ee01c5001a80327245db9d20139f3dede380c4d730b093749e44fe7468112",
+  "tile_size": [
+    32,
+    32
+  ],
+  "tiles": [
+    {
+      "id": "floor_panel_a",
+      "atlas_coords": [
+        0,
+        0
+      ],
+      "category": "floor",
+      "origin": "source_crop_nearest",
+      "usage": "runtime_limited",
+      "collision": false,
+      "source_bbox": [
+        866,
+        287,
+        944,
+        365
+      ],
+      "quality_note": "Panel edges are not seamless; use as a sparse panel grid, not a terrain fill."
+    },
+    {
+      "id": "floor_panel_b",
+      "atlas_coords": [
+        1,
+        0
+      ],
+      "category": "floor",
+      "origin": "source_crop_nearest",
+      "usage": "runtime_limited",
+      "collision": false,
+      "source_bbox": [
+        948,
+        287,
+        1026,
+        365
+      ],
+      "quality_note": "Panel edges are not seamless; use as a sparse panel grid, not a terrain fill."
+    },
+    {
+      "id": "floor_lit_reference",
+      "atlas_coords": [
+        2,
+        0
+      ],
+      "category": "floor",
+      "origin": "source_crop_nearest",
+      "usage": "reference_only",
+      "collision": false,
+      "source_bbox": [
+        1029,
+        287,
+        1106,
+        365
+      ],
+      "quality_note": "Panel edges are not seamless; use as a sparse panel grid, not a terrain fill."
+    },
+    {
+      "id": "floor_vent_reference",
+      "atlas_coords": [
+        3,
+        0
+      ],
+      "category": "floor",
+      "origin": "source_crop_nearest",
+      "usage": "reference_only",
+      "collision": false,
+      "source_bbox": [
+        1110,
+        287,
+        1188,
+        365
+      ],
+      "quality_note": "Panel edges are not seamless; use as a sparse panel grid, not a terrain fill."
+    },
+    {
+      "id": "floor_dark_panel",
+      "atlas_coords": [
+        4,
+        0
+      ],
+      "category": "floor",
+      "origin": "source_crop_nearest",
+      "usage": "runtime_limited",
+      "collision": false,
+      "source_bbox": [
+        1190,
+        287,
+        1269,
+        365
+      ],
+      "quality_note": "Panel edges are not seamless; use as a sparse panel grid, not a terrain fill."
+    },
+    {
+      "id": "floor_cracked_a",
+      "atlas_coords": [
+        5,
+        0
+      ],
+      "category": "floor",
+      "origin": "source_crop_nearest",
+      "usage": "reference_only",
+      "collision": false,
+      "source_bbox": [
+        1271,
+        287,
+        1350,
+        365
+      ],
+      "quality_note": "Panel edges are not seamless; use as a sparse panel grid, not a terrain fill."
+    },
+    {
+      "id": "floor_cracked_b",
+      "atlas_coords": [
+        6,
+        0
+      ],
+      "category": "floor",
+      "origin": "source_crop_nearest",
+      "usage": "reference_only",
+      "collision": false,
+      "source_bbox": [
+        1352,
+        287,
+        1431,
+        365
+      ],
+      "quality_note": "Panel edges are not seamless; use as a sparse panel grid, not a terrain fill."
+    },
+    {
+      "id": "floor_cracked_c",
+      "atlas_coords": [
+        7,
+        0
+      ],
+      "category": "floor",
+      "origin": "source_crop_nearest",
+      "usage": "reference_only",
+      "collision": false,
+      "source_bbox": [
+        1434,
+        287,
+        1513,
+        365
+      ],
+      "quality_note": "Panel edges are not seamless; use as a sparse panel grid, not a terrain fill."
+    },
+    {
+      "id": "floor_hazard_a",
+      "atlas_coords": [
+        0,
+        1
+      ],
+      "category": "floor",
+      "origin": "source_crop_nearest",
+      "usage": "reference_only",
+      "collision": false,
+      "source_bbox": [
+        866,
+        369,
+        944,
+        449
+      ],
+      "quality_note": "Panel edges are not seamless; use as a sparse panel grid, not a terrain fill."
+    },
+    {
+      "id": "floor_hazard_b",
+      "atlas_coords": [
+        1,
+        1
+      ],
+      "category": "floor",
+      "origin": "source_crop_nearest",
+      "usage": "reference_only",
+      "collision": false,
+      "source_bbox": [
+        948,
+        369,
+        1026,
+        449
+      ],
+      "quality_note": "Panel edges are not seamless; use as a sparse panel grid, not a terrain fill."
+    },
+    {
+      "id": "floor_pit_reference",
+      "atlas_coords": [
+        2,
+        1
+      ],
+      "category": "floor",
+      "origin": "source_crop_nearest",
+      "usage": "reference_only",
+      "collision": false,
+      "source_bbox": [
+        1029,
+        369,
+        1106,
+        449
+      ],
+      "quality_note": "Panel edges are not seamless; use as a sparse panel grid, not a terrain fill."
+    },
+    {
+      "id": "floor_moss_reference",
+      "atlas_coords": [
+        3,
+        1
+      ],
+      "category": "floor",
+      "origin": "source_crop_nearest",
+      "usage": "reference_only",
+      "collision": false,
+      "source_bbox": [
+        1110,
+        369,
+        1188,
+        449
+      ],
+      "quality_note": "Panel edges are not seamless; use as a sparse panel grid, not a terrain fill."
+    },
+    {
+      "id": "floor_wood_reference",
+      "atlas_coords": [
+        4,
+        1
+      ],
+      "category": "floor",
+      "origin": "source_crop_nearest",
+      "usage": "reference_only",
+      "collision": false,
+      "source_bbox": [
+        1190,
+        369,
+        1269,
+        449
+      ],
+      "quality_note": "Panel edges are not seamless; use as a sparse panel grid, not a terrain fill."
+    },
+    {
+      "id": "floor_stone_a",
+      "atlas_coords": [
+        5,
+        1
+      ],
+      "category": "floor",
+      "origin": "source_crop_nearest",
+      "usage": "reference_only",
+      "collision": false,
+      "source_bbox": [
+        1271,
+        369,
+        1350,
+        449
+      ],
+      "quality_note": "Panel edges are not seamless; use as a sparse panel grid, not a terrain fill."
+    },
+    {
+      "id": "floor_stone_b",
+      "atlas_coords": [
+        6,
+        1
+      ],
+      "category": "floor",
+      "origin": "source_crop_nearest",
+      "usage": "reference_only",
+      "collision": false,
+      "source_bbox": [
+        1352,
+        369,
+        1431,
+        449
+      ],
+      "quality_note": "Panel edges are not seamless; use as a sparse panel grid, not a terrain fill."
+    },
+    {
+      "id": "floor_stone_c",
+      "atlas_coords": [
+        7,
+        1
+      ],
+      "category": "floor",
+      "origin": "source_crop_nearest",
+      "usage": "reference_only",
+      "collision": false,
+      "source_bbox": [
+        1434,
+        369,
+        1513,
+        449
+      ],
+      "quality_note": "Panel edges are not seamless; use as a sparse panel grid, not a terrain fill."
+    },
+    {
+      "id": "wall_authored_placeholder",
+      "atlas_coords": [
+        0,
+        2
+      ],
+      "category": "wall",
+      "origin": "procedural_placeholder_source_palette",
+      "usage": "runtime",
+      "collision": true,
+      "quality_note": "AI wall pieces were rejected for inconsistent perspective and dimensions."
+    },
+    {
+      "id": "wall_corner_authored_placeholder",
+      "atlas_coords": [
+        1,
+        2
+      ],
+      "category": "wall_corner",
+      "origin": "procedural_placeholder_source_palette",
+      "usage": "runtime",
+      "collision": true
+    },
+    {
+      "id": "door_reference",
+      "atlas_coords": [
+        2,
+        2
+      ],
+      "category": "door",
+      "origin": "source_crop_manual_mask",
+      "usage": "reference_only",
+      "collision": false,
+      "source_bbox": [
+        1110,
+        149,
+        1188,
+        251
+      ],
+      "quality_note": "Stateful doors remain separate scenes."
+    },
+    {
+      "id": "obstacle_metal_crate",
+      "atlas_coords": [
+        3,
+        2
+      ],
+      "category": "obstacle",
+      "origin": "source_crop_manual_mask",
+      "usage": "runtime_optional",
+      "collision": true,
+      "source_bbox": [
+        1072,
+        484,
+        1121,
+        543
+      ]
+    },
+    {
+      "id": "terminal_console",
+      "atlas_coords": [
+        4,
+        2
+      ],
+      "category": "terminal",
+      "origin": "source_crop_manual_mask",
+      "usage": "runtime_optional",
+      "collision": false,
+      "source_bbox": [
+        871,
+        564,
+        933,
+        626
+      ]
+    },
+    {
+      "id": "server_rack",
+      "atlas_coords": [
+        5,
+        2
+      ],
+      "category": "server",
+      "origin": "source_crop_manual_mask",
+      "usage": "runtime_optional",
+      "collision": true,
+      "source_bbox": [
+        1009,
+        564,
+        1056,
+        626
+      ]
+    },
+    {
+      "id": "crate_wood",
+      "atlas_coords": [
+        6,
+        2
+      ],
+      "category": "crate",
+      "origin": "source_crop_manual_mask",
+      "usage": "runtime_optional",
+      "collision": true,
+      "source_bbox": [
+        962,
+        483,
+        1000,
+        543
+      ]
+    },
+    {
+      "id": "decoration_plant",
+      "atlas_coords": [
+        7,
+        2
+      ],
+      "category": "decoration",
+      "origin": "source_crop_manual_mask",
+      "usage": "runtime_optional",
+      "collision": false,
+      "source_bbox": [
+        1451,
+        475,
+        1495,
+        542
+      ]
+    },
+    {
+      "id": "pressure_plate_reference",
+      "atlas_coords": [
+        0,
+        3
+      ],
+      "category": "pressure_plate",
+      "origin": "source_crop_manual_mask",
+      "usage": "reference_only",
+      "collision": false,
+      "source_bbox": [
+        1071,
+        653,
+        1112,
+        690
+      ],
+      "quality_note": "No authored pressure plate exists; this panel is reference-only."
+    },
+    {
+      "id": "objective_light_reference",
+      "atlas_coords": [
+        1,
+        3
+      ],
+      "category": "objective",
+      "origin": "source_crop_manual_mask",
+      "usage": "reference_only",
+      "collision": false,
+      "source_bbox": [
+        1110,
+        873,
+        1188,
+        988
+      ],
+      "quality_note": "Colored light demo only; objective remains a separate procedural scene."
+    },
+    {
+      "id": "exit_light_reference",
+      "atlas_coords": [
+        2,
+        3
+      ],
+      "category": "exit",
+      "origin": "source_crop_manual_mask",
+      "usage": "reference_only",
+      "collision": false,
+      "source_bbox": [
+        1029,
+        873,
+        1106,
+        988
+      ],
+      "quality_note": "Colored light demo only; exit remains a separate trigger scene."
+    },
+    {
+      "id": "laser_reference",
+      "atlas_coords": [
+        3,
+        3
+      ],
+      "category": "laser",
+      "origin": "source_crop_manual_mask",
+      "usage": "reference_only",
+      "collision": false,
+      "source_bbox": [
+        927,
+        653,
+        1050,
+        698
+      ],
+      "quality_note": "Stateful laser visual is not used by the MVP puzzle."
+    },
+    {
+      "id": "light_reference",
+      "atlas_coords": [
+        4,
+        3
+      ],
+      "category": "light",
+      "origin": "source_crop_manual_mask",
+      "usage": "reference_only",
+      "collision": false,
+      "source_bbox": [
+        866,
+        873,
+        944,
+        988
+      ],
+      "quality_note": "Baked lighting demonstration; not suitable for seamless terrain."
+    },
+    {
+      "id": "unused_wall_reference",
+      "atlas_coords": [
+        5,
+        3
+      ],
+      "category": "unused_reference",
+      "origin": "source_crop_manual_mask",
+      "usage": "reference_only",
+      "collision": false,
+      "source_bbox": [
+        868,
+        33,
+        965,
+        136
+      ],
+      "quality_note": "Rejected wall perspective reference."
+    },
+    {
+      "id": "unused_camera_reference",
+      "atlas_coords": [
+        6,
+        3
+      ],
+      "category": "unused_reference",
+      "origin": "source_crop_manual_mask",
+      "usage": "reference_only",
+      "collision": false,
+      "source_bbox": [
+        1293,
+        652,
+        1338,
+        695
+      ],
+      "quality_note": "Reference prop not used in tutorial gameplay."
+    },
+    {
+      "id": "floor_authored_placeholder",
+      "atlas_coords": [
+        7,
+        3
+      ],
+      "category": "floor",
+      "origin": "procedural_placeholder_source_palette",
+      "usage": "runtime",
+      "collision": false,
+      "quality_note": "Stable seamless base retained because the AI floor candidates have mismatched edges."
+    }
+  ],
+  "runtime_floor_ids": [
+    "floor_authored_placeholder",
+    "floor_panel_a",
+    "floor_panel_b",
+    "floor_dark_panel"
+  ],
+  "runtime_wall_ids": [
+    "wall_authored_placeholder",
+    "wall_corner_authored_placeholder"
+  ],
+  "stateful_scene_categories": [
+    "door",
+    "pressure_plate",
+    "objective",
+    "exit"
+  ],
+  "quality_limits": [
+    "No AI-generated floor candidate is seamless; runtime panels are used sparsely.",
+    "All AI wall pieces were rejected as collision terrain due to perspective and size mismatch.",
+    "The runtime wall tile is a deterministic procedural placeholder using the source palette.",
+    "The left-side map preview is reference-only and is never loaded by gameplay."
+  ]
+}
