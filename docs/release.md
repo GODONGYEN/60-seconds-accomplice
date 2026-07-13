@@ -35,10 +35,13 @@ python3 -m venv .tools/venv
 PYTHON_BIN=.tools/venv/bin/python bash tools/validate_assets.sh
 godot --headless --path . --import
 godot --headless --path . --quit
+godot --headless --path . --script tools/validate_operation_black_minute.gd
 GODOT_BIN=godot tools/run_tests.sh
 ```
 
-The test command must return zero. Then perform the default facility acceptance path in the editor: record a westbound Guard distraction ending on the plate, begin a second loop, use the wall-hidden east route, disable `laser_right_01` at `terminal_laser_01`, cross the Ghost-opened vault door, collect the objective, and return to the courtyard exit. Confirm the closed/open door changes movement, Guard LOS, and Player-light shadow together. The preserved prototype remains a separate fast plate→Ghost→door regression.
+The mission validator must report `PASS` before the test harness starts. It checks the committed Operation: Black Minute blueprint contract, including map dimensions, required rooms and systems, reachability, Guard/CCTV/laser counts, and minimum safe timing windows. A failing mission contract blocks CI, Pages, and desktop releases even when lower-level tests still pass.
+
+The test command must also return zero. Then perform the Operation: Black Minute acceptance path in the editor and confirm that its infiltration, Chrono Recall/Echo, objective, and extraction sequence remains completable. Check that dynamic security states agree across movement collision, Guard/CCTV line of sight, and player-visible feedback. The preserved prototype and facility scenes remain separate regression modes; verify their documented two-loop plate→Ghost→door paths after changes to shared systems.
 
 ## Web release export
 
@@ -83,10 +86,11 @@ Godot can add icons or worker-related support files; the validation requires at 
 2. official Godot editor/template download with checksum verification;
 3. project import;
 4. headless boot and GDScript parse validation;
-5. the Godot test harness;
-6. a Web release smoke export with redistributable notices;
-7. required artifact-file checks;
-8. upload of the Web smoke build for diagnostics.
+5. the Operation: Black Minute mission contract validator;
+6. the Godot test harness;
+7. a Web release smoke export with redistributable notices;
+8. required artifact-file checks;
+9. upload of the Web smoke build for diagnostics.
 
 CI has `contents: read` permission only. Do not add a success badge until a run has actually passed in the public repository.
 
@@ -157,7 +161,9 @@ The workflow can also be dispatched manually with a required `v*` tag value. An 
 - `export_presets.cfg` contains `Web`, `Windows Desktop`, `Linux`, and `macOS` presets.
 - Web export is single-threaded and its artifact root contains `index.html`.
 - Automated tests pass without skips added to hide failures.
+- The Operation: Black Minute mission validator passes before automated tests.
 - Asset derivatives validate and reproduce to the same semantic fingerprint.
+- Operation: Black Minute passes its infiltration, Chrono Recall/Echo, objective, and extraction acceptance path.
 - The facility two-loop path passes with wall visibility, terminal-controlled laser, Guard/Ghost distraction, Ghost-held vault door, objective, and courtyard exit.
 - The preserved 20-second prototype two-loop regression passes after timeout and manual restart.
 - Pause stops timeline, recording, and playback clocks.

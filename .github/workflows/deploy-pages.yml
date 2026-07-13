@@ -79,11 +79,18 @@ jobs:
           echo "$HOME/.local/bin" >> "$GITHUB_PATH"
           "$HOME/.local/bin/godot" --version
 
-      - name: Import and test project
+      - name: Import project
+        run: godot --headless --path . --import
+
+      - name: Validate headless boot and GDScript parsing
+        run: godot --headless --path . --quit
+
+      - name: Validate Operation Black Minute mission contract
+        run: godot --headless --path . --script tools/validate_operation_black_minute.gd
+
+      - name: Run automated tests
         run: |
           set -euo pipefail
-          godot --headless --path . --import
-          godot --headless --path . --quit
           GODOT_BIN=godot tools/run_tests.sh
 
       - name: Export Web release
@@ -104,6 +111,7 @@ jobs:
           test -f build/web/licenses/PROJECT_LICENSE.txt
           test -f build/web/licenses/THIRD_PARTY_NOTICES.md
           test -f build/web/licenses/GODOT_ENGINE_LICENSE.txt
+          test -f build/web/licenses/NOTO_SANS_KR_OFL.txt
           find build/web -maxdepth 1 -type f -print | sort
 
       - name: Upload Pages artifact

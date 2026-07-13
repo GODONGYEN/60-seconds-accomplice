@@ -102,14 +102,19 @@ Neither the processed preview nor the 824×807 blueprint reference is placed beh
 
 The facility blueprint describes `26×25` logical cells at `32×32 px` (`832×800 px` world bounds). Runtime topology and object coordinates are documented in `docs/maps/facility_level_01_layout.md`. Wall/light/information visibility is documented in `docs/visibility_system.md`.
 
+## Bilingual UI font
+
+The Operation: Black Minute briefing uses `assets/fonts/noto_sans_kr_ui_subset.ttf`, a 70 KB weight-500 subset of Noto Sans KR containing printable ASCII plus the Korean mission-identity glyphs used by that screen. This is a runtime dependency, not an AI-generated asset. Its source revision, hashes, copyright, and SIL OFL 1.1 license are recorded in `THIRD_PARTY_NOTICES.md`; the license text is stored at `assets/fonts/OFL-NotoSansKR.txt`.
+
 ## Runtime dependency boundary
 
-The generated Godot resources reference only these runtime PNGs:
+The generated Godot resources and bilingual briefing reference only these committed runtime assets:
 
 ```text
 assets/sprites/characters/player_atlas.png
 assets/sprites/characters/guard_atlas.png
 assets/sprites/environment/facility_tileset.png
+assets/fonts/noto_sans_kr_ui_subset.ttf
 ```
 
 Source sheets, concept references, processed atlases, manifests, previews, and both map references are not gameplay dependencies. `tools/asset_pipeline.py validate` scans `.gd`, `.tscn`, `.tres`, and `project.godot` files and fails if a runtime resource points into `assets/source/`, `assets/processed/`, or `assets/concept/`. `facility_map_reference.png` is intentionally not an input to `process-all`; clean checkouts use the committed blueprint JSON and project-authored map script for runtime reconstruction.

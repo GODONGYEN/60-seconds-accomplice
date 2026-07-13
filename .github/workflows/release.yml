@@ -96,11 +96,18 @@ jobs:
           echo "$HOME/.local/bin" >> "$GITHUB_PATH"
           "$HOME/.local/bin/godot" --version
 
-      - name: Import and test project
+      - name: Import project
+        run: godot --headless --path . --import
+
+      - name: Validate headless boot and GDScript parsing
+        run: godot --headless --path . --quit
+
+      - name: Validate Operation Black Minute mission contract
+        run: godot --headless --path . --script tools/validate_operation_black_minute.gd
+
+      - name: Run automated tests
         run: |
           set -euo pipefail
-          godot --headless --path . --import
-          godot --headless --path . --quit
           GODOT_BIN=godot tools/run_tests.sh
 
       - name: Export desktop targets
@@ -116,6 +123,8 @@ jobs:
 
           bash tools/copy_notices.sh build/windows/licenses
           bash tools/copy_notices.sh build/linux/licenses
+          test -f build/windows/licenses/NOTO_SANS_KR_OFL.txt
+          test -f build/linux/licenses/NOTO_SANS_KR_OFL.txt
 
           mkdir -p build/macos-package
           unzip -q build/dist/Sixty-Second-Accomplice-macos-universal.zip \
@@ -123,6 +132,7 @@ jobs:
           macos_app="$(find build/macos-package -type d -name '*.app' -print -quit)"
           test -n "$macos_app"
           bash tools/copy_notices.sh "$macos_app/Contents/Resources/Licenses"
+          test -f "$macos_app/Contents/Resources/Licenses/NOTO_SANS_KR_OFL.txt"
           rm build/dist/Sixty-Second-Accomplice-macos-universal.zip
           (
             cd build/macos-package

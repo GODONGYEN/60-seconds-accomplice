@@ -1,110 +1,90 @@
 # Roadmap
 
-This roadmap keeps **Sixty-Second Accomplice** focused on one question: is it satisfying to cooperate with a previous version of yourself? The regression prototype uses 20 seconds; the larger facility mission uses the title's 60-second loop.
+The project is now centered on a stealth heist with limited Recall. The original full-loop puzzle remains a regression tool, not the default product direction.
 
-The source-of-truth gameplay and technical constraints remain `game_design.md`, `architecture.md`, and `AGENTS.md`. A roadmap item does not override those documents.
+`AGENTS.md`, `game_design.md`, and `architecture.md` remain the authority over this roadmap.
 
-## Milestone 1 — Browser-playable MVP
+## Completed foundation — Full-loop prototype
 
-Goal: a first-time player can open one link and complete the tutorial room in two or more timelines.
+- 20-second deterministic loop and 20 Hz hybrid recording;
+- immutable Ghost playback with stable-ID events;
+- pressure plate, door, objective, exit;
+- Guard patrol/perception/capture and Ghost distraction;
+- pause/restart/reset race handling;
+- Web/desktop export automation and public repository baseline.
 
-- Godot 4.7 stable project using the Compatibility renderer
-- Responsive 1280×720 top-down presentation
-- Input Map-driven keyboard/mouse controls
-- 20-second timeline and 20 Hz transform recording
-- Timestamped interaction events with stable object IDs
-- Frame-rate-independent Ghost interpolation
-- Deterministic player, object, UI, and playback reset
-- Pressure plate, linked door, objective, and exit puzzle
-- Contextual onboarding, pause, restart, fullscreen, and mute controls
-- Headless data/integration test harness
-- Web export with top-level `index.html`
-- CI, GitHub Pages deployment, and unsigned desktop release automation
-- Public repository documentation and licensing
+Role now: fast technology, Guard, asset, and reset regression.
 
-Exit criteria:
+## Completed foundation — Facility regression
 
-1. The first loop records the player holding the plate.
-2. The second loop spawns a Ghost from that immutable recording.
-3. The Ghost activates the plate while the live player crosses the door.
-4. The live player collects the objective and reaches the exit.
-5. Pause, restart, timeout, and victory do not race or leak mutable state.
-6. Headless tests and a local HTTP Web smoke test pass without fatal errors.
+- separate 26×25, 60-second TileMap mission;
+- terminal-controlled laser and plate-controlled vault door;
+- Guard distraction route;
+- wall collision, light occlusion, and information visibility probe;
+- bounded camera and regression acceptance coverage.
 
-## Milestone 2 — Deterministic stealth Guard
+Role now: visibility and multi-room full-loop regression.
 
-Goal: turn a failed approach into a useful Guard distraction without adding combat.
+## Current milestone — Operation: Black Minute
 
-Current implementation scope:
+Implemented architecture and content:
 
-- One collision-aware Guard following an authored two-point upper-corridor route on the starting side
-- Explicit idle, patrol, suspicious, chase, search, and return states
-- Distance, view-angle, wall, and closed-door line-of-sight checks
-- Delta-based suspicion gain/loss and capture hold timing
-- Deterministic target priority: live Player before active Ghost recordings
-- Capture finalizes the current recording and starts the next loop
-- Full Guard reset between loops, with a short perception grace period
-- Vision cone, `?`/`!` indicators, HUD suspicion meter, and capture feedback
-- Upper-corridor Ghost lure paired with a lower-vault live-player objective route
+- explicit GameMode and menu → briefing → formal mission flow;
+- blueprint-driven 64×42 facility with 15 rooms;
+- 10 deterministic Guards across 7 bounded response zones;
+- 8 CCTV cameras and 3 laser barriers;
+- Level 1 / Level 2 / Vault access progression;
+- server or biometric Vault authorization;
+- acyclic objective graph and Core/extraction lifecycle;
+- three-charge, ten-second Chrono Recall with bounded history;
+- rewindable value snapshots and maximum three Echoes;
+- tactical pause map and heist HUD;
+- mission solvability validator;
+- deterministic 180-second patrol simulation.
 
-Acceptance criteria:
+Remaining acceptance work for this milestone must be reported from actual execution, not inferred:
 
-1. The Guard patrols and changes animation in the direction of travel.
-2. Walls and a closed door block detection; the open door permits it.
-3. A caught run is retained and appears as a Ghost on the next timeline.
-4. The Guard follows the upper-corridor Ghost while the live player can cross into the lower vault lane.
-5. Losing a target leads through search and return instead of nondeterministic wandering.
-6. Pause, victory, restart, timeout, and capture preserve one deterministic loop outcome.
+1. complete no-Recall playthrough;
+2. complete Recall-assisted playthrough with Echo distraction;
+3. capture → Recall and capture → checkpoint manual review;
+4. 1280×720 and resized local-HTTP browser visual/input pass;
+5. browser console review;
+6. clean Web export, CI, Pages deployment, and deployed HTTP confirmation.
 
-This milestone deliberately excludes health, weapons, damage, hearing, reinforcements, and general-purpose enemy navigation.
+## Next milestone — Heist usability hardening
 
-## Milestone 3 — Facility map and wall visibility
+- observe first-time players and tune objective wording/patrol windows;
+- add an explicit tutorial-message replay setting;
+- improve tactical-map legend and locked-door readability;
+- verify fullscreen/mute presentation in every GameMode and browser environment;
+- profile 10 Guards + 3 Echoes + 8 cameras on representative Web hardware;
+- audit repeated Recall/checkpoint cycles for orphan nodes and stale signals;
+- capture verified screenshots/GIF after browser visual acceptance.
 
-Goal: prove the same loop in a compact multi-room mission where walls hide both rendered space and gameplay information.
+## Later decision gate — One deeper heist choice
 
-Implementation scope:
+Choose only after Black Minute is consistently completable and understandable. Candidate directions:
 
-- Separate `26×25` facility scene at `32 px` per tile; the 20-second prototype remains available for regression
-- 60-second level-local duration and bounded `832×800 px` Player camera
-- One center-corridor Guard with four deterministic patrol points
-- Lower-left pressure plate controlling the upper-left vault door
-- Right-room terminal disabling a resettable laser Player trigger
-- Objective in the upper-left control room and exit in the lower-right courtyard
-- `CanvasModulate`, one Player `PointLight2D`, TileSet wall occlusion, and a dynamic door occluder
-- Physics-ray `PlayerVisibilityProbe` plus cached alpha/HUD/prompt gating for Guard, Ghost, and stateful objects
-- Source-only `824×807` map reference; no giant runtime background texture
+- one additional mission with a different security order;
+- one non-combat gadget that deepens route planning;
+- one additional deterministic security device;
+- score/optional objectives for perfect infiltration.
 
-Exit criteria:
+Do not build all candidates at once. Any choice must preserve no-Recall solvability, stable IDs, bounded Recall history, and fast restart.
 
-1. Topology, collision, portal coordinates, per-level timing, reset, and prototype regression tests pass.
-2. A two-loop route demonstrates Ghost distraction and plate occupancy while the current Player uses the terminal/laser route.
-3. Closed/open door movement, Guard LOS, Player visibility, and rendered occlusion remain synchronized.
-4. Web screenshots show no Guard/Ghost/indicator leak behind walls at `1280×720` and a resized viewport.
-5. Web export, local HTTP smoke, browser console, CI, and Pages deployment are independently verified; none is inferred from headless tests.
+## Deferred infrastructure
 
-## Milestone 4 — MVP hardening
+- persistent mission/campaign save and schema migration;
+- controller rebinding and touch input;
+- localization pipeline beyond current labels;
+- signed/notarized desktop release;
+- generalized navigation for arbitrary generated layouts.
 
-Continue after the core loop and stealth acceptance pass consistently.
+## Explicitly out of scope
 
-- Test low frame rates and long frame stalls against replay event ordering
-- Test browser focus loss, resize, fullscreen transitions, and audio mute
-- Improve first-loop onboarding based on observed player confusion
-- Add small readability and feedback improvements without obscuring state
-- Profile the eight-Ghost cap on representative Web hardware
-- Capture a compact gameplay GIF and verified release screenshots
-- Exercise release workflows from a clean public checkout
-
-## Milestone 5 — Vertical-slice decision
-
-This is a decision gate, not a promise of features. Use playtest evidence to choose one narrow extension that deepens time-loop cooperation. Candidate work may include a second deterministic puzzle pattern or a single simple hazard. Any extension must preserve stable replay and fast retries.
-
-## Explicitly out of scope for the MVP
-
-- Multiplayer, accounts, online services, leaderboards, or analytics
-- Procedural generation or a campaign
-- Additional enemy types, combat AI, bosses, weapon systems, or skill trees
-- Meta progression, shops, inventory grids, or save migration
-- Mobile touch controls, mod loading, or user-generated content
-- Paid assets, ads, or microtransactions
-
-These systems should not receive speculative abstractions before the core loop is validated.
+- multiplayer, accounts, online services, leaderboards, analytics;
+- procedural generation or user-generated content;
+- combat, weapons, health, bosses, reinforcement AI;
+- skill trees, shops, inventory grids, meta progression;
+- hearing/noise simulation, cover, crouch;
+- ads, microtransactions, paid-asset dependencies.

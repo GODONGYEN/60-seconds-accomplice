@@ -1,1034 +1,392 @@
 # 60초의 공범 — Technical Architecture
 
-문서 상태: Prototype architecture  
-엔진: Godot 4.x  
-언어: GDScript with static typing  
-대상: Codex 및 프로젝트 개발자
+문서 상태: Operation: Black Minute + preserved loop regressions
 
----
+엔진: Godot 4.7 / Compatibility
 
-## 1. Architecture Goals
+언어: statically typed GDScript where practical
 
-이 구조의 목표는 다음과 같다.
+## 1. Architecture goals
 
-1. time-loop recording과 Ghost replay를 안정적으로 구현한다.
-2. level object가 replay system에 과도하게 결합되지 않도록 한다.
-3. prototype을 빠르게 만들되 정식 게임으로 확장 가능한 경계를 유지한다.
-4. frame rate와 physics 오차로 인한 replay drift를 최소화한다.
-5. Codex가 파일 책임과 데이터 흐름을 쉽게 이해할 수 있게 한다.
+1. 정식 heist와 full-loop regression의 lifecycle을 명시적으로 분리한다.
+2. mission, access, security, Guard scheduling, Recall 책임을 한 manager에 몰지 않는다.
+3. blueprint에서 map과 security population을 결정적으로 재현한다.
+4. Recall snapshot에 Node reference를 저장하지 않는다.
+5. stable object ID를 interaction/replay/validation의 공통 식별자로 사용한다.
+6. pause, capture, Recall restore, checkpoint reset, victory의 state transition을 한 번만 확정한다.
+7. Web에서 10 Guards, 8 cameras, 3 lasers, 3 Echoes를 예측 가능한 비용으로 처리한다.
 
----
+## 2. Explicit mode boundary
 
-## 2. Core Decisions
-
-### 2.1 Hybrid Replay
-
-prototype은 hybrid replay를 사용한다.
-
-- movement: position/facing snapshot을 timestamp에 따라 interpolation
-- discrete action: 별도 event list를 timestamp에 맞춰 실행
-
-이유:
-
-- input만 다시 실행하면 physics 상태에 따라 경로가 달라질 수 있다.
-- position만 재생하면 상호작용 시점을 안정적으로 복원하기 어렵다.
-- 두 방식을 결합하면 이동은 안정적이고 행동은 명확해진다.
-
-### 2.2 In-Memory Recording
-
-prototype에서는 recording을 disk에 저장하지 않는다.
-
-- 한 level session 동안만 유지
-- level 종료 또는 timeline reset 시 폐기
-- meta save와 분리
-
-### 2.3 Stable Object Registry
-
-상호작용 대상은 stable object ID로 조회한다.
-
-- NodePath를 recording에 저장하지 않는다.
-- level 시작 시 registry를 구성한다.
-- Ghost event는 ID로 object를 찾는다.
-
-### 2.4 Level State Reset
-
-level mutable state는 매 loop 시작 전에 초기 snapshot 또는 명시적 reset contract를 통해 복구한다.
-
-prototype에서는 각 resettable object가 `reset_for_loop()`를 구현하는 방식이 가장 단순하다.
-
-### 2.5 Shared Level Contract and Level Duration
-
-`GameplayLevel` contains only the contracts shared by the preserved prototype and `facility_level_01`: actor containers, registry rebuild, resettable/Guard caching, Player/Ghost spawning, simulation gating, and signals consumed by `GameManager`/`TimelineManager`.
-
-Each concrete level exports `level_loop_duration_seconds`. `TimelineManager.configure(level)` copies that value when the session starts:
-
-- `PrototypeLevel`: `20` seconds;
-- `FacilityLevel01`: `60` seconds.
-
-Facility map, laser, terminal, visibility, and camera logic stay in `FacilityLevel01`; they do not leak into the prototype or `TimelineManager`.
-
----
-
-## 3. Recommended Scene Tree
+`scripts/core/game_mode.gd`의 enum이 mode의 유일한 의미 소스다.
 
 ```text
-Main.tscn
-└── Main
-    ├── GameManager
-    ├── LevelContainer
-    │   └── CurrentLevel: GameplayLevel
-    │       ├── Map/Environment
-    │       ├── PlayerSpawn
-    │       ├── PlayerContainer
-    │       ├── GhostContainer
-    │       ├── Guard(s) and authored route
-    │       ├── ObjectRegistry
-    │       └── Independent resettable gameplay scenes
-    ├── TimelineManager
-    └── UI
-        ├── TimerLabel
-        ├── LoopLabel
-        └── StatusLabel
+MAIN_MENU
+OPERATION_BLACK_MINUTE
+PROTOTYPE_LOOP
+FACILITY_REGRESSION
 ```
 
-실제 scene tree는 다를 수 있지만 책임 경계는 유지한다.
+scene name, root node name, 파일 경로 문자열 비교로 mode를 판정하지 않는다.
 
----
+`AppController`는 다음만 담당한다.
 
-## 4. Module Map
+- MainMenu → MissionBriefing → Operation scene 전환;
+- developer regression mode launch;
+- 현재 session scene 교체;
+- session의 optional `return_to_menu_requested` 연결;
+- mode-independent fullscreen/mute utility input.
+
+Embedded legacy `GameManager` sessions delegate F11/V to the ancestor utility-input owner and update their local HUD state without applying the action twice. Standalone legacy scenes retain their original handlers.
+
+Operation scene은 export된 `PackedScene`을 우선 사용하고 설정된 fallback path로 load할 수 있다. Command-line user arguments `--prototype`과 `--facility-regression`은 Godot의 `--` separator 뒤에서 사용한다.
+
+## 3. Two gameplay stacks
+
+### Formal heist stack
 
 ```text
-GameManager
-├── level lifecycle
-├── success/failure state
-└── session orchestration
-
-TimelineManager
-├── loop clock
-├── recording lifecycle
-├── stored recordings
-└── Ghost spawn orchestration
-
-PlayerController
-├── movement
-├── facing
-├── interaction request
-└── current live actor state
-
-ActionRecorder
-├── snapshot sampling
-├── event capture
-└── completed recording creation
-
-GhostPlayback
-├── recording playback clock
-├── snapshot interpolation
-└── event dispatch
-
-ObjectRegistry
-├── stable ID registration
-└── object lookup
-
-LoopResetManager or reset contract
-├── reset mutable objects
-└── restore spawn state
-
-Interactables
-├── pressure plate
-├── door
-├── objective
-└── exit
-
-GuardController
-├── explicit stealth state machine
-├── suspicion and capture protocol
-├── GuardPerception candidate/FOV/LOS component
-├── GuardNavigation collision-aware steering component
-└── GuardVisual animation and readable awareness feedback
-
-FacilityLevelMap
-├── deterministic 26×25 walkable/wall topology
-├── six TileMapLayer presentation/collision layers
-└── authored room, connector, prop, and portal coordinates
-
-PlayerVisibilityProbe
-├── visibility radius
-└── PlayerVisionBlocker physics ray
-
-WorldVisibilityController
-├── cached Guard/Ghost/object target list
-├── 20 Hz reveal decisions
-└── actor-root alpha and HUD information gating
+AppController
+→ OperationBlackMinuteLevel
+   ├── MissionDirector + ObjectiveGraph
+   ├── AccessControlManager
+   ├── SecuritySystemManager
+   ├── GuardZoneManager
+   ├── PatrolScheduler
+   ├── ChronoRecallManager
+   │   ├── RecallHistory
+   │   └── RewindStateRegistry
+   ├── OperationBlackMinuteMap
+   ├── ObjectRegistry
+   ├── WorldVisibilityController
+   ├── HeistHUD
+   └── FacilityMapOverlay
 ```
 
----
-
-## 5. Data Model
-
-### 5.1 TransformSnapshot
-
-```gdscript
-class_name TransformSnapshot
-extends RefCounted
-
-var timestamp: float
-var position: Vector2
-var facing_angle: float
-
-func _init(
-    p_timestamp: float,
-    p_position: Vector2,
-    p_facing_angle: float
-) -> void:
-    timestamp = p_timestamp
-    position = p_position
-    facing_angle = p_facing_angle
-```
-
-필요하면 `velocity` 또는 animation hint를 나중에 추가할 수 있다.
-
-### 5.2 RecordedEvent
-
-```gdscript
-class_name RecordedEvent
-extends RefCounted
-
-enum EventType {
-    INTERACT,
-    SHOOT,
-    ITEM_DROP,
-}
-
-var timestamp: float
-var type: EventType
-var target_object_id: StringName
-var payload: Dictionary
-```
-
-prototype에서는 `INTERACT`만 사용해도 된다.
-
-### 5.3 LoopRecording
-
-```gdscript
-class_name LoopRecording
-extends RefCounted
-
-var duration: float
-var snapshots: Array[TransformSnapshot]
-var events: Array[RecordedEvent]
-```
-
-추가 metadata 후보:
-
-- recording ID
-- loop index
-- end reason
-- player cosmetic variant
-
-prototype에서는 필요하지 않으면 넣지 않는다.
-
----
-
-## 6. Main Responsibilities
-
-### 6.1 GameManager
-
-담당:
-
-- current level 시작
-- level 성공 처리
-- 전체 timeline reset
-- pause 상태와 UI 상위 흐름
-
-비담당:
-
-- snapshot 기록
-- Ghost interpolation
-- door 상태 직접 변경
-
-권장 signal:
-
-```gdscript
-signal level_started
-signal level_completed
-signal timeline_reset
-```
-
-### 6.2 TimelineManager
-
-권장 공개 상태:
-
-```gdscript
-@export var loop_duration_seconds: float = 20.0
-@export var max_ghosts: int = 8
-
-var current_loop_index: int
-var elapsed_time: float
-var is_loop_running: bool
-var recordings: Array[LoopRecording]
-```
-
-`20.0` is the scene fallback only. `configure(level)` replaces it with the concrete level's declared duration before the first loop.
-
-핵심 함수:
-
-```gdscript
-func start_first_loop() -> void
-func finish_current_loop(reason: StringName) -> void
-func start_next_loop() -> void
-func reset_timeline() -> void
-func get_remaining_time() -> float
-```
-
-권장 signal:
-
-```gdscript
-signal loop_started(loop_index: int)
-signal loop_time_updated(remaining_seconds: float)
-signal loop_ended(loop_index: int, reason: StringName)
-signal recording_added(recording: LoopRecording)
-```
-
-### 6.3 PlayerController
-
-담당:
-
-- input 기반 이동
-- facing 갱신
-- interaction 요청
-- spawn state 복구
-
-PlayerController는 recording array를 직접 관리하지 않는다. `ActionRecorder`에 현재 상태를 제공하거나 recorder가 player를 참조한다.
-
-### 6.4 ActionRecorder
-
-권장 설정:
-
-```gdscript
-@export var sample_rate_hz: float = 20.0
-```
-
-동작:
-
-1. loop 시작 시 buffer 초기화
-2. 일정 주기로 snapshot 추가
-3. player interaction 성공 시 event 추가
-4. loop 종료 시 `LoopRecording` 생성
-5. recording을 TimelineManager에 전달
-
-샘플 간격:
+### Preserved loop stack
 
 ```text
-sample_interval = 1.0 / sample_rate_hz
+AppController
+→ PrototypeLoopSession or FacilityRegressionSession
+   └── GameManager
+       ├── GameplayLevel
+       ├── TimelineManager
+       ├── ActionRecorder / LoopRecording
+       ├── GhostPlayback
+       └── legacy HUD / AudioFeedback
 ```
 
-`delta`가 interval보다 커도 sample을 잃지 않도록 accumulator 기반으로 처리한다.
+`TimelineManager`는 formal heist의 mission state, access, CCTV, lasers, Guard zones, Recall charge를 관리하지 않는다. `ChronoRecallManager`는 regression mode의 full-loop index/timeout을 관리하지 않는다.
 
-### 6.5 GhostPlayback
+## 4. Operation scene contract
 
-상태:
+`scenes/levels/operation_black_minute.tscn` root는 `OperationBlackMinuteLevel`이며 다음 child contract를 가진다.
+
+```text
+OperationBlackMinuteLevel
+├── OperationMap
+│   ├── Floor
+│   ├── FloorDetails
+│   ├── Walls
+│   ├── PropsBelowActors
+│   ├── PropsAboveActors
+│   ├── RoomLabels
+│   └── ObservationWindows
+├── ActorLayer
+│   ├── PlayerContainer
+│   ├── EchoContainer
+│   └── GuardContainer
+├── DynamicObjects
+├── ProgressionTriggers
+├── ObjectRegistry
+├── VisibilityController
+├── MissionDirector
+├── AccessControlManager
+├── SecuritySystemManager
+├── GuardZoneManager
+├── PatrolScheduler
+├── ChronoRecallManager
+├── HeistHUD
+└── FacilityMapOverlay
+```
+
+Map geometry와 population은 `resources/maps/operation_black_minute_blueprint.json`에서 생성한다. Gameplay scene은 source image 또는 map preview를 직접 사용하지 않는다.
+
+## 5. Blueprint as data contract
+
+Blueprint는 다음을 선언한다.
+
+- 64×42 map, 32 px tile, 2048×1344 world;
+- 15 rooms, connectors, dynamic portals, internal solids;
+- object/card/terminal/Core/extraction positions;
+- access ranks and vault credential alternatives;
+- CCTV camera phases and laser spans;
+- 10 Guard routes, waits, start phases, speeds;
+- 7 Guard zones and adjacency;
+- 15 choke capacities and safe windows;
+- objective topological order and solvability declarations.
+
+`MissionSolvabilityValidator`는 runtime 이전에 dimensions, counts, stable IDs, bounds/walkability, room connectivity, objective DAG, access circularity, authorization alternatives, route declarations, safe windows를 검사한다.
+
+Blueprint validation과 runtime validation은 목적이 다르다.
+
+- static validator: authoring/data contract;
+- `OperationBlackMinuteLevel._validate_runtime_contracts()`: 실제로 생성된 10 Guards, 8 cameras, 3 lasers, doors, terminals, zone registrations;
+- headless scene/test: Node contract와 state transition;
+- browser pass: rendering/input/console.
+
+## 6. Mission and objective flow
+
+```text
+world trigger or successful interaction
+→ OperationBlackMinuteLevel translates to semantic event
+→ MissionDirector.report_event(event_id)
+→ ObjectiveGraph validates current state/prerequisites
+→ objective state changes once
+→ HUD and tactical map receive objective list
+```
+
+`ObjectiveGraph` stores stable `StringName` IDs, authored insertion order, `all_of` and `any_of` prerequisites, optional flags, and explicit state. It validates missing prerequisites and cycles before mission start.
+
+`MissionDirector` owns mission state:
+
+```text
+BRIEFING → ACTIVE → CAPTURE_DECISION → ACTIVE
+                         └────────────→ reset mission
+ACTIVE → COMPLETED
+```
+
+It does not directly move Guards, open doors, draw UI, or restore arbitrary object fields.
+
+## 7. Access flow
+
+```text
+live Player interacts with card
+→ AccessCard emits stable card ID + level
+→ AccessControlManager.grant_access
+→ current highest access + credential source stored
+→ MissionDirector completes access objective
+→ AccessDoor.authorize on interaction
+→ door collision/LOS/visibility blocker state changes together
+```
+
+Access ranks are `PUBLIC`, `LEVEL_1`, `LEVEL_2`, `VAULT`. Vault authorization is granted from either server override or biometric source after the required physical route. Echoes cannot collect cards or grant credentials. Access state is rewindable; Recall charge spending is not.
+
+## 8. Security data flow
+
+```text
+CCTV threshold / Guard alert / laser contact
+→ SecuritySystemManager.raise_zone_alert
+→ GuardZoneManager resolves zone + adjacent recipients deterministically
+→ GuardController.receive_zone_alert(last_seen_position, source, zone)
+→ investigate / suspicion / chase / search / return
+```
+
+`SecuritySystemManager` owns:
+
+- CCTV network online/offline;
+- laser network online/offline;
+- `CLEAR`, `SUSPICIOUS`, `ALERTED`, `LOCKDOWN`;
+- last known per-zone alert payload;
+- alert decay.
+
+Cameras and lasers own their local detection/trigger behavior. Terminals request network changes through the manager. A closed AccessDoor blocks movement, Guard LOS, camera LOS, Player visibility, and light; an open door disables those blockers consistently.
+
+## 9. Guard responsibilities
+
+`GuardController` remains the explicit state machine and target lifecycle owner. It delegates:
+
+- candidate/FOV/LOS/proximity calculation to `GuardPerception`;
+- collision-aware movement to `GuardNavigation`;
+- directional animation/cone/icons to `GuardVisual`;
+- mission chase bounds/zone alerts to `GuardZoneManager`;
+- conflicting tile/choke movement decisions to `PatrolScheduler`.
+
+Guard target selection is stable: visible live Player first, then eligible Echoes by deterministic ID/sequence ordering. Node tree order is not a tie-breaker.
+
+### Guard zones
+
+Each Guard has one declared home zone and an explicit allowed response set. Zone manager validates capacity and assignments, clamps chase targets, routes alerts to local/adjacent Guards, and gives return anchors.
+
+### Patrol scheduling
+
+Routes are authored loops with waypoint waits and a start phase. Runtime Guard reset and virtual validation both call the same deterministic phase evaluator, so phase means elapsed route time in both paths. Scheduler reservations are sorted by stable Guard ID. It rejects occupied tiles and choke entries above capacity. The 180-second virtual simulation runs twice and compares trace digests while measuring overlap, choke, zone, deadlock, and separately named capacity-open opportunities. Authored safe-window declarations are never relabeled as measured results.
+
+## 10. Chrono Recall
+
+### History
+
+`RecallHistory` records the live actor at 20 Hz and timestamped stable-ID interaction events. It retains only the active bounded branch needed for a 10-second Recall.
+
+### World snapshots
+
+`ChronoRecallManager` captures:
+
+- actor transform/velocity/extended typed state;
+- a `RewindStateRegistry` snapshot of registered contracts;
+- monotonic world timestamp.
+
+Each rewindable exposes:
 
 ```gdscript
-var recording: LoopRecording
-var playback_time: float
-var next_event_index: int
-var is_playing: bool
+func get_recall_state_id() -> StringName
+func capture_recall_state() -> Dictionary
+func restore_recall_state(snapshot: Dictionary) -> bool
 ```
 
-매 frame:
+Legacy-equivalent `capture_rewind_state`/`restore_rewind_state` names are accepted by the registry. Duplicate/empty IDs, missing methods, invalid snapshots, and Object references fail validation instead of being ignored.
 
-1. playback_time 증가
-2. 현재 시간 앞뒤 snapshot index 찾기
-3. position과 facing interpolation
-4. timestamp가 지난 event를 순서대로 실행
-5. recording 종료 시 마지막 상태 유지 또는 비활성화
-
-event 실행은 `while`을 사용하여 한 frame에 여러 event 시간이 지나도 누락하지 않는다.
-
-```gdscript
-while next_event_index < recording.events.size():
-    var event := recording.events[next_event_index]
-    if event.timestamp > playback_time:
-        break
-    _dispatch_event(event)
-    next_event_index += 1
-```
-
----
-
-## 7. Interaction Architecture
-
-### 7.1 Interactable Contract
-
-Godot의 strict interface가 없으므로 base class 또는 duck typing을 선택한다.
-
-권장 base class:
-
-```gdscript
-class_name Interactable
-extends Node2D
-
-@export var object_id: StringName
-
-func can_interact(actor: Node) -> bool:
-    return true
-
-func interact(actor: Node) -> void:
-    push_warning("interact() must be overridden")
-```
-
-모든 상호작용 object가 반드시 Node2D일 필요가 없다면 `Node` base와 별도 area child를 사용할 수 있다.
-
-### 7.2 Interaction Flow
-
-현재 player:
+### Restore transaction
 
 ```text
-input interact
-→ PlayerInteractor finds nearby Interactable
-→ can_interact(player)
-→ interact(player)
-→ success
-→ ActionRecorder records INTERACT event with object_id
+validate availability and target snapshot
+→ build abandoned LoopRecording segment
+→ enter RESTORING and spend one charge
+→ restore registry snapshot in deterministic phase/ID order
+→ restore Player state
+→ spawn Echo from abandoned segment
+→ clear old bounded branch
+→ begin new branch at monotonic world time
+→ resume simulation
 ```
 
-Ghost:
+The world clock does not move backward. Snapshot state moves to the selected historical point while a new branch starts at the current monotonic timestamp. A later Recall cannot cross an earlier branch boundary. The oldest Echo is removed before exceeding the cap of three.
+
+## 11. State categories
+
+### Rewindable within a Recall
+
+- Player transform/facing/velocity and heist actor state;
+- cards and access inventory;
+- access doors and terminals;
+- CCTV/laser/alert state;
+- objective graph and Core possession;
+- Guards and cameras;
+- extraction activation and operation tutorial state.
+
+### Mission-persistent across a Recall
+
+- consumed Recall charge;
+- monotonic world time;
+- Echo sequence/cap policy;
+- current branch boundary.
+
+### Reset by mission-start checkpoint
+
+- all rewindable state;
+- all Echoes/history;
+- Recall charges;
+- Guard scheduler runtime reservations;
+- discovered maintenance route;
+- objective and alert state.
+
+There is no post-Core checkpoint in the current implementation.
+
+## 12. Stable interaction contract
+
+Interactive runtime objects register a human-readable stable ID in `ObjectRegistry`. Recording stores the stable ID, event type, order, and minimal payload, never a NodePath or Node reference.
+
+Player and Echo identity uses groups/contracts (`player_actor`, `ghost_actor`, `detectable_actor`), not node-name string comparisons.
+
+Object policy:
+
+- AccessCard: live Player only;
+- AccessDoor: live authorization; eligible Echo replay may reproduce an already-authorized interaction;
+- HackTerminal: live Player; explicitly allowed Echo replay;
+- ChronosCore and extraction: live Player only;
+- SecurityLaser: captures live Player, ignores Echo;
+- CCTV/Guards: detect both.
+
+## 13. Pause, capture, and victory
+
+Operation input/simulation gates are centralized in `OperationBlackMinuteLevel` without changing manager internals directly.
+
+- tactical map: pauses tree and closes before resume;
+- pause menu: process-always UI, gameplay stopped;
+- capture: re-entry flag, simulation disabled, mission enters `CAPTURE_DECISION`;
+- Recall choice: temporarily enables Recall transaction, restores, resumes `ACTIVE`;
+- checkpoint choice: full `reset_operation()` from mission start;
+- victory: simulation disabled, tree unpaused for victory UI, further capture ignored.
+
+## 14. Preserved hybrid replay
+
+Regression modes retain the original model:
+
+- transform snapshots sampled at 20 Hz;
+- timestamp-ordered discrete events;
+- immutable/deep-copied `LoopRecording`;
+- position interpolation instead of Ghost physics resimulation;
+- stable-ID event dispatch exactly once;
+- pause-safe clock and deterministic reset.
+
+Loop-end reason arbitration and Ghost count remain the responsibility of `TimelineManager` only inside those modes.
+
+## 15. Performance rules
+
+- Do not call `get_nodes_in_group()` every frame; cache candidates/registries at setup or controlled rebuild points.
+- Camera/Guard physics rays operate on cached candidates and bounded update cadence.
+- Vision geometry is generated from configuration, not rebuilt unnecessarily.
+- Navigation targets and reservations update only when movement requires it.
+- Rewind history is bounded; full mission history is not retained.
+- Temporary snapshot data contains value types only.
+- Reset must not accumulate signal connections, orphan Echoes, or stale reservations.
+
+## 16. Testing layers
+
+1. parser/import and scene load;
+2. objective/access/security unit behavior;
+3. Recall history, immutable segment, registry restore, persistent charge, Echo cap;
+4. Guard zone assignment/alert propagation;
+5. 180-second deterministic patrol simulation;
+6. static mission solvability validation;
+7. formal mission and preserved mode integration;
+8. Web export structure;
+9. manual local-HTTP browser rendering/input/console review.
+
+Run the static operation validator:
+
+```bash
+godot --headless --path . --script tools/validate_operation_black_minute.gd
+```
+
+Run the full harness:
+
+```bash
+GODOT_BIN=godot tools/run_tests.sh
+```
+
+Headless tests cannot certify PointLight/TileMap shadow pixels, readable cone alpha, responsive UI, or browser console state.
+
+## 17. File ownership
 
 ```text
-RecordedEvent timestamp reached
-→ ObjectRegistry.get_object(object_id)
-→ can_interact(ghost)
-→ interact(ghost)
+scripts/core/app_controller.gd                  menu and session switching
+scripts/core/game_mode.gd                       explicit mode enum/arguments
+scripts/missions/operation_black_minute_level.gd mission composition/orchestration
+scripts/missions/mission_director.gd            mission lifecycle/objective events
+scripts/missions/objective_graph.gd              acyclic objective state
+scripts/missions/mission_solvability_validator.gd blueprint contract validation
+scripts/security/access_control_manager.gd      credentials/access ranks
+scripts/security/security_system_manager.gd     networks/alerts
+scripts/security/security_camera.gd             camera sweep/perception
+scripts/security/security_laser.gd              laser live-Player trigger
+scripts/enemies/guard_zone_manager.gd            zone assignment/alert propagation
+scripts/enemies/patrol_scheduler.gd              deterministic reservations/simulation
+scripts/recording/chrono_recall_manager.gd       Recall transaction/Echo lifecycle
+scripts/recording/recall_history.gd              bounded branch recording
+scripts/recording/rewind_state_registry.gd       value snapshot contracts
+scripts/presentation/operation_black_minute_map.gd blueprint-driven map layers
+scripts/ui/mission_briefing.gd                   pre-mission briefing
+scripts/ui/facility_map_overlay.gd                tactical map
+scripts/ui/heist_hud.gd                           operation HUD/decisions
+scripts/core/timeline_manager.gd                 preserved full-loop lifecycle only
 ```
 
-기록은 interaction input이 아니라 **성공한 interaction**을 기준으로 남긴다. 실패한 입력을 기록하면 replay에서 의미 없는 event가 쌓인다.
-
-### 7.3 Actor Identity
-
-object가 player와 Ghost를 구분해야 할 수 있다.
-
-권장 방식:
-
-- group: `player_actor`, `ghost_actor`
-- 또는 공통 `TimelineActor` base class
-
-prototype에서는 group 방식이 단순하다.
-
----
-
-## 8. Object Registry
-
-### 8.1 Responsibilities
-
-- level 안의 object ID 등록
-- 중복 검사
-- ID 기반 lookup
-- level 종료 시 clear
-
-예시:
-
-```gdscript
-class_name ObjectRegistry
-extends Node
-
-var _objects: Dictionary[StringName, Node] = {}
-
-func register_object(object_id: StringName, object: Node) -> void:
-    if object_id == StringName():
-        push_error("Cannot register empty object_id")
-        return
-    if _objects.has(object_id):
-        push_error("Duplicate object_id: %s" % object_id)
-        return
-    _objects[object_id] = object
-
-func get_object(object_id: StringName) -> Node:
-    return _objects.get(object_id)
-```
-
-### 8.2 Registration Strategy
-
-권장 순서:
-
-1. level scene ready
-2. `interactable` group 순회
-3. object ID 등록
-4. 중복 검증
-5. loop 시작
-
-매 interaction마다 scene tree 전체를 검색하지 않는다.
-
----
-
-## 9. Loop Reset Architecture
-
-### 9.1 Resettable Contract
-
-```gdscript
-func reset_for_loop() -> void:
-    pass
-```
-
-reset 대상 예:
-
-- door
-- pressure plate
-- objective item
-- exit state
-- player
-- Guard position, state, perception, navigation, and capture state
-- projectile container
-
-### 9.2 Reset Order
-
-권장 순서:
-
-1. 현재 live player 입력 정지
-2. ActionRecorder 종료 및 recording 확정
-3. 일시적 node 삭제
-4. resettable object 초기화
-5. current player를 spawn point로 복구
-6. 기존 recording으로 Ghost 생성
-7. 새 recorder 시작
-8. loop clock 시작
-
-Ghost는 새 loop 시작 전 모두 제거하고 recordings 기반으로 다시 생성하는 것이 안전하다. 이전 loop의 Ghost node를 재사용하면 playback state가 남을 위험이 있다.
-
-### 9.3 State Restoration
-
-prototype에서는 object별 초기값을 export property 또는 `_ready()` 시점에 저장한다.
-
-예:
-
-```gdscript
-var _initial_position: Vector2
-var _initial_visible: bool
-
-func _ready() -> void:
-    _initial_position = global_position
-    _initial_visible = visible
-
-func reset_for_loop() -> void:
-    global_position = _initial_position
-    visible = _initial_visible
-```
-
-복잡한 level이 생기면 snapshot resource 기반 reset으로 확장할 수 있다.
-
----
-
-## 10. Pressure Plate and Door
-
-### 10.1 PressurePlate
-
-구성 예:
-
-```text
-PressurePlate (Area2D)
-├── CollisionShape2D
-├── Sprite2D
-└── AudioStreamPlayer2D
-```
-
-상태:
-
-```gdscript
-var occupying_actor_ids: Dictionary[int, bool]
-var is_active: bool
-```
-
-`body_entered`와 `body_exited`를 사용하고, actor instance ID를 set처럼 관리한다. 단일 boolean만 사용하면 여러 actor가 올라갔을 때 한 명이 나가는 순간 잘못 비활성화될 수 있다.
-
-signal:
-
-```gdscript
-signal active_changed(is_active: bool)
-```
-
-### 10.2 SecurityDoor
-
-Door는 pressure plate signal을 구독한다.
-
-```text
-PressurePlate.active_changed
-→ SecurityDoor.set_open(is_active)
-```
-
-Door는 TimelineManager를 알 필요가 없다.
-
-초기 prototype에서는 animation 없이 collision enable/disable과 sprite 상태만 바꿔도 된다.
-
----
-
-## 11. Objective and Exit
-
-### 11.1 ObjectiveItem
-
-- player만 pickup 가능
-- pickup 시 player 또는 GameManager에 objective state 전달
-- 자신은 숨기고 collision 비활성화
-- reset 시 다시 활성화
-
-권장 signal:
-
-```gdscript
-signal collected
-```
-
-### 11.2 ExitZone
-
-- player가 진입했을 때 objective 보유 여부 확인
-- 성공 시 GameManager에 level complete 요청
-- Ghost 진입은 무시
-
-objective state는 player component 또는 GameManager session state 중 하나에 둔다. prototype에서는 player의 boolean도 가능하지만, 장기적으로 inventory와 분리될 것을 고려한다.
-
----
-
-## 12. UI Data Flow
-
-UI는 manager를 직접 조작하지 않고 상태만 표시한다.
-
-```text
-TimelineManager.loop_time_updated
-→ HUD updates timer
-
-TimelineManager.loop_started
-→ HUD updates loop index
-
-GameManager.level_completed
-→ HUD shows success state
-```
-
-매 frame manager node를 찾아 값을 polling하지 않는다.
-
----
-
-## 13. Pause and Time Control
-
-- pause 중 recording time과 playback time이 멈춰야 한다.
-- UI pause menu는 process mode를 `When Paused`로 설정할 수 있다.
-- loop transition 연출에서 Engine.time_scale을 사용할 경우 반드시 원상 복구한다.
-- prototype에서는 global time scale보다 animation/tween 중심 연출을 권장한다.
-
----
-
-## 14. Determinism Strategy
-
-### Stable
-
-- pressure plate
-- door
-- objective
-- exit
-- fixed laser
-- scripted platform
-- authored Guard patrol order and search rotation
-- Guard target priority and loop-reset state
-
-이 object들은 같은 event와 상태에서 같은 결과를 내야 한다.
-
-### Dynamic Later
-
-- additional enemy AI types
-- projectile
-- physics box
-- explosion
-
-dynamic system은 퍼즐 필수 경로의 단일 실패 지점이 되지 않도록 설계한다.
-
-### Guard Stealth Data Flow
-
-현재 tutorial Guard는 난수를 사용하지 않고 authored patrol point, physics delta, stable actor ID만으로 동작한다.
-
-```text
-GuardPerception candidate cache
-→ distance / facing dot product / World LOS
-→ deterministic target selection (Player, then Ghost ID)
-→ current-target suspicion
-→ GuardController state transition
-→ GuardNavigation direct steering + move_and_slide
-→ GuardVisual animation / cone / ? / !
-→ capture request
-→ TimelineManager captured loop end
-→ recording finalization
-→ deterministic world and Guard reset
-```
-
-프로젝트에는 runtime navigation region이 없으므로 현재 Guard는 `NavigationAgent2D`를 pathfinder로 가장하지 않는다. Patrol과 last-seen segment는 collision-free 직선으로 작성하며, movement는 World collision에 대해 `move_and_slide()`를 사용한다. 일반 obstacle 회피가 필요한 level을 추가할 때만 navigation mesh를 도입한다. 상세 상태와 export contract는 `docs/guard_ai.md`를 따른다.
-
-### Replay Drift Prevention
-
-- position snapshot sampling: 기본 20Hz
-- playback: timestamp 기반 interpolation
-- event: 별도 정렬된 list
-- event index는 한 방향으로만 증가
-- loop clock은 playback과 recording이 같은 기준을 사용
-- physics input 재실행에 의존하지 않음
-
-### Facility Map and Visibility Data Flow
-
-`FacilityLevel01` composes the reusable systems without moving their internal state into the timeline manager:
-
-```text
-resources/maps/facility_level_01_blueprint.json
-→ FacilityLevelMap authored constants/validation
-→ Floor / FloorDetails / Walls / WallDetails / PropsBelow / PropsAbove TileMapLayer
-→ independent PressurePlate / SecurityDoor / Terminal / Laser / Objective / Exit scenes
-```
-
-The logical map is `26×25` cells at `32 px` (`832×800 px`). Every in-bounds cell is deterministically classified as walkable floor, a connector/dynamic portal underlay, or a wall. Only `Walls` enables physics collision and TileSet occlusion. Stateful devices never become baked TileMap cells.
-
-The visibility paths are deliberately parallel:
-
-```text
-Player position
-→ PlayerVision PointLight2D
-→ TileSet wall occluders + SecurityDoor LightOccluder2D
-→ rendered visible area
-
-PlayerVisibilityProbe
-→ radius + PlayerVisionBlocker physics ray
-→ WorldVisibilityController cached target decision
-→ actor/object root alpha
-→ interaction prompt and Guard HUD information gating
-```
-
-The global `CanvasModulate` supplies dark ambient light. The facility enables one shadow-casting Player light with an approximately `240 px` radius; the reusable Player leaves it disabled in the prototype. `WorldVisibilityController` refreshes a cached target list at `20 Hz`, not by traversing the scene tree every frame. Hidden targets keep processing so Guard AI, Ghost playback, trigger occupancy, and recording remain deterministic.
-
-Movement, Guard perception, Player information visibility, and rendered light share authored blockers while retaining narrow query masks:
-
-```text
-solid wall / closed door collision layer = World | PlayerVisionBlocker = 65
-Guard LOS mask = World (1)
-PlayerVisibilityProbe mask = PlayerVisionBlocker (64)
-light occlusion mask = 1
-```
-
-`WorldLineOfSight2D` is the shared ray helper. It ignores a logically open door during the deferred collision-disable frame. The door owns the corresponding visual/collision/LOS/light transition:
-
-```text
-Door state
-→ movement collision
-→ Guard LOS blocker
-→ Player visibility blocker
-→ Player light occluder
-→ visual state
-```
-
-Reset order remains actor-safe:
-
-```text
-disable level simulation and visibility
-→ clear live Player and Ghost nodes/visibility targets
-→ reset door, plate, terminal, laser, objective, exit, Guard
-→ rebuild/validate stable registry
-→ spawn recordings as Ghosts
-→ spawn and configure live Player/camera/light/probe
-→ start recorder and loop clock
-→ enable Guard and visibility simulation
-```
-
-Details, extension rules, and renderer limitations are in `docs/visibility_system.md`; exact room and portal coordinates are in `docs/maps/facility_level_01_layout.md`.
-
----
-
-## 15. Error and Validation Checks
-
-시작 시 검사:
-
-- loop duration > 0
-- sample rate > 0
-- PlayerSpawn 존재
-- Player 존재
-- Ghost scene 지정
-- ObjectRegistry 존재
-- stable ID 중복 없음
-
-recording 종료 시 검사:
-
-- snapshot이 최소 1개 이상
-- timestamp가 감소하지 않음
-- event가 timestamp 순서로 정렬됨
-- duration이 음수가 아님
-
-playback 시 검사:
-
-- recording null 아님
-- snapshot array 비어 있지 않음
-- 대상 object 누락 시 warning 후 continue
-
----
-
-## 16. Testing Strategy
-
-Godot 프로젝트에서 가능한 경우 GUT 같은 framework를 도입할 수 있지만, prototype 첫 단계에서는 수동 integration test와 작은 pure-data unit test를 우선한다.
-
-### 16.1 Data Tests
-
-- snapshot interpolation 결과
-- event ordering
-- sample accumulator
-- recording duration
-
-### 16.2 Integration Tests
-
-1. loop 1에서 player가 지정 경로 이동
-2. recording 생성 확인
-3. loop 2에서 Ghost 위치 확인
-4. pressure plate active 확인
-5. door collision disable 확인
-6. objective pickup 확인
-7. exit success 확인
-
-### 16.3 Regression Checks
-
-- R 연속 입력으로 recording 중복 저장되지 않음
-- pause 중 timer 감소하지 않음
-- Ghost event 중복 실행되지 않음
-- timeline reset 후 recordings 비어 있음
-- object ID 중복 시 명확한 오류
-
-### 16.4 Facility and Visibility Checks
-
-- blueprint, generated TileMap, and documented `26×25` bounds agree
-- floor/wall cells partition all `650` cells and the boundary is closed
-- wall tiles have both physics and occlusion polygons on collision layer `65`
-- same-room, radius, wall, corner, doorway, closed-door, and open-door visibility queries
-- hidden Guard/Ghost/object roots and Guard HUD do not leak information while their gameplay processing continues
-- terminal resets inactive, laser resets active, door resets closed with its LightOccluder visible
-- facility keeps `60` seconds while the prototype regression remains `20` seconds
-- repeated actor rebuild does not retain old Ghost targets or callbacks
-
-Headless tests validate data, physics rays, resource contracts, and alpha state. They do not validate Compatibility renderer shadow pixels; Web screenshots and browser console inspection remain separate release checks.
-
----
-
-## 17. Performance Budget
-
-MVP 기준:
-
-- target: 60 FPS
-- loop duration: prototype `20초`, facility `60초`
-- sample rate: 20Hz
-- snapshots per prototype Ghost: 약 401 (start/end sampling 포함)
-- snapshots per facility Ghost: 약 1,201 (start/end sampling 포함)
-- runtime Ghost cap: 8
-- facility Guard: 1
-
-60초 × 20Hz × 8 Ghost는 약 9,608 snapshots이다. 이 규모에서는 immutable in-memory recordings와 단방향 playback cursor를 유지하고, actor visibility는 cached list를 20Hz로 갱신한다. 실제 Web FPS는 브라우저에서 측정하며 문서에서 추측하지 않는다.
-
-최적화 우선순위:
-
-1. 매 frame scene tree search 제거
-2. event 중복 처리 방지
-3. 불필요한 allocation 감소
-4. Ghost 시각 효과 단순화
-5. shadow-enabled Player light를 한 개로 제한
-
-object pooling은 실제 profiling에서 필요할 때 도입한다.
-
----
-
-## 18. File Responsibility Proposal
-
-```text
-scripts/core/game_manager.gd
-- level lifecycle, success, timeline reset
-
-scripts/core/gameplay_level.gd
-- shared actor, registry, reset, Guard, and level-duration contract
-
-scripts/core/prototype_level.gd
-- preserved 20-second regression puzzle wiring
-
-scripts/core/facility_level_01.gd
-- 60-second facility mission wiring, camera/light setup, and device flow
-
-scripts/core/timeline_manager.gd
-- loop timing, recording collection, loop transitions
-
-scripts/core/object_registry.gd
-- stable ID registration and lookup
-
-scripts/core/loop_recording.gd
-- recording data container
-
-scripts/core/transform_snapshot.gd
-- movement snapshot data
-
-scripts/core/recorded_event.gd
-- event data
-
-scripts/player/player_controller.gd
-- current player movement and input
-
-scripts/player/player_interactor.gd
-- nearby interaction selection
-
-scripts/player/action_recorder.gd
-- snapshot and event recording
-
-scripts/ghost/ghost_playback.gd
-- playback interpolation and event dispatch
-
-scripts/presentation/facility_level_map.gd
-- deterministic 26×25 TileMapLayer topology and prop placement
-
-scripts/visibility/world_line_of_sight_2d.gd
-- common mask-based ray helper and open-door handling
-
-scripts/visibility/player_visibility_probe.gd
-- Player radius and blocker query API
-
-scripts/visibility/world_visibility_controller.gd
-- cached 20 Hz actor/object alpha and information visibility gating
-
-scripts/objects/interactable.gd
-- common interaction base
-
-scripts/objects/pressure_plate.gd
-- occupancy and active state
-
-scripts/objects/security_door.gd
-- open/close, collision, LOS, and dynamic light occlusion
-
-scripts/objects/security_terminal.gd
-- stable-ID laser disable interaction and reset
-
-scripts/objects/laser_barrier.gd
-- current-Player trip trigger and reset
-
-scripts/objects/objective_item.gd
-- objective pickup and reset
-
-scripts/objects/exit_zone.gd
-- completion check
-
-scripts/enemies/guard_controller.gd
-- stealth state, suspicion, target lifecycle, capture request
-
-scripts/enemies/guard_perception.gd
-- cached Player/Ghost candidates, FOV, World LOS, stable priority
-
-scripts/enemies/guard_navigation.gd
-- collision-aware direct steering and blocked progress measurement
-
-scripts/presentation/guard_visual.gd
-- directional animation, cone, awareness icons, suspicion/debug presentation
-
-scripts/ui/hud.gd
-- timer, loop, status display
-```
-
-한 파일에 여러 주요 class를 몰아넣지 않는다.
-
----
-
-## 19. Incremental Build Order
-
-### Milestone 1: Foundation
-
-- Godot project
-- folders
-- Input Map
-- prototype level shell
-- player spawn
-
-### Milestone 2: Player
-
-- movement
-- collision
-- interaction detector
-
-### Milestone 3: Recording
-
-- data classes
-- ActionRecorder
-- loop timer
-- recording finalization
-
-### Milestone 4: Ghost
-
-- Ghost scene
-- snapshot interpolation
-- event playback
-
-### Milestone 5: Puzzle
-
-- registry
-- pressure plate
-- door
-- reset contract
-
-### Milestone 6: Goal
-
-- objective
-- exit
-- success state
-- HUD
-
-### Milestone 7: Hardening
-
-- pause
-- manual restart
-- duplicate event guards
-- validation
-- headless parse check
-
-각 milestone은 독립적으로 실행 가능하고 검증 가능해야 한다.
-
----
-
-## 20. Prototype Acceptance Test
-
-다음 시나리오를 수동으로 재현할 수 있어야 한다.
-
-### Setup
-
-- loop duration 20초
-- player spawn과 pressure plate 사이 이동 가능
-- door 뒤에 objective와 exit 배치
-
-### Test
-
-1. 게임 시작
-2. player가 pressure plate로 이동
-3. plate 위에서 loop 종료
-4. 두 번째 loop 시작
-5. 첫 recording의 Ghost 생성 확인
-6. Ghost가 plate 위에 도착
-7. door가 열림
-8. 현재 player가 door 통과
-9. objective 획득
-10. exit 진입
-11. level complete UI 표시
-
-Guard stealth acceptance는 captured recording이 다음 loop의 Ghost가 되고, 그 Ghost가 시작 방 upper corridor에서 경비를 유인하는 동안 현재 Player가 문을 지나 lower vault lane에서 objective와 exit를 완료하는 흐름을 추가로 검증한다. Capture, timeout, restart, victory가 같은 physics interval에 경쟁하면 `victory > captured > restart > timeout` 우선순위로 하나의 loop 종료 사유만 확정해야 한다.
-
-### Pass Conditions
-
-- Ghost 경로가 눈에 띄게 흔들리거나 크게 어긋나지 않음
-- plate event와 door 상태가 정확히 연결됨
-- objective는 current player만 획득함
-- exit는 objective 보유 시에만 성공함
-- runtime error 없음
-- 새 loop가 시작될 때 level 상태가 정확히 초기화됨
-
-이 acceptance test와 Guard distraction acceptance를 통과하기 전에는 추가 enemy 유형, combat, meta progression을 구현하지 않는다.
-
----
-
-## 21. Facility Acceptance Test
-
-The separate `facility_level_01.tscn` acceptance path uses a 60-second duration while the prototype test above remains unchanged:
-
-1. Spawn in the lower-right courtyard with facility interiors dark behind walls.
-2. Approach a doorway and verify that only radius- and LOS-valid actors/objects become visible.
-3. Record a route that draws `guard_center_01` west and ends on `plate_vault_01`.
-4. Start loop two and verify that the Ghost repeats both distraction and plate occupancy.
-5. Use the live Player to activate `terminal_laser_01`, pass `laser_right_01`, and cross the open vault door.
-6. Collect `objective_core_01` and return to `exit_courtyard_01`.
-7. Restart and verify closed door/collision/occluder, active laser, inactive terminal, uncollected objective, inactive exit, reset Guard, hidden actor information, and rebuilt Ghost visibility targets.
-
-Automated acceptance covers topology, resources, logic, reset, and the preserved prototype. A browser screenshot pass is additionally required for actual PointLight/TileSet/door shadow output; headless success alone must not be reported as rendered-light success.
+## 18. Known architectural limits
+
+- Mission composition is specific to the one authored operation; it is not a generic campaign framework.
+- Guard movement is route/zone/reservation based, not NavigationServer-driven general pathfinding.
+- There is no persistent save serialization or schema migration.
+- The tactical map is authored information, not fog-of-war pathfinding.
+- Dynamic visual cones are guides; physics LOS remains authoritative.
+- Sound hooks are secondary to visual feedback and no external audio dependency is required.

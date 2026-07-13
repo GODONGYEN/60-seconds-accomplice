@@ -81,6 +81,9 @@ jobs:
       - name: Validate headless boot and GDScript parsing
         run: godot --headless --path . --quit
 
+      - name: Validate Operation Black Minute mission contract
+        run: godot --headless --path . --script tools/validate_operation_black_minute.gd
+
       - name: Run automated tests
         run: GODOT_BIN=godot tools/run_tests.sh
 
@@ -101,6 +104,7 @@ jobs:
           test -f build/web/licenses/PROJECT_LICENSE.txt
           test -f build/web/licenses/THIRD_PARTY_NOTICES.md
           test -f build/web/licenses/GODOT_ENGINE_LICENSE.txt
+          test -f build/web/licenses/NOTO_SANS_KR_OFL.txt
           find build/web -maxdepth 1 -type f -print | sort
 
       - name: Upload Web smoke artifact

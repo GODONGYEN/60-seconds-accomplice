@@ -1,542 +1,301 @@
 # 60초의 공범 — Game Design Document
 
-문서 상태: Prototype + Facility MVP 기준
-장르: 2D top-down time-loop action puzzle roguelite  
-플랫폼: Web 우선, 데스크톱 보조
-플레이 인원: 1인  
-엔진: Godot 4.x
+문서 상태: **Operation: Black Minute + preserved regression modes**
 
----
+장르: 2D top-down single-player stealth heist
 
-## 1. High Concept
+플랫폼: Web 우선, desktop 보조
 
-플레이어는 제한된 시간 동안 보안 시설에 침입한다. 시간이 끝나거나 경비에게 붙잡히면 회차가 초기화되지만, 이전 회차의 플레이어 행동은 Ghost로 남아 다음 회차에서 그대로 재생된다.
+엔진: Godot 4.7 / GDScript
 
-플레이어는 여러 시간대의 자신과 협력하여 혼자서는 해결할 수 없는 잠금 장치, 경비, 레이저, 금고를 돌파하고 목표물을 훔쳐 탈출해야 한다.
+## 1. Game identity
 
-핵심 문장:
+게임의 중심 문장은 다음과 같다.
 
-> 실패한 과거도 다음 계획의 공범이 된다.
+> 제한된 회귀 능력을 가진 전문 침입자가 보안 시설의 시스템과 경비망을 분석하고 무력화해 목표물을 훔쳐 탈출하는 잠입 절도 게임.
 
----
+우선순위는 `Heist → Stealth → Planning → Security interaction → Exploration → Time ability → Echo improvisation`이다. 시간 회귀는 중요한 차별점이지만 모든 행동을 다시 수행하게 만드는 강제 목표가 아니다.
 
-## 2. Player Fantasy
+기존의 전체 시간선 반복은 삭제하지 않는다. `PROTOTYPE_LOOP`과 `FACILITY_REGRESSION` 모드에서 recording, Ghost playback, 결정적 reset을 검증하는 core-technology demonstration으로 유지한다.
 
-플레이어가 느껴야 하는 핵심 환상은 다음과 같다.
+## 2. Player fantasy
 
-- 혼자서 완벽한 팀 작전을 설계한다.
-- 과거의 실수를 새로운 전략으로 전환한다.
-- 복잡한 동시 행동이 마지막 회차에 맞아떨어진다.
-- 제한시간 직전에 목표물을 들고 탈출한다.
-- 여러 명의 내가 화면 안에서 정교하게 협력한다.
+- 작전에 앞서 지도를 읽고 침투 경로를 계획한다.
+- 순찰과 카메라 sweep을 관찰해 안전한 이동 시점을 고른다.
+- 카드, terminal, 보안망을 순서대로 공략한다.
+- 실수를 Chrono Recall로 복구하거나 Echo distraction으로 전환한다.
+- 전투 없이 시설 최심부의 물체를 훔쳐 원래 침투 지점으로 돌아온다.
+- Recall을 한 번도 쓰지 않은 완벽 잠입도 가능하다.
 
-게임은 플레이어에게 빠른 반응만 요구하는 것이 아니라, 실행 가능한 계획을 직접 만들어내는 즐거움을 제공해야 한다.
+## 3. Design pillars
 
----
+### Heist first
 
-## 3. Design Pillars
+목표물, 준비 과정, 보안 계층, 진입과 탈출이 명확해야 한다. 플레이어는 “왜 이 방에 가는가”를 HUD와 지도에서 이해할 수 있어야 한다.
 
-### 3.1 실패도 진행이다
+### Readable stealth
 
-한 회차가 목표를 달성하지 못해도 그 행동은 다음 회차에서 활용할 수 있어야 한다.
+Guard vision cone, CCTV sweep, laser, 잠긴 문, alert를 색만이 아니라 icon, text, shape으로 함께 표현한다. 실제 감지는 거리, 각도, line of sight, proximity 규칙을 사용한다.
 
-### 3.2 동시 실행의 쾌감
+### Deterministic planning
 
-두 명 이상의 Ghost와 현재 플레이어가 같은 순간에 서로 다른 역할을 수행하도록 설계한다.
+Guard 순찰에는 randomness를 사용하지 않는다. route phase, waypoint wait, zone, choke safe window가 데이터로 고정되어 같은 계획이 같은 결과를 내야 한다.
 
-### 3.3 짧고 강한 반복
+### Limited recovery
 
-각 loop는 짧고 명확해야 한다. 플레이어는 빠르게 시도하고, 결과를 보고, 다음 계획을 수정한다.
+Chrono Recall은 강력하지만 3회뿐이다. 소비한 charge는 되돌아오지 않으며, 회귀 직전 행동은 보안 시스템이 볼 수 있는 Echo가 된다.
 
-### 3.4 이해 가능한 결정성
+### Failure stays fast
 
-퍼즐의 핵심 결과는 플레이어가 예측할 수 있어야 한다. 무작위 요소는 전투와 위험을 변화시킬 수 있지만, 핵심 장치가 이유 없이 실패해서는 안 된다.
+포획 시 긴 실패 화면 대신 `RECALL` 또는 `CHECKPOINT`를 선택한다. 현재 checkpoint는 mission start 하나이며, 같은 briefing을 다시 읽지 않고 빠르게 재시도할 수 있다.
 
-### 3.5 화면만 봐도 규칙이 전달된다
+## 4. Game modes
 
-Ghost가 버튼을 누르고 현재 플레이어가 문을 통과하는 장면만으로 게임의 핵심이 이해되어야 한다.
+### Operation: Black Minute
 
----
+정식 기본 모드. 전체 mission timer가 20초 또는 60초마다 강제 reset되지 않는다. 플레이어는 긴 infiltration 안에서 최대 3회의 10초 Recall을 선택적으로 사용한다.
 
-## 4. Core Gameplay Loop
+### 20-second prototype loop
 
-```text
-시설 진입
-→ 제한시간 동안 행동
-→ 시간 종료 또는 경비 포획
-→ 행동 기록 확정
-→ 스테이지 초기화
-→ 이전 기록을 재생하는 Ghost 생성
-→ 새로운 역할 수행
-→ 목표물 획득
-→ 제한시간 안에 탈출
-→ 보상 및 다음 스테이지
-```
+압력판, 문, Ghost, 목표물, 출구를 두 개 이상의 timeline으로 해결하는 가장 작은 회귀 검증 모드다. `R`, timeout, Guard capture가 recording을 확정하고 다음 Ghost를 만든다.
 
-20초 regression prototype에서는 한 판을 다음처럼 단순화한다.
+### 60-second facility regression
+
+26×25 TileMap, terminal/laser, Guard distraction, wall visibility, dynamic door occlusion을 검증하는 확장 회귀 모드다.
+
+## 5. Primary mission loop
 
 ```text
-20초 행동
-→ Ghost 생성
-→ 압력판과 문 퍼즐 해결
-→ Ghost로 경비 유인
-→ 목표물 획득
-→ 출구 진입
+Main Menu
+→ Mission Briefing와 tactical map 확인
+→ 외부 yard에서 침투
+→ Level 1 card 획득
+→ CCTV를 해제하거나 sweep을 회피
+→ electrical room에서 laser network 해제
+→ security office에서 Level 2 획득
+→ server override 또는 research biometric 획득
+→ vault authorization으로 금고 진입
+→ Chronos Core 절도
+→ extraction yard 복귀
 ```
 
-기본 facility mission은 같은 규칙을 26×25 tile 공간과 60초 회차로 확장한다.
+위험 구간에서는 다음 선택이 끼어든다.
 
 ```text
-안전한 courtyard에서 시작
-→ Ghost가 될 유인/압력판 동선 기록
-→ Guard 포획, 수동 재시작 또는 timeout
-→ Ghost가 Guard를 서쪽으로 유인하고 vault plate 유지
-→ 현재 Player가 terminal로 laser 해제
-→ 열린 vault에서 objective 획득
-→ courtyard exit로 복귀
+발각 또는 잘못된 경로
+→ Q로 수동 Recall
+→ 최근 최대 10초의 Player/world state 복원
+→ 버린 구간이 Echo로 한 번 재생
+→ 현재 Player가 다른 선택 수행
 ```
 
----
+포획 시에는 자동으로 charge를 사용하지 않는다. 선택 UI가 Recall 가능 여부를 보여 주며, Recall하지 않거나 charge가 없으면 mission-start checkpoint로 돌아간다.
 
-## 5. Loop Rules
+## 6. Operation: Black Minute
 
-### 5.1 시간
+- 작전명: **OPERATION: BLACK MINUTE / 작전명: 검은 1분**
+- 시설: **HELIX TEMPORAL RESEARCH FACILITY / 헬릭스 시간 연구시설**
+- 목표물: **CHRONOS CORE / 크로노스 코어**
+- 목적: 시설 파괴가 아니라 Core 절도와 생환
 
-- regression prototype loop duration: 20초
-- facility level 01 loop duration: 60초
-- 각 level은 동일한 timeline protocol 안에서 자신의 duration을 명시한다.
-- 남은 시간이 5초 이하가 되면 강한 시청각 경고를 제공한다.
+시설 blueprint contract:
 
-### 5.2 회차 종료
+- 64×42 cells, 32 px tile, 2048×1344 world
+- 15 named rooms/operational spaces
+- 23 room connectors and 15 dynamic security portals
+- 10 Guards in 7 bounded Guard zones
+- 8 CCTV cameras and 3 laser barriers
+- 15 choke points; every declared safe window is at least 3 seconds
 
-회차는 다음 조건에서 종료된다.
+상세 layout은 [operation_black_minute_layout.md](maps/operation_black_minute_layout.md)를 따른다.
 
-- 제한시간이 0이 됨
-- 경비에게 플레이어가 포획됨
-- 사용자가 loop restart 입력
-- 스테이지 성공
+## 7. Objective and access progression
 
-prototype에는 체력이나 사망 시스템이 없다. 경비 포획은 실패 화면이 아니라 현재 시점까지 recording을 확정하고 다음 loop를 시작하는 진행 수단이다.
+Objective는 `LOCKED`, `AVAILABLE`, `ACTIVE`, `COMPLETED`, `FAILED` 상태를 갖는 acyclic graph다.
 
-### 5.3 초기화되는 것
+주요 progression:
 
-- 현재 플레이어 위치와 상태
-- 문, 스위치, 목표물 등 level mutable state
-- 일시적인 projectile과 effect
-- 적의 위치와 AI 상태
+1. reception checkpoint 침투
+2. locker room에서 Level 1 card 획득
+3. CCTV disable 또는 안전한 회피 경로 선택
+4. electrical room에서 laser network disable
+5. security office에서 Level 2 card 획득
+6. server override 또는 research biometric 중 하나로 Vault authorization 획득
+7. laser offline + Level 2 + Vault authorization 조건으로 vault 진입
+8. Chronos Core 획득
+9. 활성화된 extraction으로 복귀
 
-### 5.4 유지되는 것
+CCTV 해제는 유리하지만 Core progression을 강제로 막지 않는다. Laser 해제와 Vault authorization은 필수다. Core는 live Player만 획득할 수 있다.
 
-- 완료된 이전 회차 recording
-- 현재 loop index
-- 스테이지 안에서 허용된 메타 정보
-- UI에 표시되는 Ghost 수
+## 8. Stealth rules
 
-### 5.5 Ghost 수
+### Guards
 
-- MVP runtime 최대: 8
-- 성능 검토 목표: 8개의 Ghost와 1명의 Guard가 동시에 안정적으로 동작
-- 최대 수에 도달한 뒤의 정책은 정식 설계 단계에서 결정한다.
+Guard state는 `IDLE`, `PATROL`, `SUSPICIOUS`, `CHASE`, `SEARCH`, `RETURN`으로 유지한다. Player와 Echo를 볼 수 있으며, 동시에 노출되면 live Player가 우선이다.
 
-MVP에서는 8개가 저장된 뒤 새 recording을 더 보존하지 않으며 기존 8개를 자동 삭제하지 않는다. HUD가 전체 timeline reset을 안내하고, recording 수와 Ghost 표시는 같은 저장 목록을 기준으로 한다.
+감지 조건:
 
----
+- vision distance 안에 있음;
+- facing 기준 시야각 안에 있음;
+- wall 또는 닫힌 door에 막히지 않음;
+- 아주 가까운 거리에서는 뒤쪽도 감지하는 proximity awareness;
+- mission active이며 pause/restore 중이 아님.
 
-## 6. Player Controls
+발각은 zone 및 인접 response zone에 last-seen 위치를 전달한다. Guard는 시설 전체를 무기한 추격하지 않고 zone bounds 안에서 조사한 뒤 route로 복귀한다.
 
-### Prototype
+### CCTV
 
-| 입력 | 행동 |
-|---|---|
-| WASD | 이동 |
-| E | 상호작용 |
-| R | 현재 loop 즉시 종료/재시작 |
-| Esc | 일시정지 |
+8개 camera는 deterministic phase로 sweep한다. Player와 Echo가 threshold 동안 보이면 zone alert를 발생시킨다. CCTV control terminal을 완료하면 network가 offline되어 sweep/detection이 멈춘다.
 
-### Later
+### Lasers
 
-| 입력 | 행동 |
-|---|---|
-| Left Mouse | 발사 |
-| Space | dash |
-| Q | 장비 사용 |
-| F | 보조 상호작용 |
+3개 barrier는 active일 때 live Player 접촉을 capture request로 바꾼다. Echo는 laser에 잡히지 않는다. Electrical terminal이 network 전체를 disable한다.
 
-조작은 간단하고 즉각적이어야 한다. 시간 반복 구조를 이해하기 전에 복잡한 key binding을 요구하지 않는다.
+### Alert
 
----
+시설 alert는 `CLEAR`, `SUSPICIOUS`, `ALERTED`, `LOCKDOWN`이다. 일반 alert는 감지가 없으면 단계적으로 감소한다. Core 절도는 `LOCKDOWN`을 발생시키고 extraction route를 연다.
 
-## 7. Recording and Ghost Rules
+## 9. Chrono Recall and Echo
 
-### 7.1 기록 대상
+기본값:
 
-prototype에서 기록하는 항목:
+- 3 mission-persistent charges;
+- 10-second bounded history;
+- 20 Hz transform/world snapshots;
+- Q manual activation;
+- maximum 3 Echoes;
+- world clock remains monotonic.
 
-- timestamp
-- player position
-- facing direction
-- interaction event
-- interaction target object ID
+Recall은 현재 branch 시작 전으로 넘어가지 않는다. 연속 Recall은 각각 새 branch를 시작한다. 사용한 charge는 snapshot restore 대상이 아니므로 복구되지 않는다.
 
-추후 추가 가능:
+Rewindable state에는 Player transform/facing, access inventory, doors, terminals, CCTV/laser state, mission objectives, Guards, cameras, Core/extraction state가 포함된다. Object reference를 snapshot data에 저장하지 않는다.
 
-- 공격
-- 장비 사용
-- item drop
-- damage event
-- animation state
+Echo가 할 수 있는 것:
 
-### 7.2 Ghost 속성
+- 과거 이동과 facing 재생;
+- Guard/CCTV distraction;
+- pressure plate occupancy;
+- 허용된 door/terminal event replay.
 
-- 반투명 또는 시간 왜곡 효과로 현재 플레이어와 구분된다.
-- 현재 플레이어와 물리 충돌하지 않는다.
-- 벽과의 충돌을 재계산하지 않고 recording 경로를 재생한다.
-- 압력판과 스위치 등 허용된 object와 상호작용한다.
-- 현재 prototype의 순찰 경비에게 보이며 유인 대상으로 작동한다.
-- playback이 끝난 Ghost는 마지막 위치를 시각적으로 유지하지만 더 이상 감지 대상이 아니므로 경비는 탐색 후 순찰로 복귀한다.
+Echo가 할 수 없는 것:
 
-prototype에서는 Ghost가 적과 전투하지 않는다.
+- access card 획득 또는 전달;
+- Chronos Core 획득;
+- 현재 Player inventory 직접 변경;
+- Recall 사용;
+- mission completion 중복 발생.
 
-### 7.3 Replay failure
+세 번째 Echo 이후 새 Echo가 필요하면 가장 오래된 Echo를 안전하게 제거한다.
 
-상호작용 대상이 사라졌거나 ID를 찾지 못한 경우:
+## 10. Checkpoint and failure policy
 
-- 해당 event만 건너뛴다.
-- 게임을 중단하지 않는다.
-- 개발 build에서는 warning을 출력한다.
+- 영구 campaign save: 없음.
+- Core 획득 전 checkpoint: mission start.
+- Core 획득 후 checkpoint: 없음.
+- capture + charge/history available: Recall 또는 checkpoint 선택.
+- capture + Recall 불가: mission-start checkpoint restart.
+- laser capture도 같은 capture decision protocol을 사용.
+- victory 이후 capture와 simulation을 중단.
 
----
+Checkpoint reset은 cards, access, doors, terminals, CCTV, lasers, alert, Guards, Core, extraction, objective graph, Echoes, Recall history/charges를 mission initial state로 복원한다.
 
-## 8. Prototype Level
+## 11. Tactical map and onboarding
 
-### 8.1 목표
+Briefing은 조작 전에 operation/facility/target/security/Recall charge와 정적 시설 지도를 보여 준다.
 
-최소 두 개의 시간선을 사용해야만 클리어 가능한 한 개의 방을 만든다.
+게임 중 `M` 또는 `Tab`으로 map을 열면 tactical pause가 적용된다. Map은 rooms, Player, objective region, extraction, security status, locked doors, 발견된 maintenance passage를 보여 주되 정답 경로나 실시간 Guard 위치를 기본 제공하지 않는다.
 
-### 8.2 배치
+튜토리얼은 상황에 맞춰 한 번씩 표시한다.
+
+- 시작: `OPEN THE TACTICAL MAP WITH M`
+- reception: vision cone과 proximity awareness
+- 잠긴 문: required access level
+- CCTV: camera가 nearby Guards에 alert 가능
+- laser: electrical network 해제 필요
+- Recall: 10초 복원, limited charge, Echo 생성
+
+## 12. Difficulty and fairness
+
+목표 플레이 시간:
+
+- first clear: 15–25 minutes;
+- practiced clear: 6–12 minutes;
+- perfect infiltration: 0 Recalls;
+- typical first clear: 1–3 Recalls.
+
+공정성 조건:
+
+- spawn 직후 이유 없이 포획되지 않는다.
+- 각 mandatory security step은 접근 가능한 room과 단서를 가진다.
+- Level 1 card는 Level 1 뒤에, Level 2 card는 Level 2 뒤에 놓이지 않는다.
+- Vault authorization은 Vault access를 먼저 요구하지 않는다.
+- laser shutdown terminal은 active laser corridor 뒤에 있지 않는다.
+- 모든 mandatory room/object zone은 spawn room graph에서 도달 가능하다.
+- choke마다 3초 이상의 declared safe window가 있다.
+- Recall 없이도 완주 가능한 declared route가 있다.
+
+`MissionSolvabilityValidator`와 180초 virtual patrol simulation이 이 데이터 계약을 자동 검사한다. 이는 실제 플레이 감각이나 browser rendering 검증을 대체하지 않는다.
+
+## 13. Presentation and accessibility
+
+- Player/Recall/Echo: cyan 계열
+- Guard/danger/alert: orange/red 계열
+- Objective/Core: violet/cyan
+- extraction active: green/cyan
+- neutral UI: dark navy/gray
+
+중요한 상태는 색뿐 아니라 text, icon, meter, shape으로 표현한다. 화면 흔들림과 flashing은 약하게 유지하고, mute 상태에서도 objective, alert, capture, countdown 상태를 읽을 수 있어야 한다.
+
+## 14. Preserved loop technology
+
+Regression modes continue to validate:
 
 ```text
-[Player Spawn]
-      |
-[Upper corridor: Guard lure]
-             |
-[Pressure Plate] ---- controls ---- [Security Door]
-                                      |
-                            [Lower vault: Objective]
-                                      |
-                                   [Exit]
+20 Hz recording
+→ immutable LoopRecording
+→ timestamp interpolation and stable-ID event playback
+→ Ghost pressure plate/door interaction
+→ Guard distraction and capture recording
+→ deterministic loop reset
 ```
 
-압력판은 누군가 위에 올라가 있는 동안에만 door를 연다.
+이 시스템은 formal heist의 `ChronoRecallManager`와 데이터 타입을 공유할 수 있지만 lifecycle은 분리한다. 정식 mission을 `TimelineManager`의 full-loop 규칙으로 실행하지 않는다.
 
-### 8.3 의도된 해결 과정
+## 15. Scope guard
 
-1회차:
+현재 범위에 포함하지 않는다.
 
-1. 플레이어가 압력판까지 이동한다.
-2. 다음 회차의 현재 Player가 문을 통과할 시간을 만들기 위해 잠시 머문다.
-3. 시작 방의 upper corridor에서 경비의 시선을 끈다.
-4. 포획되거나 수동으로 loop를 끝내 recording을 저장한다.
+- combat, health, weapons, damage, reinforcements;
+- hearing/noise simulation, cover, crouch;
+- campaign, persistent saves, scoring, meta progression;
+- procedural maps, boss, additional enemy archetypes;
+- multiplayer, accounts, leaderboard, analytics;
+- touch control and user-generated content.
 
-2회차:
+## 16. Acceptance goals
 
-1. 첫 번째 Ghost가 압력판으로 이동한다.
-2. Ghost가 압력판 위에 있는 동안 문이 열린다.
-3. 현재 플레이어가 문을 통과한다.
-4. Ghost가 시작 방 upper corridor의 유인 행동을 반복해 경비를 끌어간다.
-5. 현재 플레이어가 lower vault lane으로 이동해 목표물을 획득한다.
-6. 출구에 들어간다.
-
-이 동선은 학습을 위한 권장 해법이며 유일한 정답은 아니다. 현재 Player가 Ghost와 함께 upper corridor에 노출되면 경비는 현재 Player를 우선하므로, 문 뒤 lower vault lane이 시간선의 역할 분리를 자연스럽게 가르친다.
-
-### 8.4 Tutorial 전달
-
-긴 설명문보다 다음 순서로 학습시킨다.
-
-- 닫힌 문을 먼저 보여준다.
-- 문과 압력판을 선 또는 같은 색으로 연결한다.
-- 첫 회차 종료 후 Ghost 생성 장면을 강조한다.
-- 두 번째 회차에 열린 문을 시각적으로 명확하게 보여준다.
-- 경비의 부채꼴 시야, `?` 의심, `!` 추격 표시를 색과 형태로 함께 보여준다.
-- 첫 회차에는 압력판을 잠시 유지한 뒤 시작 방 upper corridor에서 경비를 유인하도록 안내한다.
-- 두 번째 회차에는 Ghost가 경비를 유인하는 동안 문 뒤 lower vault lane을 사용하도록 한 문장씩 안내한다.
-
-### 8.5 Facility Level 01
-
-`facility_level_01`은 기존 prototype을 삭제하거나 대체하지 않는 별도 60초 mission이다. `32×32 px` tile을 사용하는 `26×25` map이며, reference image의 upper control rooms, 중앙 보안 복도, right laser room, lower operations, courtyard 관계를 실제 TileMap topology로 재구성한다. 세부 coordinate는 `docs/maps/facility_level_01_layout.md`가 source of truth다.
-
-핵심 장치는 다음과 같다.
-
-- lower-left의 `plate_vault_01`은 upper-left objective room의 `door_vault_01`을 누르는 동안만 연다.
-- right laser room의 `terminal_laser_01`은 현재 loop 동안 `laser_right_01`을 해제한다. 활성 laser를 현재 Player가 통과하면 그 시점까지 recording을 저장하고 다음 loop를 시작한다.
-- `objective_core_01`은 현재 Player만 획득할 수 있고, 이후 courtyard의 `exit_courtyard_01`이 활성화된다.
-- 한 명의 `guard_center_01`이 네 개의 authored waypoint를 순환한다. 무작위 순찰과 전투는 없다.
-
-권장 해결은 첫 회차에 중앙 Guard를 서쪽으로 유인하고 압력판에 도착하는 기록을 만든 뒤, 두 번째 회차에 Ghost가 같은 유인과 plate 역할을 반복하는 동안 현재 Player가 우측 terminal/laser route를 사용하는 것이다. 벽이 두 역할을 분리하므로, Guard가 Player를 의도적으로 무시해서 성립하는 해법이 아니다.
-
-Facility의 어둠은 gameplay rule을 설명해야 한다. Player 주변은 하나의 radial light로 보이고, 벽 또는 닫힌 문과 Player 사이의 Guard, Ghost, 상태 object, indicator, interaction prompt, Guard HUD 정보는 숨긴다. 숨겨진 actor의 simulation은 멈추지 않는다. 열린 문은 이동, Guard LOS, Player visibility, light를 모두 통과시키며 reset 시 네 상태가 함께 닫힌 상태로 돌아간다.
-
----
-
-## 9. Interactable Objects
-
-### 9.1 Pressure Plate
-
-- actor가 위에 있는 동안 active
-- player와 Ghost 모두 활성화 가능
-- active 상태를 색과 소리로 표현
-- 여러 actor가 동시에 올라가도 정상 작동
-
-### 9.2 Door
-
-- 연결된 source가 active이면 열린다.
-- 열림과 닫힘 animation 중 충돌 상태가 명확해야 한다.
-- prototype에서는 즉시 또는 짧은 animation으로 작동한다.
-- actor를 문 안에 끼우지 않도록 한다.
-
-### 9.3 Objective Item
-
-- 현재 player만 획득 가능
-- Ghost는 획득하지 않는다.
-- 획득 후 UI에 상태 표시
-- level reset 시 원래 위치로 복구
-
-### 9.4 Exit Zone
-
-- 현재 player가 objective를 보유한 상태로 들어가면 성공
-- objective가 없으면 명확한 feedback 제공
-- Ghost는 성공 조건을 발동하지 않는다.
-
-### 9.5 Security Terminal and Laser
-
-- terminal은 `E` interaction이며 현재 Player와 recorded Ghost event 모두 stable object ID로 작동할 수 있다.
-- 한 번 활성화된 terminal은 해당 loop 동안 laser를 비활성화한다.
-- laser는 벽이나 물리 장벽이 아니라 현재 Player capture trigger다. Guard LOS와 Player light를 차단하지 않는다.
-- terminal과 laser는 loop reset 때 각각 비활성/활성 초기 상태로 복원된다.
-
----
-
-## 10. Win and Fail Conditions
-
-### Prototype 승리
-
-- 현재 player가 objective item을 획득한다.
-- 현재 player가 exit zone에 진입한다.
-
-Facility mission도 같은 승리 contract를 사용한다. 단, Player가 `terminal_laser_01`로 우측 route를 열고 Ghost가 `plate_vault_01`을 유지하는 두 역할이 실제 60초 동선에서 결합되어야 한다.
-
-### Prototype 실패
-
-- 아직 영구 실패는 없다.
-- loop가 끝나면 새로운 시도가 시작된다.
-- 경비에게 포획된 회차도 capture 시점까지 저장되어 다음 Ghost가 된다.
-- 사용자가 전체 timeline reset을 선택할 수 있다.
-
-### Later 실패
-
-- 최대 loop 수 초과
-- timeline corruption 최대치 도달
-- objective 파괴 또는 회수 불가
-- 특수 스테이지의 경보 제한 초과
-
----
-
-## 11. Feedback and Dopamine Design
-
-### 11.1 Loop 시작
-
-- 짧은 화면 왜곡
-- loop 번호 표시
-- Ghost들이 시간 균열에서 나타나는 연출
-
-### 11.2 Interaction 성공
-
-- 압력판: 강한 click과 색 변화
-- 문: 무거운 unlock sound
-- 목표물: 빛, 짧은 hit stop 또는 강조
-
-### 11.3 경비 상태
-
-- 순찰: 낮은 alpha의 부채꼴 시야와 `PATROLLING` 상태
-- 의심: orange 계열 시야, `?` icon, 의심도 meter
-- 추격: red 계열 시야, `!` icon, `CHASING` 상태
-- 포획: 짧은 `CAUGHT — THIS TIMELINE WAS SAVED` feedback 후 즉시 다음 loop
-
-### 11.4 동기화 성공
-
-두 개 이상의 시간선 행동이 연결될 때 다음 feedback을 제공할 수 있다.
+Formal mission acceptance:
 
 ```text
-GHOST ASSIST
-PERFECT SYNC
-TIMELINE TRICK
-LAST SECOND ESCAPE
+briefing
+→ 64×42 facility boot
+→ access/security progression
+→ deterministic 10-Guard patrol
+→ optional no-Recall route
+→ Recall restore + Echo distraction route
+→ Core theft
+→ extraction and victory
 ```
 
-prototype에서는 텍스트 효과를 최소화하고, 문이 열리는 순간의 시청각 feedback에 집중한다.
-
-### 11.5 남은 시간
-
-- 10초: UI 색 또는 pulse 변화
-- 5초: 초 단위 경고음
-- 3초: 더 강한 화면 효과
-- 0초: 즉시 끊기지 않고 짧은 rewind transition 후 reset
-
----
-
-## 12. Visual Direction
-
-### Prototype
-
-- player: 파란색 도형
-- Ghost: 반투명 청록색 도형
-- guard: 짙은 uniform과 orange accent
-- guard vision: 상태에 따라 cyan/orange/red로 변하는 반투명 부채꼴과 `?`/`!` icon
-- wall: 짙은 회색
-- door: 밝은 회색
-- pressure plate: 노란색, active 시 녹색
-- objective: 빛나는 흰색 또는 금색
-- exit: 명확한 외곽선과 화살표
-
-Facility에서는 dark `CanvasModulate`, Player의 cyan radial light, wall/door shadow를 추가한다. 벽 뒤의 Guard, Ghost, gameplay object와 indicator는 색만 낮추지 않고 정보가 드러나지 않도록 숨긴다. 맵 reference 이미지는 topology와 분위기 참고용 source이며 runtime 배경으로 표시하지 않는다.
-
-prototype에서는 custom art보다 읽기 쉬운 상태 표현을 우선한다.
-
-### Final Direction
-
-권장 분위기:
-
-- 근미래 보안 시설
-- 선명한 neon accent
-- 어두운 배경과 높은 대비
-- Ghost는 afterimage와 scanline 왜곡
-- UI는 작전 타이머와 보안 시스템 느낌
-
----
-
-## 13. Audio Direction
-
-필수 prototype sound:
-
-- loop start
-- loop end
-- Ghost spawn
-- pressure plate active
-- door open/close
-- objective pickup
-- exit success
-- countdown warning
-- guard suspicion/alert/capture
-
-음악은 없어도 되지만, 타이머와 상호작용 효과음은 핵심 feedback이므로 우선순위가 높다.
-
----
-
-## 14. Difficulty Principles
-
-- 플레이어가 첫 실패의 이유를 즉시 이해할 수 있어야 한다.
-- 반복은 실행 시간을 늘리는 것이 아니라 역할을 추가해야 한다.
-- 퍼즐은 하나의 정답만 강요하기보다 여러 시간선 배치를 허용한다.
-- 정확한 frame 단위 입력보다 0.2~0.5초 정도의 여유를 둔다.
-- 시간 제한은 압박을 만들되, 조작 학습을 방해하지 않아야 한다.
-
----
-
-## 15. Future Content Framework
-
-prototype 성공 후 확장 후보:
-
-### 퍼즐
-
-- 두 개의 동시 압력판
-- 시간 제한 스위치
-- 서로 다른 방향의 문
-- 레이저 차단
-- 이동식 상자
-- Ghost가 운반하는 key
-
-### 적
-
-- 고정 감시 카메라
-- 소리에 반응하는 경비
-- 여러 경비 간 경보 전달
-
-현재 prototype은 한 명의 결정적 순찰 경비와 Player/Ghost 시야 감지를 이미 포함한다. 이후 적 확장은 이 동작을 깨뜨리지 않는 playtest 근거가 있을 때만 진행한다.
-
-### 장비
-
-- 소음 권총
-- EMP
-- time anchor
-- Ghost delay device
-- recording edit tool
-
-### 스테이지
-
-- casino
-- moving train
-- time laboratory
-- underwater vault
-
-이 항목들은 prototype 완료 전에는 구현하지 않는다.
-
----
-
-## 16. Scope Guard
-
-prototype에서 가장 중요한 질문은 단 하나다.
-
-> 과거의 내가 압력판을 열고 경비를 유인하는 동안 현재의 내가 다른 역할을 수행하는 순간이 실제로 재미있는가?
-
-아래 기능은 이 질문에 답하는 데 필요하지 않으므로 뒤로 미룬다.
-
-- lore와 긴 story
-- character customization
-- progression economy
-- 다수의 weapon
-- procedural level
-- crafting
-- multiplayer
-- Steam achievement
-
----
-
-## 17. Prototype Success Criteria
-
-prototype은 다음 질문에 대부분 “예”라고 답할 수 있어야 한다.
-
-- 첫 Ghost가 등장했을 때 규칙이 직관적으로 이해되는가?
-- Ghost가 과거 행동을 충분히 정확하게 재현하는가?
-- 압력판과 문 연결 관계가 명확한가?
-- 두 번째 회차에서 문을 통과할 때 성취감이 있는가?
-- 포획된 실패가 다음 회차의 유용한 경비 유인으로 전환되는가?
-- Ghost distraction과 현재 Player의 lower-lane 이동이 화면에서 이해되는가?
-- loop reset이 답답할 정도로 오래 걸리지 않는가?
-- 다시 시도해서 더 좋은 동선을 만들고 싶은가?
-- 10초짜리 영상만으로 핵심 재미가 전달되는가?
-
-최소 기술 완료 기준:
+Regression acceptance remains:
 
 ```text
-1회차 recording
-→ 2회차 Ghost replay
-→ pressure plate 활성화
-→ door 통과
-→ Ghost가 guard 유인
-→ objective 획득
-→ exit 성공
+first loop recording
+→ next-loop Ghost
+→ pressure plate and door
+→ Guard distraction
+→ objective and exit
+→ clean deterministic reset
 ```
 
-Facility acceptance는 다음을 추가한다.
-
-```text
-26×25 TileMap collision/occlusion
-→ courtyard safe spawn
-→ 60초 recording
-→ Ghost Guard distraction + pressure plate
-→ current Player terminal + laser route
-→ wall 뒤 actor/indicator 정보 차폐
-→ objective 획득
-→ courtyard exit
-→ door/laser/light/visibility deterministic reset
-```
+Headless success validates data, resources, and logic. Compatibility-renderer pixels, responsive UI, browser input, and console cleanliness require a separate browser pass and must not be inferred.

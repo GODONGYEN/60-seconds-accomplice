@@ -1,60 +1,99 @@
 # Sixty-Second Accomplice
 
-**60초의 공범** is a 2D top-down time-loop puzzle game: record an infiltration, then cooperate with the Ghost that replays it. The compact regression prototype uses 20 seconds; the facility mission uses a 60-second loop.
+**60초의 공범** is a Godot 4 top-down stealth heist about planning an infiltration, dismantling layered security, and using a limited ten-second time recall when the plan breaks.
 
-> **한국어 안내:** 60초 facility mission에서 과거의 내가 경비를 유인하고 압력판을 유지하는 동안, 현재의 나는 벽에 몸을 숨겨 laser를 해제하고 시간 코어를 훔쳐 탈출합니다. 20초 prototype은 회귀 검증용으로 함께 보존됩니다.
+> **한국어 안내:** 정식 임무 **작전명: 검은 1분**에서 헬릭스 시간 연구시설에 침투해 출입 카드, CCTV, 레이저, 금고 인증을 해결하고 크로노스 코어를 훔쳐 탈출합니다. 시간 회귀는 강제 반복이 아니라 최대 3회 사용할 수 있는 선택 능력입니다. 기존 20초/60초 전체 시간선 모드는 기술 회귀 검증용으로 보존됩니다.
 
 ## Play in your browser
 
-[Play the current `main` deployment on GitHub Pages](https://godongyen.github.io/60-seconds-accomplice/). GitHub Actions builds and deploys this URL; check the repository's Actions page for the revision and deployment result rather than assuming a local change is already live.
+[Play the current `main` deployment on GitHub Pages](https://godongyen.github.io/60-seconds-accomplice/).
 
-<!-- Replace this block with a compressed gameplay GIF or screenshot after capture. -->
-> Gameplay screenshot/GIF placeholder: a Ghost drawing the center Guard into lower operations while the live player approaches the laser room through wall-shadowed corridors.
+GitHub Actions builds that URL from `main`. Check the repository Actions page for the deployed revision; a local working tree is not assumed to be live.
 
-## The core mechanic
+> Screenshot/GIF placeholder: the live infiltrator crossing a security zone while an Echo draws a Guard and CCTV camera away.
 
-The facility mission reconstructs an AI-generated map reference as an authored `26×25` TileMap at `32 px` per cell. It contains one Guard, a lower-left pressure plate linked to the upper-left vault door, a right-room terminal linked to a laser trigger, the time core, and a courtyard exit.
+## Current game modes
 
-1. Start safely in the lower-right courtyard.
-2. Record a first timeline that draws the center Guard west and ends on the vault pressure plate. Being caught still saves the run.
-3. Your previous run returns as a translucent Ghost and repeats the distraction and plate occupancy.
-4. While walls hide the live Player's route, activate the laser terminal on the right.
-5. Cross the disabled laser and the door held open by the Ghost.
-6. Collect the time core and return to the active courtyard exit before 60 seconds expire.
+The application uses an explicit `GameMode` enum instead of inferring a mode from scene names.
 
-Movement and facing are recorded as 20 Hz snapshots. Successful interactions are recorded as timestamped events using stable object IDs. Ghosts interpolate the snapshots against the timeline clock instead of re-simulating player physics.
+| Mode | Purpose | Entry |
+|---|---|---|
+| `OPERATION_BLACK_MINUTE` | Primary stealth-heist mission | Main menu → briefing → start mission |
+| `PROTOTYPE_LOOP` | Preserved 20-second loop/Ghost/puzzle regression | Mission select or `-- --prototype` |
+| `FACILITY_REGRESSION` | Preserved 60-second facility/visibility regression | Mission select or `-- --facility-regression` |
 
-The Guard follows a deterministic authored patrol, checks distance, view angle, and wall or closed-door occlusion, and raises suspicion before giving chase. Both the live player and active Ghost recordings are visible to it, with the live player taking priority when both are exposed. Capture finalizes the current recording, so a failed approach can become the next timeline's distraction.
+The primary mission does not force a full-level reset every 20 or 60 seconds. It uses **Chrono Recall**: three mission-persistent charges, up to ten seconds of rewindable recent history, and a maximum of three Echoes.
 
-Facility darkness combines `CanvasModulate`, one Player-centered shadow light, TileSet wall occluders, and a dynamic door occluder. A separate physics probe hides wall-blocked Guards, Ghosts, stateful objects, indicators, prompts, and Guard HUD data without stopping their simulation. The original `824×807` reference is source-only and is never used as a giant gameplay background. See [the visibility system](docs/visibility_system.md) and [facility layout](docs/maps/facility_level_01_layout.md).
+## Operation: Black Minute
+
+Infiltrate the **Helix Temporal Research Facility**, steal the **Chronos Core**, and return to the external extraction yard.
+
+The authored blueprint is a `64×42` grid of `32 px` cells (`2048×1344 px`) with:
+
+- 15 named rooms and operational spaces;
+- 10 deterministic Guards divided across 7 bounded response zones;
+- 8 sweeping CCTV cameras;
+- 3 laser barriers;
+- Level 1, Level 2, and Vault access progression;
+- server override or research biometric authorization paths;
+- 15 declared choke points with safe windows of at least three seconds.
+
+The normal security progression is:
+
+```text
+Briefing and tactical map
+→ infiltrate reception
+→ acquire Level 1 in the locker room
+→ disable or avoid CCTV
+→ disable laser power in electrical
+→ acquire Level 2 in security
+→ obtain server OR biometric vault authorization
+→ enter the Chronos Vault
+→ steal the Core
+→ extract through the external yard
+```
+
+A perfect no-Recall route is part of the mission contract. Recall is an optional recovery and improvisation tool: rewinding leaves the abandoned movement and permitted interactions behind as an Echo that Guards and cameras can see.
 
 ## Controls
 
-| Input | Action |
-|---|---|
-| <kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd> or arrow keys | Move |
-| Mouse | Face the pointer |
-| <kbd>E</kbd> | Interact |
-| <kbd>R</kbd> | Finish the current loop and restart |
-| <kbd>Esc</kbd> | Pause or resume |
-| <kbd>F11</kbd> | Toggle fullscreen |
-| <kbd>M</kbd> | Mute or unmute |
+| Input | Operation: Black Minute | Loop regression modes |
+|---|---|---|
+| <kbd>WASD</kbd> or arrows | Move | Move |
+| Mouse | Face pointer | Face pointer |
+| <kbd>E</kbd> | Interact, collect, hack, or use a door | Interact |
+| <kbd>Q</kbd> | Chrono Recall | — |
+| <kbd>M</kbd> or <kbd>Tab</kbd> | Open tactical map; mission pauses | — |
+| <kbd>R</kbd> | — | Finalize and restart the current loop |
+| <kbd>Esc</kbd> | Pause/resume or close map | Pause/resume |
+| <kbd>F11</kbd> | Toggle fullscreen | Toggle fullscreen |
+| <kbd>V</kbd> | Mute/unmute | Mute/unmute |
 
-In a browser, click the game once before using the keyboard. If the tab loses focus, return to it and click the game again. See [docs/controls.md](docs/controls.md) for details.
+In a browser, click the game once before using the keyboard. If the tab loses focus, return and click again. See [Controls and Browser Input](docs/controls.md).
+
+## Heist architecture
+
+`AppController` owns menu and mode transitions. The formal mission is orchestrated by focused managers:
+
+- `MissionDirector` and `ObjectiveGraph`: mission state and acyclic objectives;
+- `AccessControlManager`: credentials and door authorization;
+- `SecuritySystemManager`: CCTV, lasers, zone alerts, and facility alert level;
+- `GuardZoneManager`: zone assignment, bounded response, and alert recipients;
+- `PatrolScheduler`: deterministic patrol phases, tile/choke reservation, and overlap prevention;
+- `ChronoRecallManager`: bounded history, world snapshots, persistent charge spending, restore, and Echo creation;
+- `OperationBlackMinuteMap`: blueprint-driven TileMap layers and facility layout.
+
+The preserved loop modes continue to use `GameManager` + `TimelineManager`; the formal heist does not turn `TimelineManager` into a cross-mode god object. See [Technical Architecture](docs/architecture.md).
 
 ## Requirements
 
-- [Godot Engine 4.7 stable](https://godotengine.org/download/archive/4.7-stable/) (standard GDScript build, not Mono)
-- Git, for source control
-- Python 3, for the reproducible art pipeline and local Web smoke server
+- [Godot Engine 4.7 stable](https://godotengine.org/download/archive/4.7-stable/) — standard GDScript build, not Mono
+- Git
+- Python 3 for the reproducible art pipeline and local Web server
 
-The project uses the Compatibility renderer, a 1280×720 reference viewport, responsive 16:9 stretching, and a single-threaded Web export. No account, server, secret, analytics SDK, or network access is required to play.
-
-The project and workflows pin Godot `4.7.stable.official.5b4e0cb0f`. A local executable should report that version before validation; this requirement does not imply that the current unpushed working tree or its browser rendering has passed CI.
+The project pins `Godot 4.7.stable.official.5b4e0cb0f`, uses the Compatibility renderer, a responsive 1280×720 reference viewport, and a single-threaded Web export. There are no accounts, servers, analytics SDKs, secrets, or required environment variables at runtime.
 
 ## Run locally
-
-Clone the repository, then open the project in the editor:
 
 ```bash
 git clone https://github.com/GODONGYEN/60-seconds-accomplice.git
@@ -62,62 +101,56 @@ cd 60-seconds-accomplice
 godot --editor --path .
 ```
 
-If the executable is named `godot4`, substitute that name in every command. On macOS, the executable inside a downloaded app bundle can also be used directly.
-
-For a headless boot:
+Headless import and default menu boot:
 
 ```bash
 godot --headless --path . --import
-godot --headless --path . --quit
+godot --headless --path . --quit-after 3
 ```
+
+Launch a preserved regression mode directly:
+
+```bash
+godot --path . -- --prototype
+godot --path . -- --facility-regression
+```
+
+If the executable is named `godot4`, substitute it in every command.
+
+## Validate and test
+
+The operation blueprint has a standalone static solvability validator:
+
+```bash
+godot --headless --path . --script tools/validate_operation_black_minute.gd
+```
+
+It rejects invalid dimensions/counts, duplicate stable IDs, out-of-bounds or non-walkable required objects, disconnected room graphs, circular access/objective progression, missing vault-auth alternatives, missing no-Recall/Recall declarations, and choke safe windows shorter than three seconds.
+
+Run the complete Godot harness without a third-party test add-on:
+
+```bash
+GODOT_BIN=godot tools/run_tests.sh
+```
+
+The wrapper requires an explicit PASS marker in addition to the process exit code. The suite covers the preserved timeline mechanics, mission blueprint, objective/access/security logic, Chrono Recall snapshots and Echoes, Guard zones, and a deterministic virtual patrol simulation. Test failures are not converted to skips.
 
 ## Art asset pipeline
 
-The committed player, Ghost, guard, and facility art is derived from project-supplied AI-generated concept sheets. Gameplay never loads a concept sheet or preview directly: Godot resources reference only the normalized atlases under `assets/sprites/`.
-
-Create an isolated tools environment and reproduce every derivative:
+Gameplay references only normalized runtime atlases under `assets/sprites/`; AI-generated source sheets and previews are not loaded by scenes.
 
 ```bash
 python3 -m venv .tools/venv
 .tools/venv/bin/python -m pip install --requirement requirements-tools.txt
-.tools/venv/bin/python tools/asset_pipeline.py inspect
 .tools/venv/bin/python tools/asset_pipeline.py process-all
-```
-
-Validate committed derivatives without rewriting them:
-
-```bash
 .tools/venv/bin/python tools/asset_pipeline.py validate
 ```
 
-The tool verifies immutable source hashes, real RGBA transparency, 48×64 character frames with a `(24, 62)` bottom-center pivot, frame metadata, SpriteFrames/TileSet agreement, and the runtime-only asset boundary. Individual commands are also available: `process-player`, `process-guard`, and `process-tileset`.
-
-CI additionally compares `fingerprint` output before and after `process-all`, so stale generated assets fail without relying on PNG compression bytes being identical across operating systems.
-
-See [docs/art_pipeline.md](docs/art_pipeline.md) for setup, extraction, replacement, and validation details; [docs/asset_manifest.md](docs/asset_manifest.md) for exact frame counts and fallbacks; and [docs/art_direction.md](docs/art_direction.md) for the scale and palette contract.
-
-## Run tests
-
-The test harness uses Godot itself and does not require a third-party test add-on:
-
-```bash
-GODOT_BIN=godot tools/run_tests.sh
-```
-
-The wrapper rejects parser/load failures and requires the harness PASS marker because some Godot CLI script-load failures can still return exit code zero. Set `GODOT_BIN=godot4` when needed. Test failures must not be converted to skips to make CI pass. A complete local logic/resource pass is:
-
-```bash
-godot --headless --path . --import
-.tools/venv/bin/python tools/asset_pipeline.py validate
-GODOT_BIN=godot tools/run_tests.sh
-godot --headless --path . --quit
-```
-
-These commands can validate facility topology, collision/occlusion resources, LOS decisions, resets, and the preserved 20-second prototype. They cannot certify `PointLight2D` shadow pixels. After Web export, serve it over HTTP and inspect closed/open doors, corners, hidden Guard/Ghost indicators, responsive viewports, and the browser console as described in [docs/visibility_system.md](docs/visibility_system.md).
+See [Art Pipeline](docs/art_pipeline.md), [Asset Manifest](docs/asset_manifest.md), and [Art Direction](docs/art_direction.md).
 
 ## Export for Web
 
-Install the matching Godot 4.7 stable export templates, then run:
+Install matching Godot 4.7 export templates, then run:
 
 ```bash
 mkdir -p build/web
@@ -127,63 +160,57 @@ test -f build/web/index.html
 python3 -m http.server --directory build/web 8000
 ```
 
-Open [http://localhost:8000/](http://localhost:8000/) rather than loading `index.html` through `file://`. The generated `build/` directory is intentionally ignored by Git.
+Open [http://localhost:8000/](http://localhost:8000/), never `file://`. A successful headless export does not by itself prove browser rendering, input, or console cleanliness; inspect those separately.
 
 ## Export desktop development builds
-
-The desktop presets are unsigned development builds:
 
 ```bash
 mkdir -p build/windows build/linux build/macos
 godot --headless --path . --export-release "Windows Desktop" build/windows/Sixty-Second-Accomplice.exe
 godot --headless --path . --export-release "Linux" build/linux/Sixty-Second-Accomplice.x86_64
 godot --headless --path . --export-release "macOS" build/macos/Sixty-Second-Accomplice.zip
-bash tools/copy_notices.sh build/windows/licenses
-bash tools/copy_notices.sh build/linux/licenses
 ```
 
-Unsigned macOS builds can trigger Gatekeeper. No signing or notarization is claimed without a configured Apple signing identity.
+Desktop artifacts are unsigned development builds. macOS Gatekeeper may warn; signing and notarization are not claimed without configured credentials.
 
 ## Publish with GitHub Pages
 
-The repository includes `.github/workflows/deploy-pages.yml`, which exports `build/web/index.html`, uploads the directory as a Pages artifact, and deploys it with GitHub's official actions.
+`.github/workflows/deploy-pages.yml` exports the Web build and deploys the official Pages artifact.
 
-1. Push the repository to GitHub with `main` as the default branch.
-2. Open **Settings → Pages**.
-3. Under **Build and deployment**, choose **GitHub Actions** as the source.
-4. Run **Deploy GitHub Pages** from the Actions tab, or push to `main`.
-5. Confirm the deployed game at the play link above.
+1. Keep `main` as the deployment branch.
+2. In **Settings → Pages**, select **GitHub Actions** as the source.
+3. Push to `main` or run **Deploy GitHub Pages** manually.
+4. Confirm the workflow revision and then open the play link above.
 
-See [docs/release.md](docs/release.md) for CI, release, artifact, and troubleshooting details.
+See [Release Guide](docs/release.md).
 
-## Current status
+## Documentation
 
-This repository contains two level scopes on the same deterministic timeline architecture:
+- [Story](docs/story.md)
+- [Operation: Black Minute](docs/missions/operation_black_minute.md)
+- [Facility layout](docs/maps/operation_black_minute_layout.md)
+- [Objective system](docs/objective_system.md)
+- [Security systems](docs/security_systems.md)
+- [Access control](docs/access_control.md)
+- [Chrono Recall](docs/chrono_recall.md)
+- [Guard zones and patrol scheduling](docs/guard_zones.md)
+- [Onboarding](docs/onboarding.md)
+- [Roadmap](docs/roadmap.md)
 
-- the preserved `30×16`, 20-second prototype for fast recording/Ghost/Guard/puzzle regression;
-- `facility_level_01`, an authored `26×25`, 60-second mission with one four-point center Guard, a plate-controlled vault door, terminal-controlled laser, objective, courtyard exit, bounded camera, and wall-based rendered/information visibility.
+## Known limitations
 
-The live player and Ghost share a directional animated sprite set; the Guard has patrol, suspicion, chase, search, return, line-of-sight, capture, and deterministic reset behavior without combat or health systems. Facility geometry comes from TileMap layers and independent stateful scenes, never from the full source reference image.
+- There is one formal heist mission. Campaign progression, persistent saves, mission scoring, and `CONTINUE` are not implemented.
+- The only checkpoint is mission start. Capturing after Core theft does not create an extraction-phase checkpoint.
+- Chrono Recall keeps only the current bounded branch; it cannot cross a previous Recall branch. At the three-Echo cap, the oldest Echo is removed.
+- Guard movement uses deterministic authored routes, bounded zones, collision-aware steering, and reservations rather than a general navigation mesh.
+- Vision cones are readable approximations; actual detection additionally uses physics line of sight and close-proximity awareness.
+- CCTV and facility alerts coordinate nearby zones, but there are no reinforcements, combat, health, hearing simulation, or multiple enemy archetypes.
+- Mission data and recordings are session-only and are not written to disk.
+- Keyboard and mouse are the primary supported devices; controller rebinding and touch controls are out of scope.
+- Current headless validation cannot certify actual Compatibility-renderer shadow pixels or browser UX. Do not infer a manual browser pass from automated tests.
 
-Known limitations:
+## Contributing and license
 
-- One facility mission plus one regression prototype; there are no additional enemy types, hearing simulation, combat, campaign, progression, or procedural generation.
-- Facility runtime uses one Guard on a four-point center route. A second route is documented but intentionally disabled pending multi-Guard acceptance.
-- Guard movement uses deterministic collision-aware steering for compact authored straight segments rather than a general navigation mesh, and the readable vision cone is not geometrically clipped against wall silhouettes.
-- Player light is radial rather than persistent fog-of-war. Actor reveal uses one sample point at a 20 Hz refresh, and Compatibility-renderer shadow output still requires browser screenshot review; headless tests cannot prove that rendered shadows are leak-free.
-- Recordings live only for the current level session and are not saved to disk.
-- Keyboard and mouse are the primary input devices; mobile touch controls are out of scope.
-- Desktop artifacts are unsigned development builds.
-- Character interaction/alert cycles and the seamless facility base still use documented prototype fallbacks; the original AI concept sheets and map reference are not production-ready tiles or a runtime background.
+Read [CONTRIBUTING.md](CONTRIBUTING.md) before opening a pull request. Large changes should begin with an issue so they preserve deterministic replay, mission solvability, and the regression modes.
 
-See [docs/roadmap.md](docs/roadmap.md) for the deliberately narrow next steps.
-
-Guard state, perception, target priority, capture, reset, patrol authoring, and debug behavior are documented in [docs/guard_ai.md](docs/guard_ai.md).
-
-## Contributing
-
-Read [CONTRIBUTING.md](CONTRIBUTING.md) before opening a pull request. Bug reports should include the browser or OS, commit, reproduction steps, logs, and visual evidence when possible. Large features should begin with an issue so they do not compromise replay determinism or MVP scope.
-
-## License and third-party notices
-
-Project-authored code and content are available under the [MIT License](LICENSE). See [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md) for the Godot Engine notice, build-only dependencies, AI-source disclosure, and the current no-external-authored-assets statement.
+Project-authored code and content are available under the [MIT License](LICENSE). See [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md) for Godot, build dependencies, and AI-source disclosure.

@@ -1,76 +1,101 @@
 # Controls and Browser Input
 
-## Default controls
+All gameplay input uses Godot Input Map actions. Gameplay scripts do not inspect physical key constants directly.
 
-All gameplay input is defined through Godot's Input Map. Scripts must query action names rather than physical key constants.
+## Operation: Black Minute
 
-| Input | Input Map action | Result |
+| Input | Action | Result |
 |---|---|---|
-| <kbd>W</kbd> or <kbd>↑</kbd> | `move_up` | Move up |
-| <kbd>S</kbd> or <kbd>↓</kbd> | `move_down` | Move down |
-| <kbd>A</kbd> or <kbd>←</kbd> | `move_left` | Move left |
-| <kbd>D</kbd> or <kbd>→</kbd> | `move_right` | Move right |
+| <kbd>W</kbd> or <kbd>↑</kbd> | `move_up` | Move north |
+| <kbd>S</kbd> or <kbd>↓</kbd> | `move_down` | Move south |
+| <kbd>A</kbd> or <kbd>←</kbd> | `move_left` | Move west |
+| <kbd>D</kbd> or <kbd>→</kbd> | `move_right` | Move east |
 | Mouse movement | pointer position | Face the pointer |
-| <kbd>E</kbd> | `interact` | Interact with a nearby valid object |
-| <kbd>R</kbd> | `restart_loop` | Finalize the current recording and begin the next loop |
-| <kbd>Esc</kbd> | `pause` | Pause or resume |
-| <kbd>F11</kbd> | `toggle_fullscreen` | Enter or leave fullscreen |
-| <kbd>M</kbd> | `toggle_mute` | Mute or restore game audio |
+| <kbd>E</kbd> | `interact` | Use a nearby visible valid card, door, terminal, or Core |
+| <kbd>Q</kbd> | `chrono_recall` | Spend a charge and restore up to ten seconds when available |
+| <kbd>M</kbd> or <kbd>Tab</kbd> | `open_map` | Open/close the tactical map with simulation paused |
+| <kbd>Esc</kbd> | `pause` | Close map or pause/resume the operation |
+| <kbd>F11</kbd> | `toggle_fullscreen` | Toggle fullscreen through the application controller |
+| <kbd>V</kbd> | `toggle_mute` | Mute/unmute the Master bus globally |
 
-Diagonal movement is normalized so it is not faster than horizontal or vertical movement. The live player and Ghosts do not collide with one another.
+`R` full-loop restart is intentionally disabled in the formal mission. Use the pause menu to restart the mission, or choose checkpoint after capture.
+
+`AppController` owns fullscreen and mute while the application launcher is present, so the same shortcuts work in the menu, briefing, formal operation, and both regression sessions. A legacy `GameManager` launched as a standalone scene retains its local handlers; when embedded it delegates to the application owner, preventing one key press from toggling twice.
+
+## Regression modes
+
+| Input | Action | Result |
+|---|---|---|
+| movement / mouse / <kbd>E</kbd> | same actions | Move, face, interact |
+| <kbd>R</kbd> | `restart_loop` | Finalize current recording and begin the next full loop |
+| <kbd>Esc</kbd> | `pause` | Pause/resume |
+| <kbd>F11</kbd> | `toggle_fullscreen` | Toggle fullscreen |
+| <kbd>V</kbd> | `toggle_mute` | Mute/unmute Master bus |
+
+The 20-second prototype and 60-second facility use the same action names but keep their own full-loop lifecycle.
+
+## Movement
+
+Diagonal input is normalized. Character movement is independent from sprite animation. The live Player uses a lower-body collision shape; Player and Echo do not collide with each other.
+
+When gameplay input is disabled for pause, map, capture decision, Recall restore, reset, or victory, movement velocity is cleared so a released key cannot remain stuck.
+
+## Interaction
+
+The prompt appears only when a stable interactable is in range and visible. A successful interaction is recorded with stable target ID and minimal payload; a failed or denied interaction is not treated as completed.
+
+- cards and Chronos Core: live Player only;
+- doors: access and mission-condition check;
+- terminals: hold/interaction completion, with explicit Echo replay policy;
+- pressure plates: actor occupancy, no `E` input;
+- extraction: live Player with Core only.
+
+## Chrono Recall
+
+Recall is available only when:
+
+- operation is active and simulation is running;
+- at least one charge remains;
+- recent history and a valid world snapshot exist;
+- map/pause/restore is not blocking input.
+
+Immediately after mission start or a prior Recall, the available history can be shorter than ten seconds. The ability restores as far as valid current-branch history allows. Used charges do not return.
+
+On capture, `Q` can select Recall when the decision panel offers it; the HUD button provides the same action. Recall is never automatic.
+
+## Tactical map
+
+Opening the map pauses Player, Guards, cameras, alert decay, and Recall history. It shows planning information without showing a solved path or real-time Guard locations. Closing it resumes unless a separate pause/capture/victory state is active.
 
 ## Stealth feedback
 
-Stealth does not add another input. Watch the Guard's translucent vision cone and status display while moving:
+- neutral/cyan cone and `PATROL`: authored route;
+- orange `?`: suspicion/investigation;
+- red `!`: confirmed chase/alert;
+- search/return labels: target lost and route recovery;
+- Security HUD: CCTV, lasers, facility alert;
+- Access HUD: current tier;
+- Recall HUD: remaining/maximum charges;
+- Core HUD: acquired state.
 
-- Cyan cone and `PATROLLING`: the Guard is following its authored route.
-- Orange cone and `?`: suspicion is increasing while a target remains visible.
-- Red cone and `!`: the Guard is chasing its last confirmed target.
-- `SEARCHING`: the Guard lost sight and checks the last seen position before returning.
-
-Walls and a closed security door block actual line of sight; an open door permits it. The cone is a readable range-and-angle guide and is not cut into exact wall silhouettes. The live player has detection priority if the Guard can see both the player and a Ghost, so use walls to keep the live facility route separated while the Ghost repeats the lower-operations distraction.
-
-## Facility visibility
-
-The 60-second facility mission starts in the lower-right courtyard. A dark ambient layer and one Player-centered light reveal nearby floor. Walls and the closed vault door cast light shadows and also suppress information that the rendered shadow alone cannot safely hide:
-
-- a Guard, Ghost, gameplay object, Guard cone, and `?`/`!` indicator behind a wall have alpha gated to zero;
-- the HUD reports `GUARD — OUT OF SIGHT` instead of leaking hidden suspicion or target state;
-- an <kbd>E</kbd> prompt is shown only when the object is both in interaction range and visible to the Player probe;
-- hidden Guard AI and Ghost playback continue to run.
-
-Approaching a doorway reveals valid targets again. Opening the vault door simultaneously removes movement collision, Guard LOS blocking, Player visibility blocking, and its light occluder. The rendered shadow uses Godot's Compatibility renderer and still requires browser visual review; automated LOS tests alone do not certify shadow pixels.
-
-## Interaction rules
-
-The interaction prompt appears only when a valid object is in range. Pressing <kbd>E</kbd> records an event only after an interaction succeeds. The recording stores the target's stable object ID, never its scene-tree path.
-
-Pressure plates are occupancy triggers rather than <kbd>E</kbd> interactions: the live player and Ghosts activate a plate while standing on it. Objective collection and level completion are restricted to the live player.
-
-In `facility_level_01`, use <kbd>E</kbd> at `terminal_laser_01` to disable the right-room laser for the current loop. An active laser detects the current Player and saves/ends the loop; it does not block Guard sight or the Player light. The lower-left pressure plate holds the upper-left vault door open, so a previous Ghost is required to keep it active while the live Player crosses.
-
-## Timeline controls
-
-Pressing <kbd>R</kbd> is an intentional loop finish, not a full session reset. The completed run becomes another Ghost unless the recording limit has been reached. Guard capture or an active facility laser also finalizes the recording at that timestamp; it is time-loop progression, not permanent failure. The prototype loop is 20 seconds and the facility loop is 60 seconds. The timer, Guard AI, recording, playback, and visibility refresh stop with level simulation while paused. Victory freezes the timeline and prevents a simultaneous timeout or capture from starting another loop.
+Actual detection uses physics LOS and close proximity in addition to the readable cone.
 
 ## Browser focus
 
-Browsers require a user gesture before fullscreen or audio can be controlled. On first load:
+Browsers require a user gesture before keyboard focus and some platform features work.
 
 1. Click inside the game.
 2. Use the controls above.
-3. If the tab or window loses focus, return and click the game again.
+3. If the tab loses focus, return and click the canvas again.
 
-The game clears live movement when focus is lost so a released key cannot leave the player moving. Browser shortcuts may take precedence over game input on some systems; fullscreen can also be exited with the browser's standard shortcut.
+During Operation: Black Minute, focus loss also opens the safe pause state: Player, Guards, CCTV, Recall history, alert decay, and in-progress hacks stop until the player explicitly resumes. Capture and victory modals retain ownership instead of being replaced. Browser shortcuts can take precedence over game actions. Always validate a Web build through a local HTTP server, not `file://`.
 
-## Accessibility and presentation defaults
+## Accessibility
 
-- Important states use text, shape, and brightness in addition to color.
-- The live player is bright and opaque; Ghosts are translucent and labeled.
-- Guard suspicion and chase use a meter plus `?`/`!` shapes, not color alone.
-- Closed/active door, plate, objective, and exit states remain visually distinct when muted.
-- Countdown urgency is visible; audio is never the only timer cue.
-- Flashing and screen shake are kept minimal.
-- UI anchors and containers keep text inside the viewport as the browser resizes.
+- important state uses text/icon/shape in addition to color;
+- Player, Echo, Guard, objective, and extraction use distinct silhouettes/brightness;
+- muted play retains capture, objective, alert, and extraction feedback;
+- flashing and screen shake are minimized;
+- responsive containers are intended for the 1280×720 reference and resized windows.
 
-Keyboard and mouse are the primary supported devices for this MVP. Rebinding UI, controllers, and touch controls are not part of the current scope.
+Keyboard and mouse are the primary supported devices. Controller rebinding and touch controls are not implemented.
