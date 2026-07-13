@@ -2,24 +2,27 @@
 
 **60초의 공범** is a 2D top-down time-loop puzzle game: record one 20-second run, then cooperate with the Ghost that replays it.
 
-> **한국어 안내:** 20초 동안의 행동이 다음 회차의 Ghost로 재생됩니다. 과거의 나가 압력판을 누르는 동안 문을 통과하고, 시간 코어를 획득해 탈출하세요.
+> **한국어 안내:** 20초 동안의 행동이 다음 회차의 Ghost로 재생됩니다. 과거의 내가 압력판을 열고 경비를 유인하는 동안 아래쪽 경로로 시간 코어를 훔쳐 탈출하세요.
 
 ## Play in your browser
 
 [Play the current MVP on GitHub Pages](https://godongyen.github.io/60-seconds-accomplice/). The deployment is built from `main` by the repository's Pages workflow.
 
 <!-- Replace this block with a compressed gameplay GIF or screenshot after capture. -->
-> Gameplay screenshot/GIF placeholder: Ghost on the pressure plate while the live player crosses the open door.
+> Gameplay screenshot/GIF placeholder: Ghost drawing the Guard through the upper corridor while the live player escapes through the lower vault lane.
 
 ## The core mechanic
 
-1. Move onto the pressure plate during the first timeline.
-2. Let the 20-second loop end, or press <kbd>R</kbd> when your setup is ready.
+1. Move onto the pressure plate during the first timeline and hold it briefly.
+2. Move into the upper corridor on the starting side and let the Guard see and pursue you. Being caught still saves the run.
 3. Your previous run returns as a translucent Ghost.
-4. Cross the door while the Ghost holds the plate.
-5. Collect the time core and reach the active exit before the loop expires.
+4. Cross while the Ghost opens the door, then let it repeat the upper-corridor distraction.
+5. Use the lower vault lane while the Guard follows the Ghost.
+6. Collect the time core and reach the active exit before the loop expires.
 
 Movement and facing are recorded as 20 Hz snapshots. Successful interactions are recorded as timestamped events using stable object IDs. Ghosts interpolate the snapshots against the timeline clock instead of re-simulating player physics.
+
+The Guard follows a deterministic authored patrol, checks distance, view angle, and wall or closed-door occlusion, and raises suspicion before giving chase. Both the live player and active Ghost recordings are visible to it, with the live player taking priority when both are exposed. Capture finalizes the current recording, so a failed approach can become the next timeline's distraction.
 
 ## Controls
 
@@ -142,17 +145,20 @@ See [docs/release.md](docs/release.md) for CI, release, artifact, and troublesho
 
 ## Current status
 
-This repository targets a focused MVP: one 30×16-tile tutorial room, one pressure plate and linked door, one objective, one exit, a 20-second deterministic loop, and up to eight in-memory Ghost recordings. The acceptance path requires at least two timelines. The live player and Ghost share a directional animated sprite set; a non-colliding deterministic guard patrol demonstrates the processed guard art without adding detection or combat scope.
+This repository targets a focused MVP: one 30×16-tile tutorial room, one pressure plate and linked door, one objective, one exit, one stealth Guard, a 20-second deterministic loop, and up to eight in-memory Ghost recordings. The intended acceptance path uses at least two timelines: the first run holds the plate and draws the Guard through the upper corridor on the starting side, then its Ghost repeats that route while the live player crosses into the lower vault lane. The live player and Ghost share a directional animated sprite set; the Guard has patrol, suspicion, chase, search, return, line-of-sight, capture, and deterministic reset behavior without combat or health systems.
 
 Known limitations:
 
-- One tutorial level; the guard is presentation-only, with no detection, navigation, combat, campaign, progression, or procedural generation.
+- One tutorial level and one authored two-point Guard route; there are no additional enemy types, hearing simulation, combat, campaign, progression, or procedural generation.
+- Guard movement uses deterministic collision-aware steering for this compact authored room rather than a general navigation mesh, and the readable vision cone is not geometrically clipped against walls.
 - Recordings live only for the current level session and are not saved to disk.
 - Keyboard and mouse are the primary input devices; mobile touch controls are out of scope.
 - Desktop artifacts are unsigned development builds.
 - Character interaction/alert cycles and the seamless facility base still use documented prototype fallbacks; the original AI concept sheets are not production-ready tiles or complete animation sets.
 
 See [docs/roadmap.md](docs/roadmap.md) for the deliberately narrow next steps.
+
+Guard state, perception, target priority, capture, reset, patrol authoring, and debug behavior are documented in [docs/guard_ai.md](docs/guard_ai.md).
 
 ## Contributing
 

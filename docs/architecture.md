@@ -130,6 +130,13 @@ Interactables
 ├── door
 ├── objective
 └── exit
+
+GuardController
+├── explicit stealth state machine
+├── suspicion and capture protocol
+├── GuardPerception candidate/FOV/LOS component
+├── GuardNavigation collision-aware steering component
+└── GuardVisual animation and readable awareness feedback
 ```
 
 ---
@@ -445,7 +452,7 @@ reset 대상 예:
 - objective item
 - exit state
 - player
-- future enemy
+- Guard position, state, perception, navigation, and capture state
 - projectile container
 
 ### 9.2 Reset Order
@@ -592,17 +599,39 @@ GameManager.level_completed
 - exit
 - fixed laser
 - scripted platform
+- authored Guard patrol order and search rotation
+- Guard target priority and loop-reset state
 
 이 object들은 같은 event와 상태에서 같은 결과를 내야 한다.
 
 ### Dynamic Later
 
-- enemy AI
+- additional enemy AI types
 - projectile
 - physics box
 - explosion
 
 dynamic system은 퍼즐 필수 경로의 단일 실패 지점이 되지 않도록 설계한다.
+
+### Guard Stealth Data Flow
+
+현재 tutorial Guard는 난수를 사용하지 않고 authored patrol point, physics delta, stable actor ID만으로 동작한다.
+
+```text
+GuardPerception candidate cache
+→ distance / facing dot product / World LOS
+→ deterministic target selection (Player, then Ghost ID)
+→ current-target suspicion
+→ GuardController state transition
+→ GuardNavigation direct steering + move_and_slide
+→ GuardVisual animation / cone / ? / !
+→ capture request
+→ TimelineManager captured loop end
+→ recording finalization
+→ deterministic world and Guard reset
+```
+
+프로젝트에는 runtime navigation region이 없으므로 현재 Guard는 `NavigationAgent2D`를 pathfinder로 가장하지 않는다. Patrol과 last-seen segment는 collision-free 직선으로 작성하며, movement는 World collision에 대해 `move_and_slide()`를 사용한다. 일반 obstacle 회피가 필요한 level을 추가할 때만 navigation mesh를 도입한다. 상세 상태와 export contract는 `docs/guard_ai.md`를 따른다.
 
 ### Replay Drift Prevention
 
@@ -745,6 +774,18 @@ scripts/objects/objective_item.gd
 scripts/objects/exit_zone.gd
 - completion check
 
+scripts/enemies/guard_controller.gd
+- stealth state, suspicion, target lifecycle, capture request
+
+scripts/enemies/guard_perception.gd
+- cached Player/Ghost candidates, FOV, World LOS, stable priority
+
+scripts/enemies/guard_navigation.gd
+- collision-aware direct steering and blocked progress measurement
+
+scripts/presentation/guard_visual.gd
+- directional animation, cone, awareness icons, suspicion/debug presentation
+
 scripts/ui/hud.gd
 - timer, loop, status display
 ```
@@ -832,6 +873,8 @@ scripts/ui/hud.gd
 10. exit 진입
 11. level complete UI 표시
 
+Guard stealth acceptance는 captured recording이 다음 loop의 Ghost가 되고, 그 Ghost가 시작 방 upper corridor에서 경비를 유인하는 동안 현재 Player가 문을 지나 lower vault lane에서 objective와 exit를 완료하는 흐름을 추가로 검증한다. Capture, timeout, restart, victory가 같은 physics interval에 경쟁하면 `victory > captured > restart > timeout` 우선순위로 하나의 loop 종료 사유만 확정해야 한다.
+
 ### Pass Conditions
 
 - Ghost 경로가 눈에 띄게 흔들리거나 크게 어긋나지 않음
@@ -841,4 +884,4 @@ scripts/ui/hud.gd
 - runtime error 없음
 - 새 loop가 시작될 때 level 상태가 정확히 초기화됨
 
-이 acceptance test를 통과하기 전에는 enemy AI, combat, meta progression을 구현하지 않는다.
+이 acceptance test와 Guard distraction acceptance를 통과하기 전에는 추가 enemy 유형, combat, meta progression을 구현하지 않는다.

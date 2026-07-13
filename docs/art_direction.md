@@ -52,6 +52,8 @@ Ghosts share the player `SpriteFrames`; they do not have a separate atlas. Use b
 
 The guard uses dark navy/gray, an orange or yellow badge/equipment accent, and a cap to separate its silhouette from the hooded player. Directional equipment is a presentation hint only and is not authoritative vision data. The source provides three-quarter side views and only subtle pose changes, so the patrol and alert cycles remain prototype placeholders.
 
+The gameplay vision cone is a low-alpha cyan shape during patrol, orange with a `?` during suspicion/search, and red with a `!` during chase. Physics line-of-sight remains authoritative when a wall or closed door overlaps the un-clipped presentation cone. The per-Guard meter and HUD text make suspicion readable without color or audio.
+
 ## Facility language
 
 The tutorial room is a dark science-fiction security facility:

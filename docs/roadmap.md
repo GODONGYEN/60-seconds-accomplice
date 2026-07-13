@@ -31,9 +31,36 @@ Exit criteria:
 5. Pause, restart, timeout, and victory do not race or leak mutable state.
 6. Headless tests and a local HTTP Web smoke test pass without fatal errors.
 
-## Milestone 2 — MVP hardening
+## Milestone 2 — Deterministic stealth Guard
 
-Only begin after Milestone 1 acceptance passes consistently.
+Goal: turn a failed approach into a useful Guard distraction without adding combat.
+
+Current implementation scope:
+
+- One collision-aware Guard following an authored two-point upper-corridor route on the starting side
+- Explicit idle, patrol, suspicious, chase, search, and return states
+- Distance, view-angle, wall, and closed-door line-of-sight checks
+- Delta-based suspicion gain/loss and capture hold timing
+- Deterministic target priority: live Player before active Ghost recordings
+- Capture finalizes the current recording and starts the next loop
+- Full Guard reset between loops, with a short perception grace period
+- Vision cone, `?`/`!` indicators, HUD suspicion meter, and capture feedback
+- Upper-corridor Ghost lure paired with a lower-vault live-player objective route
+
+Acceptance criteria:
+
+1. The Guard patrols and changes animation in the direction of travel.
+2. Walls and a closed door block detection; the open door permits it.
+3. A caught run is retained and appears as a Ghost on the next timeline.
+4. The Guard follows the upper-corridor Ghost while the live player can cross into the lower vault lane.
+5. Losing a target leads through search and return instead of nondeterministic wandering.
+6. Pause, victory, restart, timeout, and capture preserve one deterministic loop outcome.
+
+This milestone deliberately excludes health, weapons, damage, hearing, reinforcements, and general-purpose enemy navigation.
+
+## Milestone 3 — MVP hardening
+
+Continue after the core loop and stealth acceptance pass consistently.
 
 - Test low frame rates and long frame stalls against replay event ordering
 - Test browser focus loss, resize, fullscreen transitions, and audio mute
@@ -43,7 +70,7 @@ Only begin after Milestone 1 acceptance passes consistently.
 - Capture a compact gameplay GIF and verified release screenshots
 - Exercise release workflows from a clean public checkout
 
-## Milestone 3 — Vertical-slice decision
+## Milestone 4 — Vertical-slice decision
 
 This is a decision gate, not a promise of features. Use playtest evidence to choose one narrow extension that deepens time-loop cooperation. Candidate work may include a second deterministic puzzle pattern or a single simple hazard. Any extension must preserve stable replay and fast retries.
 
@@ -51,7 +78,7 @@ This is a decision gate, not a promise of features. Use playtest evidence to cho
 
 - Multiplayer, accounts, online services, leaderboards, or analytics
 - Procedural generation or a campaign
-- Complex enemy AI, bosses, weapon systems, or skill trees
+- Additional enemy types, combat AI, bosses, weapon systems, or skill trees
 - Meta progression, shops, inventory grids, or save migration
 - Mobile touch controls, mod loading, or user-generated content
 - Paid assets, ads, or microtransactions

@@ -19,6 +19,17 @@ All gameplay input is defined through Godot's Input Map. Scripts must query acti
 
 Diagonal movement is normalized so it is not faster than horizontal or vertical movement. The live player and Ghosts do not collide with one another.
 
+## Stealth feedback
+
+Stealth does not add another input. Watch the Guard's translucent vision cone and status display while moving:
+
+- Cyan cone and `PATROLLING`: the Guard is following its authored route.
+- Orange cone and `?`: suspicion is increasing while a target remains visible.
+- Red cone and `!`: the Guard is chasing its last confirmed target.
+- `SEARCHING`: the Guard lost sight and checks the last seen position before returning.
+
+Walls and a closed security door block actual line of sight; an open door permits it. The cone is a readable range-and-angle guide and is not cut into exact wall silhouettes. The live player has detection priority if the Guard can see both the player and a Ghost, so cross into the lower vault lane while the Ghost repeats the upper-corridor distraction on the starting side.
+
 ## Interaction rules
 
 The interaction prompt appears only when a valid object is in range. Pressing <kbd>E</kbd> records an event only after an interaction succeeds. The recording stores the target's stable object ID, never its scene-tree path.
@@ -27,7 +38,7 @@ Pressure plates are occupancy triggers rather than <kbd>E</kbd> interactions: th
 
 ## Timeline controls
 
-Pressing <kbd>R</kbd> is an intentional loop finish, not a full session reset. The completed run becomes another Ghost unless the recording limit has been reached. The timer and all playback clocks stop while paused. Victory freezes the timeline and prevents a simultaneous timeout from starting another loop.
+Pressing <kbd>R</kbd> is an intentional loop finish, not a full session reset. The completed run becomes another Ghost unless the recording limit has been reached. Guard capture also finalizes the recording at the capture timestamp after a short visual confirmation; it is time-loop progression, not permanent failure. The timer, Guard AI, recording, and playback clocks stop while paused. Victory freezes the timeline and prevents a simultaneous timeout or capture from starting another loop.
 
 ## Browser focus
 
@@ -43,6 +54,7 @@ The game clears live movement when focus is lost so a released key cannot leave 
 
 - Important states use text, shape, and brightness in addition to color.
 - The live player is bright and opaque; Ghosts are translucent and labeled.
+- Guard suspicion and chase use a meter plus `?`/`!` shapes, not color alone.
 - Closed/active door, plate, objective, and exit states remain visually distinct when muted.
 - Countdown urgency is visible; audio is never the only timer cue.
 - Flashing and screen shake are kept minimal.

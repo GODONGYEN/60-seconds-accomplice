@@ -61,7 +61,7 @@ Quality limits: the down walk is visibly subtler than side/up motion; interactio
 | Logical frame / pivot | 48×64 / `(24, 62)` bottom center |
 | Selected source frames | 16 of 20 detected candidates |
 | Horizontal flip | None; directional source poses were selected directly |
-| Runtime use | Non-colliding deterministic tutorial patrol presentation |
+| Runtime use | Deterministic tutorial Guard patrol, suspicion, chase, search, and capture presentation |
 
 | Animation group | Frames per direction | FPS / loop | Source or fallback status |
 |---|---:|---|---|
@@ -69,7 +69,7 @@ Quality limits: the down walk is visibly subtler than side/up motion; interactio
 | `walk_down/left/right/up` | 2 | 6 / yes | Two subtle source poses; incomplete walk-cycle placeholder |
 | `alert_down/left/right/up` | 2 | 6 / no | Equipment poses used as the clearest available alert cue |
 
-Quality limits: left/right are three-quarter views rather than strict profiles; cap, badge, and equipment placement vary slightly; the source has no complete authored patrol or alert sequence. Equipment direction is presentation-only and is not used as authoritative vision data. The tutorial guard does not add detection, navigation, combat, or time-loop interaction gameplay.
+Quality limits: left/right are three-quarter views rather than strict profiles; cap, badge, and equipment placement vary slightly; the source has no complete authored patrol or alert sequence. Equipment direction is presentation-only and is not used as authoritative vision data. Guard perception uses controller-facing vector math and physics LOS, never pixels in the equipment pose.
 
 ## Facility derivatives
 
