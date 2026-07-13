@@ -17,6 +17,10 @@ func can_interact(_actor: Node) -> bool:
 	return false
 
 
+func get_interaction_prompt(_actor: Node) -> String:
+	return "E  INTERACT"
+
+
 func interact(_actor: Node) -> bool:
 	push_warning("Interactable.interact() must be overridden for object_id=%s" % object_id)
 	return false
@@ -28,4 +32,3 @@ func replay_event(event_type: StringName, actor: Node, _payload: Dictionary) -> 
 	if not can_interact(actor):
 		return false
 	return interact(actor)
-

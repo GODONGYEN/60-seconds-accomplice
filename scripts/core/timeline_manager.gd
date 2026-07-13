@@ -36,7 +36,7 @@ var elapsed_time: float = 0.0
 var run_state: RunState = RunState.IDLE
 var recordings: Array[LoopRecording] = []
 
-var _level: PrototypeLevel = null
+var _level: GameplayLevel = null
 var _active_ghosts: Array[GhostPlayback] = []
 var _pending_reason: StringName = StringName()
 var _ghost_cap_warning_emitted: bool = false
@@ -48,9 +48,9 @@ func _ready() -> void:
 	set_physics_process(false)
 
 
-func configure(level: PrototypeLevel) -> bool:
+func configure(level: GameplayLevel) -> bool:
 	if level == null or not is_instance_valid(level):
-		_fail("TimelineManager requires a valid PrototypeLevel")
+		_fail("TimelineManager requires a valid GameplayLevel")
 		return false
 	if loop_duration_seconds <= 0.0:
 		_fail("TimelineManager loop duration must be greater than zero")
@@ -66,6 +66,7 @@ func configure(level: PrototypeLevel) -> bool:
 		return false
 
 	_level = level
+	loop_duration_seconds = level.get_loop_duration_seconds()
 	action_recorder.sample_rate_hz = recording_frequency_hz
 	if not _level.completion_requested.is_connected(complete_level):
 		_level.completion_requested.connect(complete_level)

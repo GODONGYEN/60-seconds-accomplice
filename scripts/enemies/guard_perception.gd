@@ -5,7 +5,6 @@ signal candidate_count_changed(candidate_count: int)
 
 const WORLD_COLLISION_MASK: int = 1
 const TARGET_HEIGHT_OFFSET: Vector2 = Vector2(0.0, -18.0)
-const MAX_OPEN_DOOR_PASSES: int = 4
 
 @export_range(32.0, 640.0, 1.0) var vision_distance: float = 220.0
 @export_range(5.0, 89.0, 1.0) var vision_half_angle_degrees: float = 38.0
@@ -77,34 +76,17 @@ func is_target_visible(target: Node2D, facing_direction: Vector2) -> bool:
 func has_clear_line_of_sight(target: Node2D) -> bool:
 	if target == null or not is_instance_valid(target) or not is_inside_tree():
 		return false
-	var space_state := get_world_2d().direct_space_state
-	if space_state == null:
-		return false
 	var excluded_rids: Array[RID] = []
 	var guard_body := get_parent() as CollisionObject2D
 	if guard_body != null:
 		excluded_rids.append(guard_body.get_rid())
-	var target_position := target.global_position + TARGET_HEIGHT_OFFSET
-	for _pass_index: int in range(MAX_OPEN_DOOR_PASSES):
-		var query := PhysicsRayQueryParameters2D.create(
-			global_position,
-			target_position,
-			WORLD_COLLISION_MASK,
-			excluded_rids
-		)
-		query.collide_with_areas = false
-		query.collide_with_bodies = true
-		var hit: Dictionary = space_state.intersect_ray(query)
-		if hit.is_empty():
-			return true
-		var collider: Object = hit.get("collider") as Object
-		if collider is SecurityDoor and (collider as SecurityDoor).is_open:
-			var collider_rid: RID = hit.get("rid", RID())
-			if collider_rid.is_valid():
-				excluded_rids.append(collider_rid)
-				continue
-		return false
-	return false
+	return WorldLineOfSight2D.has_clear_line(
+		get_world_2d().direct_space_state,
+		global_position,
+		target.global_position + TARGET_HEIGHT_OFFSET,
+		WORLD_COLLISION_MASK,
+		excluded_rids
+	)
 
 
 static func is_point_in_view(

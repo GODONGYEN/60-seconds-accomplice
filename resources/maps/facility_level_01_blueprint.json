@@ -1,0 +1,110 @@
+{
+  "schema_version": 1,
+  "level_id": "facility_level_01",
+  "size": [26, 25],
+  "tile_size": 32,
+  "world_size": [832, 800],
+  "coordinate_convention": "zero_based_rect_xywh_cell_center_world",
+  "loop_duration_seconds": 60.0,
+  "rooms": {
+    "upper_left_control": {"rect": [1, 1, 6, 5]},
+    "upper_central_corridor": {"rect": [8, 1, 8, 6]},
+    "upper_right_control": {"rect": [17, 1, 8, 5]},
+    "west_service_corridor": {"rect": [1, 7, 2, 10]},
+    "middle_left_enclosed": {"rect": [4, 8, 8, 7]},
+    "center_security_corridor": {"rect": [13, 7, 6, 11]},
+    "right_laser_room": {"rect": [20, 8, 5, 8]},
+    "lower_left_utility": {"rect": [1, 18, 6, 6]},
+    "lower_operations": {"rect": [8, 19, 10, 5]},
+    "lower_right_courtyard": {"rect": [19, 17, 6, 7]}
+  },
+  "connectors": [
+    {"id": "upper_west_cross", "rect": [3, 6, 5, 2], "connects": ["west_service_corridor", "upper_central_corridor"]},
+    {"id": "doorway_service_middle", "rect": [3, 11, 1, 2], "connects": ["west_service_corridor", "middle_left_enclosed"]},
+    {"id": "doorway_middle_center", "rect": [12, 10, 1, 3], "connects": ["middle_left_enclosed", "center_security_corridor"]},
+    {"id": "elbow_middle_utility", "rect": [5, 15, 2, 3], "connects": ["middle_left_enclosed", "lower_left_utility"]},
+    {"id": "portal_center_operations", "rect": [14, 18, 3, 1], "connects": ["center_security_corridor", "lower_operations"]},
+    {"id": "portal_utility_operations", "rect": [7, 20, 1, 3], "connects": ["lower_left_utility", "lower_operations"]},
+    {"id": "portal_operations_courtyard", "rect": [18, 19, 1, 2], "connects": ["lower_operations", "lower_right_courtyard"]},
+    {"id": "portal_laser_courtyard", "rect": [21, 16, 3, 1], "connects": ["right_laser_room", "lower_right_courtyard"]},
+    {"id": "doorway_upper_controls", "rect": [16, 3, 1, 2], "connects": ["upper_central_corridor", "upper_right_control"]}
+  ],
+  "dynamic_portals": [
+    {
+      "id": "door_vault_01",
+      "type": "security_door",
+      "anchor": [7, 3],
+      "span_rect": [7, 1, 1, 5],
+      "connects": ["upper_left_control", "upper_central_corridor"],
+      "initially_open": false,
+      "controlled_by": "plate_vault_01",
+      "blocks_movement": true,
+      "blocks_guard_los": true,
+      "blocks_player_visibility": true
+    },
+    {
+      "id": "laser_right_01",
+      "type": "laser_barrier",
+      "anchor": [19, 11],
+      "span_rect": [19, 10, 1, 3],
+      "connects": ["center_security_corridor", "right_laser_room"],
+      "initially_active": true,
+      "controlled_by": "terminal_laser_01",
+      "blocks_movement": false,
+      "triggers_loop_end": true,
+      "blocks_guard_los": false,
+      "blocks_player_visibility": false
+    }
+  ],
+  "objects": {
+    "player_spawn": {"position": [24, 23]},
+    "plate_vault_01": {"position": [4, 21], "controls": ["door_vault_01"]},
+    "terminal_laser_01": {"position": [22, 13], "controls": ["laser_right_01"]},
+    "objective_core_01": {"position": [3, 3]},
+    "exit_courtyard_01": {"position": [23, 21], "requires": "objective_core_01"}
+  },
+  "guards": [
+    {
+      "id": "guard_center_01",
+      "enabled_by_default": true,
+      "spawn": [14, 8],
+      "initial_facing": [1, 0],
+      "patrol": [[14, 8], [17, 8], [17, 15], [14, 15]]
+    },
+    {
+      "id": "guard_vault_01",
+      "enabled_by_default": false,
+      "enable_after_multi_guard_acceptance": true,
+      "spawn": [10, 2],
+      "initial_facing": [1, 0],
+      "patrol": [[10, 2], [14, 2], [14, 5], [10, 5]]
+    }
+  ],
+  "prop_regions": {
+    "upper_left_desks": [1, 1, 5, 2],
+    "upper_right_servers": [18, 1, 6, 2],
+    "middle_left_equipment": [5, 9, 6, 5],
+    "right_laser_equipment": [21, 9, 4, 6],
+    "lower_operations_island": [10, 20, 3, 1],
+    "courtyard_edge_decoration": [20, 18, 5, 6]
+  },
+  "collision": {
+    "wall_rule": "every map cell outside the room, connector, and dynamic portal union",
+    "boundary_closed": true,
+    "dynamic_portal_floor_underlay": true
+  },
+  "occlusion": {
+    "wall_rule": "same cell set as collision walls",
+    "door_vault_01_dynamic": true,
+    "laser_right_01_occludes_light": false
+  },
+  "camera": {
+    "limits": [0, 0, 832, 800],
+    "recommended_zoom": [2.0, 2.0],
+    "rotation_degrees": 0.0
+  },
+  "intended_loops": [
+    "Loop 1: enter lower operations, expose the player at the center portal, lure guard_center_01 west, and finish on plate_vault_01.",
+    "Loop 2: the Ghost repeats the lower route and holds the plate while the live player enters the laser room, disables laser_right_01, reaches the open vault, collects objective_core_01, and returns to exit_courtyard_01."
+  ]
+}

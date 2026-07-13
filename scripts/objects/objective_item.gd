@@ -29,6 +29,10 @@ func can_interact(actor: Node) -> bool:
 	return not is_collected and actor.is_in_group("player_actor")
 
 
+func get_interaction_prompt(_actor: Node) -> String:
+	return "E  COLLECT TIME CORE"
+
+
 func interact(actor: Node) -> bool:
 	if not can_interact(actor):
 		return false
@@ -56,4 +60,3 @@ func _draw() -> void:
 	draw_circle(Vector2.ZERO, 8.0, Color.WHITE)
 	draw_line(Vector2(-23.0, 0.0), Vector2(23.0, 0.0), CORE_COLOR, 2.0)
 	draw_line(Vector2(0.0, -23.0), Vector2(0.0, 23.0), CORE_COLOR, 2.0)
-

@@ -1,8 +1,10 @@
-[gd_scene load_steps=7 format=3]
+[gd_scene load_steps=9 format=3]
 
 [ext_resource type="Script" path="res://scripts/player/player_controller.gd" id="1_player"]
 [ext_resource type="Script" path="res://scripts/presentation/player_visual.gd" id="2_visual"]
 [ext_resource type="SpriteFrames" path="res://resources/characters/player_sprite_frames.tres" id="3_frames"]
+[ext_resource type="Script" path="res://scripts/visibility/player_visibility_probe.gd" id="4_probe"]
+[ext_resource type="Texture2D" path="res://resources/vision/player_vision_gradient.tres" id="5_vision"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_body"]
 size = Vector2(18, 12)
@@ -64,3 +66,23 @@ mouse_filter = 2
 text = "CORE"
 label_settings = SubResource("LabelSettings_objective")
 horizontal_alignment = 1
+
+[node name="PlayerVision" type="Node2D" parent="."]
+unique_name_in_owner = true
+position = Vector2(0, -18)
+script = ExtResource("4_probe")
+
+[node name="VisionLight" type="PointLight2D" parent="PlayerVision"]
+unique_name_in_owner = true
+enabled = false
+texture = ExtResource("5_vision")
+energy = 1.25
+shadow_enabled = true
+shadow_filter = 0
+range_item_cull_mask = 1
+shadow_item_cull_mask = 1
+
+[node name="PlayerCamera" type="Camera2D" parent="."]
+unique_name_in_owner = true
+enabled = false
+position_smoothing_enabled = false

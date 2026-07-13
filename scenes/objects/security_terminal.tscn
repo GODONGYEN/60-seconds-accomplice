@@ -1,0 +1,17 @@
+[gd_scene load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://scripts/objects/security_terminal.gd" id="1_terminal"]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_terminal"]
+size = Vector2(44, 50)
+
+[node name="SecurityTerminal" type="Area2D"]
+z_index = 2
+collision_layer = 8
+collision_mask = 0
+monitoring = false
+script = ExtResource("1_terminal")
+object_id = &"terminal_laser_01"
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+shape = SubResource("RectangleShape2D_terminal")

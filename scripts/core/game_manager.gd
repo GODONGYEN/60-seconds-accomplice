@@ -1,7 +1,7 @@
 class_name GameManager
 extends Node2D
 
-@onready var level: PrototypeLevel = %PrototypeLevel
+@onready var level: GameplayLevel = %CurrentLevel
 @onready var timeline: TimelineManager = %TimelineManager
 @onready var hud: GameHUD = %HUD
 @onready var audio_feedback: AudioFeedback = %AudioFeedback
@@ -74,9 +74,11 @@ func _connect_ui_signals() -> void:
 
 func _on_loop_started(loop_index: int, ghost_count: int) -> void:
 	hud.update_loop(loop_index, ghost_count)
+	hud.set_hint(level.get_loop_hint(loop_index))
 	hud.hide_victory()
 	audio_feedback.play_loop_start()
-	hud.update_guard_status(&"idle", 0.0, StringName())
+	hud.update_guard_status(&"hidden", 0.0, StringName())
+	level.refresh_visible_guard_status()
 
 
 func _on_objective_collected() -> void:

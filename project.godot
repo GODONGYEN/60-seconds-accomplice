@@ -82,6 +82,7 @@ toggle_mute={
 2d_physics/layer_4="Interactable"
 2d_physics/layer_5="Trigger"
 2d_physics/layer_6="Guard"
+2d_physics/layer_7="PlayerVisionBlocker"
 
 [physics]
 

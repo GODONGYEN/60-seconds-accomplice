@@ -11,9 +11,12 @@ const FRAME_COLOR := Color("c9d4e7")
 
 @onready var blocker: CollisionShape2D = %Blocker
 @onready var safety_area: Area2D = %SafetyArea
+@onready var light_occluder: LightOccluder2D = %LightOccluder2D
 
 var is_open: bool = false
 var _close_pending: bool = false
+var _requested_open: bool = false
+var _state_commit_scheduled: bool = false
 
 
 func _ready() -> void:
@@ -25,6 +28,10 @@ func _ready() -> void:
 
 func get_object_id() -> StringName:
 	return object_id
+
+
+func get_visibility_sample_position() -> Vector2:
+	return global_position
 
 
 func set_open(requested_open: bool) -> void:
@@ -59,12 +66,33 @@ func _on_safety_body_exited(_body: Node2D) -> void:
 
 
 func _apply_open_state(value: bool, force: bool = false) -> void:
-	if not force and is_open == value:
+	if not force and not _state_commit_scheduled and is_open == value:
 		return
+	_requested_open = value
+	if force:
+		_state_commit_scheduled = false
+		_commit_open_state(value, true)
+		return
+	if _state_commit_scheduled:
+		return
+	_state_commit_scheduled = true
+	call_deferred("_commit_requested_open_state")
+
+
+func _commit_requested_open_state() -> void:
+	_state_commit_scheduled = false
+	_commit_open_state(_requested_open)
+
+
+func _commit_open_state(value: bool, force: bool = false) -> void:
+	var changed := is_open != value
 	is_open = value
-	blocker.set_deferred("disabled", is_open)
+	# One deferred boundary keeps physics, both LOS systems, light, and visuals aligned.
+	blocker.disabled = is_open
+	light_occluder.visible = not is_open
 	queue_redraw()
-	open_state_changed.emit(is_open)
+	if changed or force:
+		open_state_changed.emit(is_open)
 
 
 func _draw() -> void:

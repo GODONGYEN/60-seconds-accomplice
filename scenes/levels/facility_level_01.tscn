@@ -1,0 +1,175 @@
+[gd_scene load_steps=14 format=3]
+
+[ext_resource type="Script" path="res://scripts/core/facility_level_01.gd" id="1_level"]
+[ext_resource type="Script" path="res://scripts/core/object_registry.gd" id="2_registry"]
+[ext_resource type="Script" path="res://scripts/presentation/facility_level_map.gd" id="3_map"]
+[ext_resource type="Script" path="res://scripts/visibility/world_visibility_controller.gd" id="4_visibility"]
+[ext_resource type="TileSet" path="res://resources/tilesets/facility_tileset.tres" id="5_tileset"]
+[ext_resource type="PackedScene" path="res://scenes/objects/pressure_plate.tscn" id="6_plate"]
+[ext_resource type="PackedScene" path="res://scenes/objects/security_door.tscn" id="7_door"]
+[ext_resource type="PackedScene" path="res://scenes/objects/laser_barrier.tscn" id="8_laser"]
+[ext_resource type="PackedScene" path="res://scenes/objects/security_terminal.tscn" id="9_terminal"]
+[ext_resource type="PackedScene" path="res://scenes/objects/objective_item.tscn" id="10_objective"]
+[ext_resource type="PackedScene" path="res://scenes/objects/exit_zone.tscn" id="11_exit"]
+[ext_resource type="PackedScene" path="res://scenes/enemies/guard.tscn" id="12_guard"]
+[ext_resource type="PackedScene" path="res://scenes/objects/decorative_security_camera.tscn" id="13_camera"]
+
+[node name="FacilityLevel01" type="Node2D"]
+process_mode = 1
+script = ExtResource("1_level")
+level_loop_duration_seconds = 60.0
+
+[node name="CanvasModulate" type="CanvasModulate" parent="."]
+color = Color(0.015, 0.02, 0.035, 1)
+
+[node name="FacilityMap" type="Node2D" parent="."]
+unique_name_in_owner = true
+script = ExtResource("3_map")
+
+[node name="Floor" type="TileMapLayer" parent="FacilityMap"]
+unique_name_in_owner = true
+tile_set = ExtResource("5_tileset")
+collision_enabled = false
+occlusion_enabled = false
+navigation_enabled = false
+
+[node name="FloorDetails" type="TileMapLayer" parent="FacilityMap"]
+unique_name_in_owner = true
+z_index = 1
+tile_set = ExtResource("5_tileset")
+collision_enabled = false
+occlusion_enabled = false
+navigation_enabled = false
+
+[node name="CourtyardGround" type="Polygon2D" parent="FacilityMap"]
+z_index = 1
+polygon = PackedVector2Array(608, 544, 800, 544, 800, 768, 608, 768)
+color = Color(0.08, 0.24, 0.18, 0.62)
+
+[node name="Walls" type="TileMapLayer" parent="FacilityMap"]
+unique_name_in_owner = true
+z_index = 2
+tile_set = ExtResource("5_tileset")
+collision_enabled = true
+occlusion_enabled = true
+navigation_enabled = false
+
+[node name="WallDetails" type="TileMapLayer" parent="FacilityMap"]
+unique_name_in_owner = true
+z_index = 3
+tile_set = ExtResource("5_tileset")
+collision_enabled = false
+occlusion_enabled = false
+navigation_enabled = false
+
+[node name="PropsBelowActors" type="TileMapLayer" parent="FacilityMap"]
+unique_name_in_owner = true
+z_index = 1
+tile_set = ExtResource("5_tileset")
+collision_enabled = false
+occlusion_enabled = false
+navigation_enabled = false
+
+[node name="ActorLayer" type="Node2D" parent="FacilityMap"]
+z_index = 4
+y_sort_enabled = true
+
+[node name="PlayerContainer" type="Node2D" parent="FacilityMap/ActorLayer"]
+unique_name_in_owner = true
+
+[node name="GhostContainer" type="Node2D" parent="FacilityMap/ActorLayer"]
+unique_name_in_owner = true
+
+[node name="Guards" type="Node2D" parent="FacilityMap/ActorLayer"]
+
+[node name="CenterGuard" parent="FacilityMap/ActorLayer/Guards" instance=ExtResource("12_guard")]
+position = Vector2(464, 272)
+object_id = &"guard_center_01"
+patrol_speed = 48.0
+chase_speed = 92.0
+idle_duration = 0.9
+reset_perception_grace = 1.0
+initial_facing = Vector2(1, 0)
+patrol_route_path = NodePath("../../GuardRoutes/CenterRoute")
+
+[node name="GuardRoutes" type="Node2D" parent="FacilityMap/ActorLayer"]
+
+[node name="CenterRoute" type="Node2D" parent="FacilityMap/ActorLayer/GuardRoutes"]
+
+[node name="Point01" type="Marker2D" parent="FacilityMap/ActorLayer/GuardRoutes/CenterRoute"]
+position = Vector2(464, 272)
+
+[node name="Point02" type="Marker2D" parent="FacilityMap/ActorLayer/GuardRoutes/CenterRoute"]
+position = Vector2(560, 272)
+
+[node name="Point03" type="Marker2D" parent="FacilityMap/ActorLayer/GuardRoutes/CenterRoute"]
+position = Vector2(560, 496)
+
+[node name="Point04" type="Marker2D" parent="FacilityMap/ActorLayer/GuardRoutes/CenterRoute"]
+position = Vector2(464, 496)
+
+[node name="PlayerSpawn" type="Marker2D" parent="FacilityMap/ActorLayer"]
+unique_name_in_owner = true
+position = Vector2(784, 752)
+
+[node name="PropsAboveActors" type="TileMapLayer" parent="FacilityMap"]
+unique_name_in_owner = true
+z_index = 6
+tile_set = ExtResource("5_tileset")
+collision_enabled = false
+occlusion_enabled = false
+navigation_enabled = false
+
+[node name="DynamicObjects" type="Node2D" parent="FacilityMap"]
+z_index = 3
+
+[node name="PressurePlate" parent="FacilityMap/DynamicObjects" instance=ExtResource("6_plate")]
+unique_name_in_owner = true
+position = Vector2(144, 688)
+object_id = &"plate_vault_01"
+
+[node name="SecurityDoor" parent="FacilityMap/DynamicObjects" instance=ExtResource("7_door")]
+unique_name_in_owner = true
+position = Vector2(240, 112)
+object_id = &"door_vault_01"
+
+[node name="LaserBarrier" parent="FacilityMap/DynamicObjects" instance=ExtResource("8_laser")]
+unique_name_in_owner = true
+position = Vector2(624, 368)
+object_id = &"laser_right_01"
+
+[node name="SecurityTerminal" parent="FacilityMap/DynamicObjects" instance=ExtResource("9_terminal")]
+unique_name_in_owner = true
+position = Vector2(720, 432)
+object_id = &"terminal_laser_01"
+
+[node name="ObjectiveItem" parent="FacilityMap/DynamicObjects" instance=ExtResource("10_objective")]
+unique_name_in_owner = true
+position = Vector2(112, 112)
+object_id = &"objective_core_01"
+
+[node name="ExitZone" parent="FacilityMap/DynamicObjects" instance=ExtResource("11_exit")]
+unique_name_in_owner = true
+position = Vector2(752, 688)
+object_id = &"exit_courtyard_01"
+
+[node name="SecurityCamera" parent="FacilityMap/DynamicObjects" instance=ExtResource("13_camera")]
+unique_name_in_owner = true
+position = Vector2(784, 112)
+
+[node name="NavigationRoot" type="Node2D" parent="."]
+
+[node name="OcclusionRoot" type="Node2D" parent="."]
+
+[node name="LightingRoot" type="Node2D" parent="."]
+
+[node name="ObjectRegistry" type="Node" parent="."]
+unique_name_in_owner = true
+script = ExtResource("2_registry")
+
+[node name="VisibilityController" type="Node" parent="."]
+unique_name_in_owner = true
+script = ExtResource("4_visibility")
+
+[node name="CameraBounds" type="Node2D" parent="."]
+unique_name_in_owner = true

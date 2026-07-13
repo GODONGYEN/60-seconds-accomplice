@@ -26,6 +26,7 @@ const STATE_NAMES: Dictionary = {
 const TARGET_POSITION_EPSILON_SQUARED: float = 64.0
 const SUSPICION_EPSILON: float = 0.0001
 
+@export var object_id: StringName = &"guard_training_01"
 @export_range(0.0, 200.0, 1.0) var patrol_speed: float = 52.0
 @export_range(0.0, 300.0, 1.0) var chase_speed: float = 96.0
 @export_range(0.0, 5.0, 0.05) var idle_duration: float = 0.7
@@ -78,6 +79,7 @@ var _last_reported_target_id: StringName = &"__unset"
 func _ready() -> void:
 	add_to_group(&"loop_resettable")
 	add_to_group(&"guard_actor")
+	add_to_group(&"stable_object")
 	process_physics_priority = 200
 	motion_mode = CharacterBody2D.MOTION_MODE_FLOATING
 	_initial_global_position = global_position
@@ -219,6 +221,14 @@ func is_simulation_enabled() -> bool:
 
 func get_visual() -> GuardVisual:
 	return visual
+
+
+func get_object_id() -> StringName:
+	return object_id
+
+
+func get_visibility_sample_position() -> Vector2:
+	return global_position + GuardPerception.TARGET_HEIGHT_OFFSET
 
 
 func get_perception() -> GuardPerception:

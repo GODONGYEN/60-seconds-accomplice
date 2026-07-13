@@ -849,9 +849,12 @@ def _extract_prop(source: Image.Image, bbox: tuple[int, int, int, int]) -> Image
 def _render_tileset_resource(manifest: dict[str, Any]) -> str:
     runtime_atlas = ROOT / manifest["runtime_atlas"]
     lines = [
-        '[gd_resource type="TileSet" load_steps=3 format=3]',
+        '[gd_resource type="TileSet" load_steps=4 format=3]',
         "",
         f'[ext_resource type="Texture2D" path="{_godot_path(runtime_atlas)}" id="1_tiles"]',
+        "",
+        '[sub_resource type="OccluderPolygon2D" id="OccluderPolygon2D_full_cell"]',
+        'polygon = PackedVector2Array(-16, -16, 16, -16, 16, 16, -16, 16)',
         "",
         '[sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_facility"]',
         'texture = ExtResource("1_tiles")',
@@ -865,13 +868,19 @@ def _render_tileset_resource(manifest: dict[str, Any]) -> str:
             lines.append(
                 f"{x}:{y}/0/physics_layer_0/polygon_0/points = {collision_points}"
             )
+            lines.append(
+                f'{x}:{y}/0/occlusion_layer_0/polygon_0/polygon = '
+                'SubResource("OccluderPolygon2D_full_cell")'
+            )
     lines.extend(
         [
             "",
             "[resource]",
             f"tile_size = Vector2i({TILE_SIZE}, {TILE_SIZE})",
-            "physics_layer_0/collision_layer = 1",
+            "physics_layer_0/collision_layer = 65",
             "physics_layer_0/collision_mask = 0",
+            "occlusion_layer_0/light_mask = 1",
+            "occlusion_layer_0/sdf_collision = false",
             'sources/0 = SubResource("TileSetAtlasSource_facility")',
         ]
     )
@@ -1505,8 +1514,17 @@ def _validate_tileset() -> list[str]:
         errors.append("TileSet resource does not exactly match its manifest")
     if _godot_path(runtime_atlas_path) not in resource_text:
         errors.append("TileSet does not reference the runtime atlas")
-    if "physics_layer_0/collision_layer = 1" not in resource_text:
-        errors.append("TileSet lacks the world collision layer")
+    if "physics_layer_0/collision_layer = 65" not in resource_text:
+        errors.append("TileSet lacks the World and PlayerVisionBlocker layers")
+    if "occlusion_layer_0/light_mask = 1" not in resource_text:
+        errors.append("TileSet lacks the player-light occlusion layer")
+    for entry in manifest.get("tiles", []):
+        if not entry.get("collision"):
+            continue
+        x, y = map(int, entry["atlas_coords"])
+        occlusion_property = f"{x}:{y}/0/occlusion_layer_0/polygon_0/polygon"
+        if occlusion_property not in resource_text:
+            errors.append(f"Solid tile {entry.get('id', '')} lacks light occlusion")
     return errors
 
 

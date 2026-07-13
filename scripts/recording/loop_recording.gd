@@ -108,14 +108,18 @@ func _copy_events(source_events: Array[RecordedEvent]) -> void:
 
 
 func _normalize_timestamp(value: float, value_kind: String) -> float:
-	if value < 0.0:
+	if value < -TIMESTAMP_EPSILON:
 		push_warning("LoopRecording clamped negative %s timestamp %.6f." % [value_kind, value])
 		return 0.0
-	if value > duration:
+	if value < 0.0:
+		return 0.0
+	if value > duration + TIMESTAMP_EPSILON:
 		push_warning(
 			"LoopRecording clamped %s timestamp %.6f to duration %.6f."
 			% [value_kind, value, duration]
 		)
+		return duration
+	if value > duration:
 		return duration
 	return value
 

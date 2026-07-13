@@ -41,17 +41,13 @@ func _ready() -> void:
 	victory_panel.visible = false
 	focus_overlay.visible = true
 	capture_panel.visible = false
-	update_guard_status(&"idle", 0.0, StringName())
+	update_guard_status(&"hidden", 0.0, StringName())
 	set_interaction_prompt("")
 
 
 func update_loop(loop_index: int, ghost_count: int) -> void:
 	loop_label.text = "TIMELINE  %02d" % loop_index
 	ghost_label.text = "GHOSTS  %d / 8" % ghost_count
-	if loop_index <= 1:
-		set_hint("HOLD THE PLATE BRIEFLY, THEN DRAW THE GUARD INTO THE UPPER CORRIDOR")
-	else:
-		set_hint("CROSS WHILE YOUR GHOST OPENS THE DOOR AND DISTRACTS THE GUARD")
 	objective_label.text = "OBJECTIVE  FIND THE TIME CORE"
 	objective_label.modulate = Color("a9b5c7")
 	capture_panel.visible = false
@@ -89,7 +85,11 @@ func update_guard_status(
 	target_id: StringName
 ) -> void:
 	guard_suspicion_meter.value = clampf(suspicion, 0.0, 1.0) * 100.0
+	guard_suspicion_meter.visible = state_name != &"hidden"
 	match state_name:
+		&"hidden":
+			guard_status_label.text = "GUARD  —  OUT OF SIGHT"
+			guard_status_label.modulate = Color("718094")
 		&"suspicious":
 			guard_status_label.text = "GUARD  ? SUSPICIOUS"
 			guard_status_label.modulate = Color("ffad4d")

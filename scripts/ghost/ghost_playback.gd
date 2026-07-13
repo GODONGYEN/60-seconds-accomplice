@@ -99,6 +99,10 @@ func get_visual() -> PlayerVisual:
 	return _visual
 
 
+func get_visibility_sample_position() -> Vector2:
+	return global_position + Vector2(0.0, -18.0)
+
+
 func get_detection_id() -> StringName:
 	return StringName("ghost_%03d" % display_loop_index)
 

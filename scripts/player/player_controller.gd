@@ -16,11 +16,15 @@ signal interaction_prompt_changed(message: String)
 
 @onready var interaction_area: Area2D = %InteractionArea
 @onready var visual: PlayerVisual = %VisualRoot
+@onready var visibility_probe: PlayerVisibilityProbe = %PlayerVision
+@onready var vision_light: PointLight2D = %VisionLight
+@onready var player_camera: Camera2D = %PlayerCamera
 
 var _gameplay_input_enabled: bool = false
 var _has_objective: bool = false
 var _last_prompt: String = ""
 var _facing_angle: float = 0.0
+var _facility_view_configured: bool = false
 
 
 func _ready() -> void:
@@ -109,6 +113,43 @@ func get_visual() -> PlayerVisual:
 	return visual
 
 
+func get_visibility_probe() -> PlayerVisibilityProbe:
+	return visibility_probe
+
+
+func configure_facility_view(
+	camera_bounds: Rect2,
+	camera_zoom: Vector2,
+	vision_radius: float
+) -> void:
+	_facility_view_configured = true
+	visibility_probe.set_visibility_radius(vision_radius)
+	# TimelineManager unlocks the query only after every resettable object, Ghost,
+	# and the live Player are in their deterministic starting state.
+	visibility_probe.set_query_enabled(false)
+	vision_light.texture_scale = vision_radius / 256.0
+	vision_light.enabled = false
+	player_camera.limit_left = roundi(camera_bounds.position.x)
+	player_camera.limit_top = roundi(camera_bounds.position.y)
+	player_camera.limit_right = roundi(camera_bounds.end.x)
+	player_camera.limit_bottom = roundi(camera_bounds.end.y)
+	player_camera.zoom = camera_zoom
+	player_camera.enabled = true
+
+
+func set_facility_visibility_enabled(enabled: bool) -> void:
+	var facility_visibility_enabled := _facility_view_configured and enabled
+	visibility_probe.set_query_enabled(facility_visibility_enabled)
+	vision_light.enabled = facility_visibility_enabled
+
+
+func disable_facility_view() -> void:
+	_facility_view_configured = false
+	visibility_probe.set_query_enabled(false)
+	vision_light.enabled = false
+	player_camera.enabled = false
+
+
 func get_detection_id() -> StringName:
 	return DETECTION_ID
 
@@ -164,6 +205,11 @@ func _find_nearest_interactable() -> Area2D:
 	for candidate: Area2D in interaction_area.get_overlapping_areas():
 		if not candidate.is_in_group("interactable"):
 			continue
+		if _facility_view_configured:
+			if not visibility_probe.is_query_enabled():
+				continue
+			if not visibility_probe.is_world_point_visible(candidate.global_position):
+				continue
 		var distance_squared := global_position.distance_squared_to(candidate.global_position)
 		if distance_squared < nearest_distance_squared:
 			nearest = candidate
@@ -175,7 +221,10 @@ func _update_interaction_prompt() -> void:
 	var target := _find_nearest_interactable()
 	var prompt := ""
 	if target != null:
-		prompt = "E  COLLECT TIME CORE"
+		if target.has_method(&"get_interaction_prompt"):
+			prompt = String(target.call(&"get_interaction_prompt", self))
+		else:
+			prompt = "E  INTERACT"
 	if prompt == _last_prompt:
 		return
 	_last_prompt = prompt
