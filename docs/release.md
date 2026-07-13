@@ -38,7 +38,7 @@ godot --headless --path . --quit
 GODOT_BIN=godot tools/run_tests.sh
 ```
 
-The test command must return zero. Then perform the playable acceptance path in the editor: record the plate route, begin a second loop, cross the Ghost-opened door, collect the objective, and enter the exit.
+The test command must return zero. Then perform the default facility acceptance path in the editor: record a westbound Guard distraction ending on the plate, begin a second loop, use the wall-hidden east route, disable `laser_right_01` at `terminal_laser_01`, cross the Ghost-opened vault door, collect the objective, and return to the courtyard exit. Confirm the closed/open door changes movement, Guard LOS, and Player-light shadow together. The preserved prototype remains a separate fast plate→Ghost→door regression.
 
 ## Web release export
 
@@ -158,7 +158,8 @@ The workflow can also be dispatched manually with a required `v*` tag value. An 
 - Web export is single-threaded and its artifact root contains `index.html`.
 - Automated tests pass without skips added to hide failures.
 - Asset derivatives validate and reproduce to the same semantic fingerprint.
-- The two-loop tutorial acceptance path passes after timeout and manual restart.
+- The facility two-loop path passes with wall visibility, terminal-controlled laser, Guard/Ghost distraction, Ghost-held vault door, objective, and courtyard exit.
+- The preserved 20-second prototype two-loop regression passes after timeout and manual restart.
 - Pause stops timeline, recording, and playback clocks.
 - Victory wins the race against timeout and blocks further gameplay input.
 - The browser console has no unexplained errors.

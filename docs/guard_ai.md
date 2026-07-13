@@ -14,7 +14,8 @@ Guard는 전투 actor가 아니라 time-loop 퍼즐의 deterministic stealth obs
 - `GuardPerception`: 감지 후보 cache, 거리/시야각/line-of-sight 검사, deterministic target 정렬
 - `GuardNavigation`: 단일 목표점을 향한 collision-aware direct steering과 blocked-time 측정
 - `GuardVisual`: 4방향 animation, vision cone, `?`/`!`, suspicion meter, 선택적 debug label
-- `PrototypeLevel`: patrol route 유효성 검증, Guard signal을 level/timeline/UI로 전달
+- `GameplayLevel`: 공통 patrol route 유효성 검증과 Guard signal bridge
+- `PrototypeLevel` / `FacilityLevel01`: 각 level의 authored route와 HUD/visibility 정책 구성
 - `TimelineManager`: `captured`를 하나의 loop 종료 사유로 확정하고 recording 저장 및 다음 loop 시작
 
 Guard는 `process_physics_priority = 200`으로 실행된다. Player는 기본 physics priority에서 먼저 이동하고, `TimelineManager`는 priority `100`에서 recording/Ghost를 갱신한 다음 Guard가 최신 위치를 감지한다.
@@ -167,8 +168,8 @@ Capture data flow:
 
 ```text
 GuardController.capture_requested
-→ PrototypeLevel validates current live Player
-→ PrototypeLevel.player_captured
+→ GameplayLevel validates current live Player
+→ GameplayLevel.player_captured
 → TimelineManager.request_loop_end("captured")
 → input and Guard simulation lock
 → capture feedback (default 0.45 s)
@@ -219,11 +220,13 @@ simulation이 다시 켜진 뒤에도 `reset_perception_grace` 동안 감지를 
 Tutorial level은 Guard와 같은 level 아래에 별도 `GuardPatrolRoute` Node2D를 둔다.
 
 ```text
-PrototypeLevel
+GameplayLevel
 ├── GuardPatrolRoute
 │   ├── Point01 (Marker2D)
-│   └── Point02 (Marker2D)
-└── TrainingGuard
+│   ├── Point02 (Marker2D)
+│   ├── Point03 (Marker2D, optional)
+│   └── Point04 (Marker2D, optional)
+└── GuardController
 ```
 
 설정 절차:
@@ -234,7 +237,7 @@ PrototypeLevel
 4. 각 인접 point 사이의 직선 구간이 World collider를 가로지르지 않는지 확인한다.
 5. Guard 초기 위치는 첫 point와 맞추는 것을 권장한다.
 
-Guard는 `_ready()`에서 Marker의 global position을 cache한다. runtime에 route node를 이동하거나 child 순서를 바꿔도 자동 재수집하지 않는다. `PrototypeLevel.validate_level()`은 point가 두 개 미만이면 시작을 거부한다.
+Guard는 `_ready()`에서 Marker의 global position을 cache한다. runtime에 route node를 이동하거나 child 순서를 바꿔도 자동 재수집하지 않는다. `GameplayLevel.validate_level()`은 point가 두 개 미만이면 시작을 거부한다. 보존된 prototype은 두 점 왕복 route를 사용하고, 기본 facility의 `guard_center_01`은 `(14,8) → (17,8) → (17,15) → (14,15)` 네 점 route를 사용한다.
 
 ## 9. Export variables
 

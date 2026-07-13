@@ -28,7 +28,18 @@ Stealth does not add another input. Watch the Guard's translucent vision cone an
 - Red cone and `!`: the Guard is chasing its last confirmed target.
 - `SEARCHING`: the Guard lost sight and checks the last seen position before returning.
 
-Walls and a closed security door block actual line of sight; an open door permits it. The cone is a readable range-and-angle guide and is not cut into exact wall silhouettes. The live player has detection priority if the Guard can see both the player and a Ghost, so cross into the lower vault lane while the Ghost repeats the upper-corridor distraction on the starting side.
+Walls and a closed security door block actual line of sight; an open door permits it. The cone is a readable range-and-angle guide and is not cut into exact wall silhouettes. The live player has detection priority if the Guard can see both the player and a Ghost, so use walls to keep the live facility route separated while the Ghost repeats the lower-operations distraction.
+
+## Facility visibility
+
+The 60-second facility mission starts in the lower-right courtyard. A dark ambient layer and one Player-centered light reveal nearby floor. Walls and the closed vault door cast light shadows and also suppress information that the rendered shadow alone cannot safely hide:
+
+- a Guard, Ghost, gameplay object, Guard cone, and `?`/`!` indicator behind a wall have alpha gated to zero;
+- the HUD reports `GUARD — OUT OF SIGHT` instead of leaking hidden suspicion or target state;
+- an <kbd>E</kbd> prompt is shown only when the object is both in interaction range and visible to the Player probe;
+- hidden Guard AI and Ghost playback continue to run.
+
+Approaching a doorway reveals valid targets again. Opening the vault door simultaneously removes movement collision, Guard LOS blocking, Player visibility blocking, and its light occluder. The rendered shadow uses Godot's Compatibility renderer and still requires browser visual review; automated LOS tests alone do not certify shadow pixels.
 
 ## Interaction rules
 
@@ -36,9 +47,11 @@ The interaction prompt appears only when a valid object is in range. Pressing <k
 
 Pressure plates are occupancy triggers rather than <kbd>E</kbd> interactions: the live player and Ghosts activate a plate while standing on it. Objective collection and level completion are restricted to the live player.
 
+In `facility_level_01`, use <kbd>E</kbd> at `terminal_laser_01` to disable the right-room laser for the current loop. An active laser detects the current Player and saves/ends the loop; it does not block Guard sight or the Player light. The lower-left pressure plate holds the upper-left vault door open, so a previous Ghost is required to keep it active while the live Player crosses.
+
 ## Timeline controls
 
-Pressing <kbd>R</kbd> is an intentional loop finish, not a full session reset. The completed run becomes another Ghost unless the recording limit has been reached. Guard capture also finalizes the recording at the capture timestamp after a short visual confirmation; it is time-loop progression, not permanent failure. The timer, Guard AI, recording, and playback clocks stop while paused. Victory freezes the timeline and prevents a simultaneous timeout or capture from starting another loop.
+Pressing <kbd>R</kbd> is an intentional loop finish, not a full session reset. The completed run becomes another Ghost unless the recording limit has been reached. Guard capture or an active facility laser also finalizes the recording at that timestamp; it is time-loop progression, not permanent failure. The prototype loop is 20 seconds and the facility loop is 60 seconds. The timer, Guard AI, recording, playback, and visibility refresh stop with level simulation while paused. Victory freezes the timeline and prevents a simultaneous timeout or capture from starting another loop.
 
 ## Browser focus
 

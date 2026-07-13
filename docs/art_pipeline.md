@@ -13,7 +13,7 @@ resources/characters/                 generated SpriteFrames resources
 resources/tilesets/                   generated TileSet resource
 ```
 
-The tool verifies the committed SHA-256 digest of each source before processing. This makes an accidental source edit fail loudly instead of silently changing every derivative. Do not crop, paint over, or resave a file in `assets/source/generated/`.
+The tool verifies the committed SHA-256 digest of each configured pipeline input before processing. This makes an accidental pipeline-input edit fail loudly instead of silently changing every derivative. The separate facility map reference is source-only and is not a `process-all` input. Do not crop, paint over, or resave a file in `assets/source/generated/`.
 
 ## Tool setup
 
@@ -131,7 +131,7 @@ godot --headless --path . --quit
 
 `validate` checks:
 
-- required source/output files and pinned source hashes;
+- required pipeline input/output files and pinned configured-input hashes;
 - RGBA output and real transparent padding;
 - regular frame/tile dimensions and in-bounds rectangles;
 - non-empty frames and a single significant actor component;

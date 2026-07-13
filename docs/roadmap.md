@@ -1,6 +1,6 @@
 # Roadmap
 
-This roadmap keeps **Sixty-Second Accomplice** focused on one question: is it satisfying to cooperate with a previous 20-second version of yourself?
+This roadmap keeps **Sixty-Second Accomplice** focused on one question: is it satisfying to cooperate with a previous version of yourself? The regression prototype uses 20 seconds; the larger facility mission uses the title's 60-second loop.
 
 The source-of-truth gameplay and technical constraints remain `game_design.md`, `architecture.md`, and `AGENTS.md`. A roadmap item does not override those documents.
 
@@ -58,7 +58,31 @@ Acceptance criteria:
 
 This milestone deliberately excludes health, weapons, damage, hearing, reinforcements, and general-purpose enemy navigation.
 
-## Milestone 3 — MVP hardening
+## Milestone 3 — Facility map and wall visibility
+
+Goal: prove the same loop in a compact multi-room mission where walls hide both rendered space and gameplay information.
+
+Implementation scope:
+
+- Separate `26×25` facility scene at `32 px` per tile; the 20-second prototype remains available for regression
+- 60-second level-local duration and bounded `832×800 px` Player camera
+- One center-corridor Guard with four deterministic patrol points
+- Lower-left pressure plate controlling the upper-left vault door
+- Right-room terminal disabling a resettable laser Player trigger
+- Objective in the upper-left control room and exit in the lower-right courtyard
+- `CanvasModulate`, one Player `PointLight2D`, TileSet wall occlusion, and a dynamic door occluder
+- Physics-ray `PlayerVisibilityProbe` plus cached alpha/HUD/prompt gating for Guard, Ghost, and stateful objects
+- Source-only `824×807` map reference; no giant runtime background texture
+
+Exit criteria:
+
+1. Topology, collision, portal coordinates, per-level timing, reset, and prototype regression tests pass.
+2. A two-loop route demonstrates Ghost distraction and plate occupancy while the current Player uses the terminal/laser route.
+3. Closed/open door movement, Guard LOS, Player visibility, and rendered occlusion remain synchronized.
+4. Web screenshots show no Guard/Ghost/indicator leak behind walls at `1280×720` and a resized viewport.
+5. Web export, local HTTP smoke, browser console, CI, and Pages deployment are independently verified; none is inferred from headless tests.
+
+## Milestone 4 — MVP hardening
 
 Continue after the core loop and stealth acceptance pass consistently.
 
@@ -70,7 +94,7 @@ Continue after the core loop and stealth acceptance pass consistently.
 - Capture a compact gameplay GIF and verified release screenshots
 - Exercise release workflows from a clean public checkout
 
-## Milestone 4 — Vertical-slice decision
+## Milestone 5 — Vertical-slice decision
 
 This is a decision gate, not a promise of features. Use playtest evidence to choose one narrow extension that deepens time-loop cooperation. Candidate work may include a second deterministic puzzle pattern or a single simple hazard. Any extension must preserve stable replay and fast retries.
 

@@ -4,13 +4,14 @@ This manifest records the provenance, processing result, runtime use, and known 
 
 ## Source assets
 
-All three pipeline inputs were supplied to the project as AI-generated concept images. They are preserved byte-for-byte under `assets/source/generated/` and are not loaded by gameplay.
+All three art-pipeline inputs and the separate map blueprint reference were supplied to the project as AI-generated images. They are preserved byte-for-byte under `assets/source/generated/` and are not loaded by gameplay.
 
 | Source | Measured image | SHA-256 | Observed content | Pipeline use |
 |---|---:|---|---|---|
 | `player_animation_source.png` | 1448×1086 RGB | `1f77a8deeae04022a2bff8c91af9829ebb64dfd824d950fcfd56975756ffa7e1` | 4×8 character pose sheet with a checkerboard baked into the RGB pixels | 26 selected poses after border-connected background removal |
 | `guard_animation_source.png` | 1536×1024 RGBA | `a66592ebbd84c19901ea150875ad319a8aa0212e68faae4af3f1d3797bf33f78` | 20 alpha-separated guard poses in a 4×5 presentation | 16 selected directional poses after alpha/component cleanup |
 | `facility_map_tileset_source.png` | 1536×1024 RGB | `c2bb4c0279e5b5de2bbfecd2d199b7ca0ed747189b3df50609e2963c956d0546` | Mixed map preview, floor samples, perspective walls, props, lighting, and guide material | Explicitly classified crops plus deterministic runtime base tiles |
+| `facility_map_reference.png` | 824×807 RGBA | `64cedbee9b003678b4ffbf80e77c9918080cab62fb9c62f7ff7204ae38498cc5` | Top-down facility blueprint with control rooms, corridors, laser room, courtyard, props, lighting, and example characters | Source-only topology/art reference for the authored 26×25 facility; never copied to a runtime texture |
 
 `assets/concept/player_design_reference.png` is a separate 1536×1024 RGBA player design reference (SHA-256 `48d5fbf6e2646ed1f749a40a4a34c257fad1496d73c5b80a38ce93e957cbe2c1`). It is retained as an unused concept reference and is not an input to `tools/asset_pipeline.py` or a runtime dependency.
 
@@ -84,20 +85,22 @@ Quality limits: left/right are three-quarter views rather than strict profiles; 
 | Atlas size | 256×128 RGBA |
 | Tile size | 32×32 |
 | Classified entries | 32 |
-| Runtime use | 30×16 tutorial presentation grid; stateful objects remain scenes |
+| Runtime use | Preserved 30×16 prototype presentation and separate 26×25 facility TileMap; stateful objects remain scenes |
 
 ### Classification and use
 
 | Category | Runtime decision |
 |---|---|
 | `floor` | A deterministic seamless dark base is used across the room. `floor_panel_a`, `floor_panel_b`, and `floor_dark_panel` appear only as sparse detail because source edges do not tile seamlessly. |
-| `wall`, `wall_corner` | All AI wall candidates were rejected for perspective/size mismatch. Deterministic project-authored tiles use the source palette. The TileSet stores wall collision metadata. |
+| `wall`, `wall_corner` | All AI wall candidates were rejected for perspective/size mismatch. Deterministic project-authored tiles use the source palette. Approved solid tiles store full-cell physics and light-occlusion polygons. |
 | `door` | Source crop is reference-only; the resettable `SecurityDoor` scene owns visuals and collision. |
 | `obstacle`, `terminal`, `server`, `crate`, `decoration` | Reviewed source crops are optional presentation props. Tutorial placements are currently non-colliding; some TileSet entries retain collision metadata for a future explicitly collision-enabled authored layer. |
 | `pressure_plate`, `objective`, `exit` | Reference classifications only; runtime objects remain stable-ID gameplay scenes with triggers and reset state. |
-| `laser`, `light`, `unused_reference` | Not used by the tutorial. Baked lighting and guide material are unsuitable for reusable terrain. |
+| `laser`, `light`, `unused_reference` | Source crops remain reference-only. Facility laser behavior is an independent resettable scene, and facility illumination uses Godot `CanvasModulate`/`PointLight2D` rather than baked source lighting. |
 
-The left-side finished map preview is never placed behind the level. The runtime `FacilityMap` uses three collision-disabled `TileMapLayer` children so visual tiles cannot create double collision. Existing authored `StaticBody2D` boundaries and the stateful door remain the collision authority; this preserves deterministic movement and reset behavior while the TileSet retains reusable collision definitions for future authored maps.
+Neither the processed preview nor the 824×807 blueprint reference is placed behind a level. `FacilityLevelMap` rebuilds the facility from deterministic rooms/connectors across six `TileMapLayer` children. Only `Walls` enables collision and light occlusion; floor, detail, and prop layers explicitly disable both. The TileSet's approved wall tiles use physics collision layer `65` (`World | PlayerVisionBlocker`) and light-occlusion mask `1`. The stateful door, pressure plate, terminal, laser, objective, and exit remain independent scenes.
+
+The facility blueprint describes `26×25` logical cells at `32×32 px` (`832×800 px` world bounds). Runtime topology and object coordinates are documented in `docs/maps/facility_level_01_layout.md`. Wall/light/information visibility is documented in `docs/visibility_system.md`.
 
 ## Runtime dependency boundary
 
@@ -109,4 +112,4 @@ assets/sprites/characters/guard_atlas.png
 assets/sprites/environment/facility_tileset.png
 ```
 
-Source sheets, concept references, processed atlases, manifests, previews, and the map reference are not gameplay dependencies. `tools/asset_pipeline.py validate` scans `.gd`, `.tscn`, `.tres`, and `project.godot` files and fails if a runtime resource points into `assets/source/`, `assets/processed/`, or `assets/concept/`.
+Source sheets, concept references, processed atlases, manifests, previews, and both map references are not gameplay dependencies. `tools/asset_pipeline.py validate` scans `.gd`, `.tscn`, `.tres`, and `project.godot` files and fails if a runtime resource points into `assets/source/`, `assets/processed/`, or `assets/concept/`. `facility_map_reference.png` is intentionally not an input to `process-all`; clean checkouts use the committed blueprint JSON and project-authored map script for runtime reconstruction.

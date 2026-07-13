@@ -1,28 +1,32 @@
 # Sixty-Second Accomplice
 
-**60초의 공범** is a 2D top-down time-loop puzzle game: record one 20-second run, then cooperate with the Ghost that replays it.
+**60초의 공범** is a 2D top-down time-loop puzzle game: record an infiltration, then cooperate with the Ghost that replays it. The compact regression prototype uses 20 seconds; the facility mission uses a 60-second loop.
 
-> **한국어 안내:** 20초 동안의 행동이 다음 회차의 Ghost로 재생됩니다. 과거의 내가 압력판을 열고 경비를 유인하는 동안 아래쪽 경로로 시간 코어를 훔쳐 탈출하세요.
+> **한국어 안내:** 60초 facility mission에서 과거의 내가 경비를 유인하고 압력판을 유지하는 동안, 현재의 나는 벽에 몸을 숨겨 laser를 해제하고 시간 코어를 훔쳐 탈출합니다. 20초 prototype은 회귀 검증용으로 함께 보존됩니다.
 
 ## Play in your browser
 
-[Play the current MVP on GitHub Pages](https://godongyen.github.io/60-seconds-accomplice/). The deployment is built from `main` by the repository's Pages workflow.
+[Play the current `main` deployment on GitHub Pages](https://godongyen.github.io/60-seconds-accomplice/). GitHub Actions builds and deploys this URL; check the repository's Actions page for the revision and deployment result rather than assuming a local change is already live.
 
 <!-- Replace this block with a compressed gameplay GIF or screenshot after capture. -->
-> Gameplay screenshot/GIF placeholder: Ghost drawing the Guard through the upper corridor while the live player escapes through the lower vault lane.
+> Gameplay screenshot/GIF placeholder: a Ghost drawing the center Guard into lower operations while the live player approaches the laser room through wall-shadowed corridors.
 
 ## The core mechanic
 
-1. Move onto the pressure plate during the first timeline and hold it briefly.
-2. Move into the upper corridor on the starting side and let the Guard see and pursue you. Being caught still saves the run.
-3. Your previous run returns as a translucent Ghost.
-4. Cross while the Ghost opens the door, then let it repeat the upper-corridor distraction.
-5. Use the lower vault lane while the Guard follows the Ghost.
-6. Collect the time core and reach the active exit before the loop expires.
+The facility mission reconstructs an AI-generated map reference as an authored `26×25` TileMap at `32 px` per cell. It contains one Guard, a lower-left pressure plate linked to the upper-left vault door, a right-room terminal linked to a laser trigger, the time core, and a courtyard exit.
+
+1. Start safely in the lower-right courtyard.
+2. Record a first timeline that draws the center Guard west and ends on the vault pressure plate. Being caught still saves the run.
+3. Your previous run returns as a translucent Ghost and repeats the distraction and plate occupancy.
+4. While walls hide the live Player's route, activate the laser terminal on the right.
+5. Cross the disabled laser and the door held open by the Ghost.
+6. Collect the time core and return to the active courtyard exit before 60 seconds expire.
 
 Movement and facing are recorded as 20 Hz snapshots. Successful interactions are recorded as timestamped events using stable object IDs. Ghosts interpolate the snapshots against the timeline clock instead of re-simulating player physics.
 
 The Guard follows a deterministic authored patrol, checks distance, view angle, and wall or closed-door occlusion, and raises suspicion before giving chase. Both the live player and active Ghost recordings are visible to it, with the live player taking priority when both are exposed. Capture finalizes the current recording, so a failed approach can become the next timeline's distraction.
+
+Facility darkness combines `CanvasModulate`, one Player-centered shadow light, TileSet wall occluders, and a dynamic door occluder. A separate physics probe hides wall-blocked Guards, Ghosts, stateful objects, indicators, prompts, and Guard HUD data without stopping their simulation. The original `824×807` reference is source-only and is never used as a giant gameplay background. See [the visibility system](docs/visibility_system.md) and [facility layout](docs/maps/facility_level_01_layout.md).
 
 ## Controls
 
@@ -46,7 +50,7 @@ In a browser, click the game once before using the keyboard. If the tab loses fo
 
 The project uses the Compatibility renderer, a 1280×720 reference viewport, responsive 16:9 stretching, and a single-threaded Web export. No account, server, secret, analytics SDK, or network access is required to play.
 
-The local import, test, and export results documented for this revision were produced with `4.7.stable.official.5b4e0cb0f`.
+The project and workflows pin Godot `4.7.stable.official.5b4e0cb0f`. A local executable should report that version before validation; this requirement does not imply that the current unpushed working tree or its browser rendering has passed CI.
 
 ## Run locally
 
@@ -100,7 +104,16 @@ The test harness uses Godot itself and does not require a third-party test add-o
 GODOT_BIN=godot tools/run_tests.sh
 ```
 
-The wrapper rejects parser/load failures and requires the harness PASS marker because some Godot CLI script-load failures can still return exit code zero. Set `GODOT_BIN=godot4` when needed. Test failures must not be converted to skips to make CI pass.
+The wrapper rejects parser/load failures and requires the harness PASS marker because some Godot CLI script-load failures can still return exit code zero. Set `GODOT_BIN=godot4` when needed. Test failures must not be converted to skips to make CI pass. A complete local logic/resource pass is:
+
+```bash
+godot --headless --path . --import
+.tools/venv/bin/python tools/asset_pipeline.py validate
+GODOT_BIN=godot tools/run_tests.sh
+godot --headless --path . --quit
+```
+
+These commands can validate facility topology, collision/occlusion resources, LOS decisions, resets, and the preserved 20-second prototype. They cannot certify `PointLight2D` shadow pixels. After Web export, serve it over HTTP and inspect closed/open doors, corners, hidden Guard/Ghost indicators, responsive viewports, and the browser console as described in [docs/visibility_system.md](docs/visibility_system.md).
 
 ## Export for Web
 
@@ -145,16 +158,23 @@ See [docs/release.md](docs/release.md) for CI, release, artifact, and troublesho
 
 ## Current status
 
-This repository targets a focused MVP: one 30×16-tile tutorial room, one pressure plate and linked door, one objective, one exit, one stealth Guard, a 20-second deterministic loop, and up to eight in-memory Ghost recordings. The intended acceptance path uses at least two timelines: the first run holds the plate and draws the Guard through the upper corridor on the starting side, then its Ghost repeats that route while the live player crosses into the lower vault lane. The live player and Ghost share a directional animated sprite set; the Guard has patrol, suspicion, chase, search, return, line-of-sight, capture, and deterministic reset behavior without combat or health systems.
+This repository contains two level scopes on the same deterministic timeline architecture:
+
+- the preserved `30×16`, 20-second prototype for fast recording/Ghost/Guard/puzzle regression;
+- `facility_level_01`, an authored `26×25`, 60-second mission with one four-point center Guard, a plate-controlled vault door, terminal-controlled laser, objective, courtyard exit, bounded camera, and wall-based rendered/information visibility.
+
+The live player and Ghost share a directional animated sprite set; the Guard has patrol, suspicion, chase, search, return, line-of-sight, capture, and deterministic reset behavior without combat or health systems. Facility geometry comes from TileMap layers and independent stateful scenes, never from the full source reference image.
 
 Known limitations:
 
-- One tutorial level and one authored two-point Guard route; there are no additional enemy types, hearing simulation, combat, campaign, progression, or procedural generation.
-- Guard movement uses deterministic collision-aware steering for this compact authored room rather than a general navigation mesh, and the readable vision cone is not geometrically clipped against walls.
+- One facility mission plus one regression prototype; there are no additional enemy types, hearing simulation, combat, campaign, progression, or procedural generation.
+- Facility runtime uses one Guard on a four-point center route. A second route is documented but intentionally disabled pending multi-Guard acceptance.
+- Guard movement uses deterministic collision-aware steering for compact authored straight segments rather than a general navigation mesh, and the readable vision cone is not geometrically clipped against wall silhouettes.
+- Player light is radial rather than persistent fog-of-war. Actor reveal uses one sample point at a 20 Hz refresh, and Compatibility-renderer shadow output still requires browser screenshot review; headless tests cannot prove that rendered shadows are leak-free.
 - Recordings live only for the current level session and are not saved to disk.
 - Keyboard and mouse are the primary input devices; mobile touch controls are out of scope.
 - Desktop artifacts are unsigned development builds.
-- Character interaction/alert cycles and the seamless facility base still use documented prototype fallbacks; the original AI concept sheets are not production-ready tiles or complete animation sets.
+- Character interaction/alert cycles and the seamless facility base still use documented prototype fallbacks; the original AI concept sheets and map reference are not production-ready tiles or a runtime background.
 
 See [docs/roadmap.md](docs/roadmap.md) for the deliberately narrow next steps.
 

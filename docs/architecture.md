@@ -56,6 +56,17 @@ level mutable state는 매 loop 시작 전에 초기 snapshot 또는 명시적 r
 
 prototype에서는 각 resettable object가 `reset_for_loop()`를 구현하는 방식이 가장 단순하다.
 
+### 2.5 Shared Level Contract and Level Duration
+
+`GameplayLevel` contains only the contracts shared by the preserved prototype and `facility_level_01`: actor containers, registry rebuild, resettable/Guard caching, Player/Ghost spawning, simulation gating, and signals consumed by `GameManager`/`TimelineManager`.
+
+Each concrete level exports `level_loop_duration_seconds`. `TimelineManager.configure(level)` copies that value when the session starts:
+
+- `PrototypeLevel`: `20` seconds;
+- `FacilityLevel01`: `60` seconds.
+
+Facility map, laser, terminal, visibility, and camera logic stay in `FacilityLevel01`; they do not leak into the prototype or `TimelineManager`.
+
 ---
 
 ## 3. Recommended Scene Tree
@@ -65,17 +76,14 @@ Main.tscn
 └── Main
     ├── GameManager
     ├── LevelContainer
-    │   └── PrototypeLevel
-    │       ├── Environment
+    │   └── CurrentLevel: GameplayLevel
+    │       ├── Map/Environment
     │       ├── PlayerSpawn
-    │       ├── Player
+    │       ├── PlayerContainer
     │       ├── GhostContainer
+    │       ├── Guard(s) and authored route
     │       ├── ObjectRegistry
-    │       ├── ResettableContainer
-    │       ├── PressurePlate
-    │       ├── SecurityDoor
-    │       ├── ObjectiveItem
-    │       └── ExitZone
+    │       └── Independent resettable gameplay scenes
     ├── TimelineManager
     └── UI
         ├── TimerLabel
@@ -137,6 +145,20 @@ GuardController
 ├── GuardPerception candidate/FOV/LOS component
 ├── GuardNavigation collision-aware steering component
 └── GuardVisual animation and readable awareness feedback
+
+FacilityLevelMap
+├── deterministic 26×25 walkable/wall topology
+├── six TileMapLayer presentation/collision layers
+└── authored room, connector, prop, and portal coordinates
+
+PlayerVisibilityProbe
+├── visibility radius
+└── PlayerVisionBlocker physics ray
+
+WorldVisibilityController
+├── cached Guard/Ghost/object target list
+├── 20 Hz reveal decisions
+└── actor-root alpha and HUD information gating
 ```
 
 ---
@@ -238,13 +260,15 @@ signal timeline_reset
 
 ```gdscript
 @export var loop_duration_seconds: float = 20.0
-@export var max_recordings: int = 5
+@export var max_ghosts: int = 8
 
 var current_loop_index: int
 var elapsed_time: float
 var is_loop_running: bool
 var recordings: Array[LoopRecording]
 ```
+
+`20.0` is the scene fallback only. `configure(level)` replaces it with the concrete level's declared duration before the first loop.
 
 핵심 함수:
 
@@ -642,6 +666,71 @@ GuardPerception candidate cache
 - loop clock은 playback과 recording이 같은 기준을 사용
 - physics input 재실행에 의존하지 않음
 
+### Facility Map and Visibility Data Flow
+
+`FacilityLevel01` composes the reusable systems without moving their internal state into the timeline manager:
+
+```text
+resources/maps/facility_level_01_blueprint.json
+→ FacilityLevelMap authored constants/validation
+→ Floor / FloorDetails / Walls / WallDetails / PropsBelow / PropsAbove TileMapLayer
+→ independent PressurePlate / SecurityDoor / Terminal / Laser / Objective / Exit scenes
+```
+
+The logical map is `26×25` cells at `32 px` (`832×800 px`). Every in-bounds cell is deterministically classified as walkable floor, a connector/dynamic portal underlay, or a wall. Only `Walls` enables physics collision and TileSet occlusion. Stateful devices never become baked TileMap cells.
+
+The visibility paths are deliberately parallel:
+
+```text
+Player position
+→ PlayerVision PointLight2D
+→ TileSet wall occluders + SecurityDoor LightOccluder2D
+→ rendered visible area
+
+PlayerVisibilityProbe
+→ radius + PlayerVisionBlocker physics ray
+→ WorldVisibilityController cached target decision
+→ actor/object root alpha
+→ interaction prompt and Guard HUD information gating
+```
+
+The global `CanvasModulate` supplies dark ambient light. The facility enables one shadow-casting Player light with an approximately `240 px` radius; the reusable Player leaves it disabled in the prototype. `WorldVisibilityController` refreshes a cached target list at `20 Hz`, not by traversing the scene tree every frame. Hidden targets keep processing so Guard AI, Ghost playback, trigger occupancy, and recording remain deterministic.
+
+Movement, Guard perception, Player information visibility, and rendered light share authored blockers while retaining narrow query masks:
+
+```text
+solid wall / closed door collision layer = World | PlayerVisionBlocker = 65
+Guard LOS mask = World (1)
+PlayerVisibilityProbe mask = PlayerVisionBlocker (64)
+light occlusion mask = 1
+```
+
+`WorldLineOfSight2D` is the shared ray helper. It ignores a logically open door during the deferred collision-disable frame. The door owns the corresponding visual/collision/LOS/light transition:
+
+```text
+Door state
+→ movement collision
+→ Guard LOS blocker
+→ Player visibility blocker
+→ Player light occluder
+→ visual state
+```
+
+Reset order remains actor-safe:
+
+```text
+disable level simulation and visibility
+→ clear live Player and Ghost nodes/visibility targets
+→ reset door, plate, terminal, laser, objective, exit, Guard
+→ rebuild/validate stable registry
+→ spawn recordings as Ghosts
+→ spawn and configure live Player/camera/light/probe
+→ start recorder and loop clock
+→ enable Guard and visibility simulation
+```
+
+Details, extension rules, and renderer limitations are in `docs/visibility_system.md`; exact room and portal coordinates are in `docs/maps/facility_level_01_layout.md`.
+
 ---
 
 ## 15. Error and Validation Checks
@@ -700,20 +789,34 @@ Godot 프로젝트에서 가능한 경우 GUT 같은 framework를 도입할 수 
 - timeline reset 후 recordings 비어 있음
 - object ID 중복 시 명확한 오류
 
+### 16.4 Facility and Visibility Checks
+
+- blueprint, generated TileMap, and documented `26×25` bounds agree
+- floor/wall cells partition all `650` cells and the boundary is closed
+- wall tiles have both physics and occlusion polygons on collision layer `65`
+- same-room, radius, wall, corner, doorway, closed-door, and open-door visibility queries
+- hidden Guard/Ghost/object roots and Guard HUD do not leak information while their gameplay processing continues
+- terminal resets inactive, laser resets active, door resets closed with its LightOccluder visible
+- facility keeps `60` seconds while the prototype regression remains `20` seconds
+- repeated actor rebuild does not retain old Ghost targets or callbacks
+
+Headless tests validate data, physics rays, resource contracts, and alpha state. They do not validate Compatibility renderer shadow pixels; Web screenshots and browser console inspection remain separate release checks.
+
 ---
 
 ## 17. Performance Budget
 
-prototype 기준:
+MVP 기준:
 
 - target: 60 FPS
-- loop duration: 20초
+- loop duration: prototype `20초`, facility `60초`
 - sample rate: 20Hz
-- snapshots per Ghost: 약 400
-- Ghost target count: 5
-- stretch target: 10
+- snapshots per prototype Ghost: 약 401 (start/end sampling 포함)
+- snapshots per facility Ghost: 약 1,201 (start/end sampling 포함)
+- runtime Ghost cap: 8
+- facility Guard: 1
 
-20초 × 20Hz × 10 Ghost = 4,000 snapshots이므로 prototype 규모에서는 충분히 관리 가능하다.
+60초 × 20Hz × 8 Ghost는 약 9,608 snapshots이다. 이 규모에서는 immutable in-memory recordings와 단방향 playback cursor를 유지하고, actor visibility는 cached list를 20Hz로 갱신한다. 실제 Web FPS는 브라우저에서 측정하며 문서에서 추측하지 않는다.
 
 최적화 우선순위:
 
@@ -721,6 +824,7 @@ prototype 기준:
 2. event 중복 처리 방지
 3. 불필요한 allocation 감소
 4. Ghost 시각 효과 단순화
+5. shadow-enabled Player light를 한 개로 제한
 
 object pooling은 실제 profiling에서 필요할 때 도입한다.
 
@@ -731,6 +835,15 @@ object pooling은 실제 profiling에서 필요할 때 도입한다.
 ```text
 scripts/core/game_manager.gd
 - level lifecycle, success, timeline reset
+
+scripts/core/gameplay_level.gd
+- shared actor, registry, reset, Guard, and level-duration contract
+
+scripts/core/prototype_level.gd
+- preserved 20-second regression puzzle wiring
+
+scripts/core/facility_level_01.gd
+- 60-second facility mission wiring, camera/light setup, and device flow
 
 scripts/core/timeline_manager.gd
 - loop timing, recording collection, loop transitions
@@ -759,6 +872,18 @@ scripts/player/action_recorder.gd
 scripts/ghost/ghost_playback.gd
 - playback interpolation and event dispatch
 
+scripts/presentation/facility_level_map.gd
+- deterministic 26×25 TileMapLayer topology and prop placement
+
+scripts/visibility/world_line_of_sight_2d.gd
+- common mask-based ray helper and open-door handling
+
+scripts/visibility/player_visibility_probe.gd
+- Player radius and blocker query API
+
+scripts/visibility/world_visibility_controller.gd
+- cached 20 Hz actor/object alpha and information visibility gating
+
 scripts/objects/interactable.gd
 - common interaction base
 
@@ -766,7 +891,13 @@ scripts/objects/pressure_plate.gd
 - occupancy and active state
 
 scripts/objects/security_door.gd
-- open/close and collision
+- open/close, collision, LOS, and dynamic light occlusion
+
+scripts/objects/security_terminal.gd
+- stable-ID laser disable interaction and reset
+
+scripts/objects/laser_barrier.gd
+- current-Player trip trigger and reset
 
 scripts/objects/objective_item.gd
 - objective pickup and reset
@@ -885,3 +1016,19 @@ Guard stealth acceptance는 captured recording이 다음 loop의 Ghost가 되고
 - 새 loop가 시작될 때 level 상태가 정확히 초기화됨
 
 이 acceptance test와 Guard distraction acceptance를 통과하기 전에는 추가 enemy 유형, combat, meta progression을 구현하지 않는다.
+
+---
+
+## 21. Facility Acceptance Test
+
+The separate `facility_level_01.tscn` acceptance path uses a 60-second duration while the prototype test above remains unchanged:
+
+1. Spawn in the lower-right courtyard with facility interiors dark behind walls.
+2. Approach a doorway and verify that only radius- and LOS-valid actors/objects become visible.
+3. Record a route that draws `guard_center_01` west and ends on `plate_vault_01`.
+4. Start loop two and verify that the Ghost repeats both distraction and plate occupancy.
+5. Use the live Player to activate `terminal_laser_01`, pass `laser_right_01`, and cross the open vault door.
+6. Collect `objective_core_01` and return to `exit_courtyard_01`.
+7. Restart and verify closed door/collision/occluder, active laser, inactive terminal, uncollected objective, inactive exit, reset Guard, hidden actor information, and rebuilt Ghost visibility targets.
+
+Automated acceptance covers topology, resources, logic, reset, and the preserved prototype. A browser screenshot pass is additionally required for actual PointLight/TileSet/door shadow output; headless success alone must not be reported as rendered-light success.
