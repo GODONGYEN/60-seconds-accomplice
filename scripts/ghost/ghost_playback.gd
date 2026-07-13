@@ -3,6 +3,7 @@ extends AnimatableBody2D
 
 const TIMESTAMP_EPSILON: float = 0.000001
 const GHOST_COLLISION_LAYER: int = 4
+const DETECTION_PRIORITY: int = 1
 
 var display_loop_index: int = 0
 var playback_time: float = 0.0
@@ -23,6 +24,7 @@ var _warned_non_monotonic_time: bool = false
 func _enter_tree() -> void:
 	add_to_group(&"timeline_actor")
 	add_to_group(&"ghost_actor")
+	add_to_group(&"detectable_actor")
 
 
 func _ready() -> void:
@@ -95,6 +97,18 @@ func get_facing_direction() -> Vector2:
 
 func get_visual() -> PlayerVisual:
 	return _visual
+
+
+func get_detection_id() -> StringName:
+	return StringName("ghost_%03d" % display_loop_index)
+
+
+func get_detection_priority() -> int:
+	return DETECTION_PRIORITY
+
+
+func is_detectable_by_guard() -> bool:
+	return _recording != null and not is_playback_complete()
 
 
 func is_playback_complete() -> bool:

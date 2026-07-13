@@ -41,6 +41,20 @@ func play_victory() -> void:
 	_push_tone(1320.0, 0.16, 0.12)
 
 
+func play_suspicion() -> void:
+	_push_tone(410.0, 0.07, 0.08)
+
+
+func play_alert() -> void:
+	_push_tone(820.0, 0.08, 0.12)
+	_push_tone(610.0, 0.12, 0.11)
+
+
+func play_capture() -> void:
+	_push_tone(240.0, 0.10, 0.13)
+	_push_tone(150.0, 0.16, 0.13)
+
+
 func _push_tone(frequency: float, duration: float, amplitude: float) -> void:
 	if _playback == null:
 		return

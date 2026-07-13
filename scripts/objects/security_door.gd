@@ -32,7 +32,7 @@ func set_open(requested_open: bool) -> void:
 		_close_pending = false
 		_apply_open_state(true)
 		return
-	if _has_player_in_clearance():
+	if _has_actor_in_clearance():
 		_close_pending = true
 		return
 	_close_pending = false
@@ -44,15 +44,15 @@ func reset_for_loop() -> void:
 	_apply_open_state(false, true)
 
 
-func _has_player_in_clearance() -> bool:
+func _has_actor_in_clearance() -> bool:
 	for body: Node2D in safety_area.get_overlapping_bodies():
-		if body.is_in_group("player_actor"):
+		if body.is_in_group("player_actor") or body.is_in_group("guard_actor"):
 			return true
 	return false
 
 
 func _on_safety_body_exited(_body: Node2D) -> void:
-	if not _close_pending or _has_player_in_clearance():
+	if not _close_pending or _has_actor_in_clearance():
 		return
 	_close_pending = false
 	_apply_open_state(false)
@@ -77,4 +77,3 @@ func _draw() -> void:
 	else:
 		draw_rect(Rect2(-22.0, -76.0, 44.0, 152.0), panel_color, true)
 		draw_line(Vector2(-16.0, 0.0), Vector2(16.0, 0.0), Color.WHITE, 4.0)
-

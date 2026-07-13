@@ -19,6 +19,7 @@ window/size/viewport_height=720
 window/size/window_width_override=1280
 window/size/window_height_override=720
 window/stretch/mode="canvas_items"
+window/stretch/aspect="keep"
 window/handheld/orientation=1
 
 [input]
@@ -80,6 +81,7 @@ toggle_mute={
 2d_physics/layer_3="Ghost"
 2d_physics/layer_4="Interactable"
 2d_physics/layer_5="Trigger"
+2d_physics/layer_6="Guard"
 
 [physics]
 

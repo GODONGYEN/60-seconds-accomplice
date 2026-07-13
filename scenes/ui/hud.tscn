@@ -1,4 +1,4 @@
-[gd_scene load_steps=8 format=3]
+[gd_scene load_steps=11 format=3]
 
 [ext_resource type="Script" path="res://scripts/ui/hud.gd" id="1_hud"]
 
@@ -79,6 +79,27 @@ content_margin_left = 18.0
 content_margin_top = 8.0
 content_margin_right = 18.0
 content_margin_bottom = 8.0
+
+[sub_resource type="StyleBoxFlat" id="Style_guard"]
+bg_color = Color(0.055, 0.07, 0.095, 0.94)
+border_width_left = 3
+border_color = Color(1, 0.55, 0.2, 0.85)
+corner_radius_top_right = 8
+corner_radius_bottom_right = 8
+
+[sub_resource type="StyleBoxFlat" id="Style_guard_meter_bg"]
+bg_color = Color(0.015, 0.025, 0.045, 0.95)
+corner_radius_top_left = 3
+corner_radius_top_right = 3
+corner_radius_bottom_right = 3
+corner_radius_bottom_left = 3
+
+[sub_resource type="StyleBoxFlat" id="Style_guard_meter_fill"]
+bg_color = Color(1, 0.35, 0.22, 0.95)
+corner_radius_top_left = 3
+corner_radius_top_right = 3
+corner_radius_bottom_right = 3
+corner_radius_bottom_left = 3
 
 [node name="HUD" type="CanvasLayer"]
 unique_name_in_owner = true
@@ -170,6 +191,36 @@ horizontal_alignment = 1
 vertical_alignment = 1
 autowrap_mode = 2
 
+[node name="GuardPanel" type="PanelContainer" parent="."]
+offset_left = 18.0
+offset_top = 102.0
+offset_right = 246.0
+offset_bottom = 158.0
+theme_override_styles/panel = SubResource("Style_guard")
+
+[node name="Margin" type="MarginContainer" parent="GuardPanel"]
+theme_override_constants/margin_left = 12
+theme_override_constants/margin_top = 5
+theme_override_constants/margin_right = 12
+theme_override_constants/margin_bottom = 5
+
+[node name="Column" type="VBoxContainer" parent="GuardPanel/Margin"]
+theme_override_constants/separation = 2
+
+[node name="GuardStatusLabel" type="Label" parent="GuardPanel/Margin/Column"]
+unique_name_in_owner = true
+theme_override_colors/font_color = Color(0.55, 0.86, 0.91, 1)
+theme_override_font_sizes/font_size = 14
+text = "GUARD  PATROLLING"
+
+[node name="GuardSuspicionMeter" type="ProgressBar" parent="GuardPanel/Margin/Column"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(190, 7)
+mouse_filter = 2
+theme_override_styles/background = SubResource("Style_guard_meter_bg")
+theme_override_styles/fill = SubResource("Style_guard_meter_fill")
+show_percentage = false
+
 [node name="Controls" type="Label" parent="."]
 anchors_preset = 2
 anchor_top = 1.0
@@ -197,6 +248,63 @@ theme_override_colors/font_color = Color(0.035, 0.055, 0.08, 1)
 theme_override_font_sizes/font_size = 19
 theme_override_styles/normal = SubResource("Style_interaction")
 text = "E  COLLECT TIME CORE"
+
+[node name="CapturePanel" type="Control" parent="."]
+unique_name_in_owner = true
+visible = false
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+
+[node name="Shade" type="ColorRect" parent="CapturePanel"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+color = Color(0.16, 0.015, 0.025, 0.42)
+
+[node name="Center" type="CenterContainer" parent="CapturePanel"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+
+[node name="Card" type="PanelContainer" parent="CapturePanel/Center"]
+custom_minimum_size = Vector2(500, 0)
+layout_mode = 2
+mouse_filter = 2
+theme_override_styles/panel = SubResource("Style_modal")
+
+[node name="Content" type="VBoxContainer" parent="CapturePanel/Center/Card"]
+layout_mode = 2
+mouse_filter = 2
+theme_override_constants/separation = 8
+
+[node name="Title" type="Label" parent="CapturePanel/Center/Card/Content"]
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 0.28, 0.34, 1)
+theme_override_colors/font_outline_color = Color(0.09, 0.01, 0.02, 1)
+theme_override_constants/outline_size = 5
+theme_override_font_sizes/font_size = 44
+text = "CAUGHT"
+horizontal_alignment = 1
+
+[node name="Subtitle" type="Label" parent="CapturePanel/Center/Card/Content"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.93, 0.88, 0.9, 1)
+theme_override_font_sizes/font_size = 20
+text = "TIMELINE RECORDED — YOUR GHOST WILL RETURN"
+horizontal_alignment = 1
 
 [node name="PausePanel" type="Control" parent="."]
 unique_name_in_owner = true

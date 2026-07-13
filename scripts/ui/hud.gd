@@ -20,6 +20,9 @@ signal mute_requested
 @onready var focus_overlay: Control = %FocusOverlay
 @onready var volume_slider: HSlider = %VolumeSlider
 @onready var mute_button: Button = %MuteButton
+@onready var guard_status_label: Label = %GuardStatusLabel
+@onready var guard_suspicion_meter: ProgressBar = %GuardSuspicionMeter
+@onready var capture_panel: Control = %CapturePanel
 
 var _muted: bool = false
 
@@ -37,6 +40,8 @@ func _ready() -> void:
 	pause_panel.visible = false
 	victory_panel.visible = false
 	focus_overlay.visible = true
+	capture_panel.visible = false
+	update_guard_status(&"idle", 0.0, StringName())
 	set_interaction_prompt("")
 
 
@@ -44,11 +49,12 @@ func update_loop(loop_index: int, ghost_count: int) -> void:
 	loop_label.text = "TIMELINE  %02d" % loop_index
 	ghost_label.text = "GHOSTS  %d / 8" % ghost_count
 	if loop_index <= 1:
-		set_hint("STAND ON THE PRESSURE PLATE, THEN PRESS R TO REWIND")
+		set_hint("HOLD THE PLATE BRIEFLY, THEN DRAW THE GUARD INTO THE UPPER CORRIDOR")
 	else:
-		set_hint("CROSS WHEN YOUR GHOST REACHES THE PRESSURE PLATE")
+		set_hint("CROSS WHILE YOUR GHOST OPENS THE DOOR AND DISTRACTS THE GUARD")
 	objective_label.text = "OBJECTIVE  FIND THE TIME CORE"
 	objective_label.modulate = Color("a9b5c7")
+	capture_panel.visible = false
 
 
 func update_time(remaining_seconds: float) -> void:
@@ -77,6 +83,34 @@ func set_objective_collected() -> void:
 	objective_label.modulate = Color("47e1a8")
 
 
+func update_guard_status(
+	state_name: StringName,
+	suspicion: float,
+	target_id: StringName
+) -> void:
+	guard_suspicion_meter.value = clampf(suspicion, 0.0, 1.0) * 100.0
+	match state_name:
+		&"suspicious":
+			guard_status_label.text = "GUARD  ? SUSPICIOUS"
+			guard_status_label.modulate = Color("ffad4d")
+		&"chase":
+			guard_status_label.text = "GUARD  ! CHASING"
+			guard_status_label.modulate = Color("ff5264")
+		&"search":
+			guard_status_label.text = "GUARD  ? SEARCHING"
+			guard_status_label.modulate = Color("ffc163")
+		_:
+			guard_status_label.text = "GUARD  PATROLLING"
+			guard_status_label.modulate = Color("8bdbe8")
+	if not target_id.is_empty() and String(target_id).begins_with("ghost_"):
+		guard_status_label.text += "  •  GHOST"
+
+
+func show_capture_feedback() -> void:
+	capture_panel.visible = true
+	set_interaction_prompt("")
+
+
 func set_pause_visible(value: bool) -> void:
 	pause_panel.visible = value
 
@@ -98,11 +132,13 @@ func show_victory(loop_index: int, elapsed_seconds: float) -> void:
 	victory_panel.visible = true
 	pause_panel.visible = false
 	focus_overlay.visible = false
+	capture_panel.visible = false
 	set_interaction_prompt("")
 
 
 func hide_victory() -> void:
 	victory_panel.visible = false
+	capture_panel.visible = false
 
 
 func set_muted(value: bool) -> void:

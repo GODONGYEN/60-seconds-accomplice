@@ -182,14 +182,26 @@ position = Vector2(656, 376)
 
 [node name="ObjectiveItem" parent="." instance=ExtResource("5_objective")]
 unique_name_in_owner = true
-position = Vector2(848, 320)
+position = Vector2(848, 512)
 
 [node name="ExitZone" parent="." instance=ExtResource("6_exit")]
 unique_name_in_owner = true
 position = Vector2(1040, 528)
 
+[node name="GuardPatrolRoute" type="Node2D" parent="."]
+unique_name_in_owner = true
+
+[node name="Point01" type="Marker2D" parent="GuardPatrolRoute"]
+position = Vector2(400, 240)
+
+[node name="Point02" type="Marker2D" parent="GuardPatrolRoute"]
+position = Vector2(560, 240)
+
 [node name="TrainingGuard" parent="." instance=ExtResource("9_guard")]
 unique_name_in_owner = true
-position = Vector2(912, 240)
-patrol_speed = 30.0
-patrol_half_distance = 40.0
+position = Vector2(400, 240)
+patrol_speed = 52.0
+chase_speed = 96.0
+idle_duration = 0.7
+initial_facing = Vector2(1, 0)
+patrol_route_path = NodePath("../GuardPatrolRoute")

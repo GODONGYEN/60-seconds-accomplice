@@ -1,6 +1,9 @@
 class_name PlayerController
 extends CharacterBody2D
 
+const DETECTION_ID: StringName = &"player_live"
+const DETECTION_PRIORITY: int = 0
+
 signal restart_requested
 signal interaction_recorded(
 	target_object_id: StringName,
@@ -23,6 +26,7 @@ var _facing_angle: float = 0.0
 func _ready() -> void:
 	add_to_group("timeline_actor")
 	add_to_group("player_actor")
+	add_to_group("detectable_actor")
 	motion_mode = CharacterBody2D.MOTION_MODE_FLOATING
 	visual.reset_visual(Vector2.DOWN)
 
@@ -49,6 +53,8 @@ func _physics_process(_delta: float) -> void:
 
 func _unhandled_input(event: InputEvent) -> void:
 	if not _gameplay_input_enabled:
+		return
+	if event is InputEventKey and (event as InputEventKey).echo:
 		return
 	if event.is_action_pressed("interact"):
 		_try_interact()
@@ -101,6 +107,18 @@ func get_recorded_velocity() -> Vector2:
 
 func get_visual() -> PlayerVisual:
 	return visual
+
+
+func get_detection_id() -> StringName:
+	return DETECTION_ID
+
+
+func get_detection_priority() -> int:
+	return DETECTION_PRIORITY
+
+
+func is_detectable_by_guard() -> bool:
+	return true
 
 
 func _notification(what: int) -> void:

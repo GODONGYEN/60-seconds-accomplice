@@ -52,12 +52,15 @@ func _connect_gameplay_signals() -> void:
 	timeline.loop_started.connect(_on_loop_started)
 	timeline.loop_time_updated.connect(hud.update_time)
 	timeline.level_completed.connect(_on_level_completed)
+	timeline.capture_feedback_requested.connect(_on_capture_feedback_requested)
 	timeline.ghost_capacity_reached.connect(_on_ghost_capacity_reached)
 	timeline.timeline_error.connect(hud.set_hint)
 	level.hint_changed.connect(hud.set_hint)
 	level.interaction_prompt_changed.connect(hud.set_interaction_prompt)
 	level.objective_collected.connect(_on_objective_collected)
 	level.door_state_changed.connect(audio_feedback.play_door)
+	level.guard_status_changed.connect(hud.update_guard_status)
+	level.guard_state_changed.connect(_on_guard_state_changed)
 
 
 func _connect_ui_signals() -> void:
@@ -73,6 +76,7 @@ func _on_loop_started(loop_index: int, ghost_count: int) -> void:
 	hud.update_loop(loop_index, ghost_count)
 	hud.hide_victory()
 	audio_feedback.play_loop_start()
+	hud.update_guard_status(&"idle", 0.0, StringName())
 
 
 func _on_objective_collected() -> void:
@@ -85,6 +89,18 @@ func _on_level_completed(loop_index: int, elapsed_seconds: float) -> void:
 	get_tree().paused = false
 	hud.show_victory(loop_index, elapsed_seconds)
 	audio_feedback.play_victory()
+
+
+func _on_capture_feedback_requested(_loop_index: int, _elapsed_seconds: float) -> void:
+	hud.show_capture_feedback()
+	audio_feedback.play_capture()
+
+
+func _on_guard_state_changed(state_name: StringName) -> void:
+	if state_name == &"suspicious":
+		audio_feedback.play_suspicion()
+	elif state_name == &"chase":
+		audio_feedback.play_alert()
 
 
 func _on_ghost_capacity_reached(maximum_ghosts: int) -> void:

@@ -8,10 +8,12 @@ signal recording_completed(recording: LoopRecording)
 signal ghost_spawned(source_loop_index: int)
 signal ghost_capacity_reached(maximum_ghosts: int)
 signal level_completed(loop_index: int, elapsed_seconds: float)
+signal capture_feedback_requested(loop_index: int, elapsed_seconds: float)
 signal timeline_error(message: String)
 
 const REASON_TIMEOUT: StringName = &"timeout"
 const REASON_RESTART: StringName = &"restart"
+const REASON_CAPTURED: StringName = &"captured"
 const REASON_VICTORY: StringName = &"victory"
 
 enum RunState {
@@ -25,6 +27,7 @@ enum RunState {
 @export_range(1.0, 120.0, 1.0) var loop_duration_seconds: float = 20.0
 @export_range(1.0, 60.0, 1.0) var recording_frequency_hz: float = 20.0
 @export_range(1, 8, 1) var max_ghosts: int = 8
+@export_range(0.0, 1.0, 0.05) var capture_feedback_seconds: float = 0.45
 
 @onready var action_recorder: ActionRecorder = %ActionRecorder
 
@@ -37,6 +40,7 @@ var _level: PrototypeLevel = null
 var _active_ghosts: Array[GhostPlayback] = []
 var _pending_reason: StringName = StringName()
 var _ghost_cap_warning_emitted: bool = false
+var _transition_serial: int = 0
 
 
 func _ready() -> void:
@@ -65,6 +69,8 @@ func configure(level: PrototypeLevel) -> bool:
 	action_recorder.sample_rate_hz = recording_frequency_hz
 	if not _level.completion_requested.is_connected(complete_level):
 		_level.completion_requested.connect(complete_level)
+	if not _level.player_captured.is_connected(_on_player_captured):
+		_level.player_captured.connect(_on_player_captured)
 	return true
 
 
@@ -75,6 +81,7 @@ func start_session() -> bool:
 	recordings.clear()
 	current_loop_index = 1
 	_pending_reason = StringName()
+	_transition_serial += 1
 	_ghost_cap_warning_emitted = false
 	return _start_loop()
 
@@ -92,12 +99,20 @@ func request_loop_end(reason: StringName) -> void:
 	if run_state == RunState.TRANSITION_PENDING:
 		if _reason_priority(reason) > _reason_priority(_pending_reason):
 			_pending_reason = reason
+			_transition_serial += 1
+			if reason == REASON_CAPTURED:
+				capture_feedback_requested.emit(current_loop_index, elapsed_time)
+			_schedule_transition_commit(reason, _transition_serial)
 		return
 
 	_pending_reason = reason
 	run_state = RunState.TRANSITION_PENDING
 	_level.set_live_input_enabled(false)
-	call_deferred(&"_commit_transition")
+	_level.set_level_simulation_enabled(false)
+	_transition_serial += 1
+	if reason == REASON_CAPTURED:
+		capture_feedback_requested.emit(current_loop_index, elapsed_time)
+	_schedule_transition_commit(reason, _transition_serial)
 
 
 func complete_level() -> void:
@@ -112,6 +127,7 @@ func reset_timeline() -> bool:
 	recordings.clear()
 	_active_ghosts.clear()
 	_pending_reason = StringName()
+	_transition_serial += 1
 	_ghost_cap_warning_emitted = false
 	current_loop_index = 1
 	run_state = RunState.RESETTING
@@ -197,8 +213,10 @@ func _start_loop() -> bool:
 	return true
 
 
-func _commit_transition() -> void:
+func _commit_transition(serial: int = -1) -> void:
 	if run_state != RunState.TRANSITION_PENDING:
+		return
+	if serial >= 0 and serial != _transition_serial:
 		return
 	var reason := _pending_reason
 	set_physics_process(false)
@@ -256,6 +274,27 @@ func _on_interaction_recorded(
 	)
 
 
+func _on_player_captured(player: PlayerController) -> void:
+	if run_state != RunState.RUNNING:
+		return
+	if _level == null or player != _level.current_player:
+		push_warning("TimelineManager ignored capture from a non-live Player")
+		return
+	request_loop_end(REASON_CAPTURED)
+
+
+func _schedule_transition_commit(reason: StringName, serial: int) -> void:
+	if reason == REASON_CAPTURED and capture_feedback_seconds > 0.0:
+		_wait_for_capture_feedback(serial)
+		return
+	call_deferred(&"_commit_transition", serial)
+
+
+func _wait_for_capture_feedback(serial: int) -> void:
+	await get_tree().create_timer(capture_feedback_seconds, false).timeout
+	_commit_transition(serial)
+
+
 func _fail(message: String) -> void:
 	push_error(message)
 	run_state = RunState.IDLE
@@ -268,6 +307,8 @@ func _fail(message: String) -> void:
 func _reason_priority(reason: StringName) -> int:
 	match reason:
 		REASON_VICTORY:
+			return 4
+		REASON_CAPTURED:
 			return 3
 		REASON_RESTART:
 			return 2

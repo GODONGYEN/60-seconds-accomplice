@@ -6,6 +6,9 @@ signal completion_requested
 signal hint_changed(message: String)
 signal interaction_prompt_changed(message: String)
 signal door_state_changed(is_open: bool)
+signal player_captured(player: PlayerController)
+signal guard_status_changed(state_name: StringName, suspicion: float, target_id: StringName)
+signal guard_state_changed(state_name: StringName)
 
 const PLAYER_SCENE: PackedScene = preload("res://scenes/player/player.tscn")
 const GHOST_SCENE: PackedScene = preload("res://scenes/ghost/ghost.tscn")
@@ -19,10 +22,13 @@ const GHOST_SCENE: PackedScene = preload("res://scenes/ghost/ghost.tscn")
 @onready var objective_item: ObjectiveItem = %ObjectiveItem
 @onready var exit_zone: ExitZone = %ExitZone
 @onready var training_guard: GuardController = %TrainingGuard
+@onready var guard_patrol_route: Node2D = %GuardPatrolRoute
 
 var current_player: PlayerController = null
 var _resettables: Array[Node] = []
 var _is_initialized: bool = false
+var _shown_player_detection_hint: bool = false
+var _shown_ghost_detection_hint: bool = false
 
 
 func _ready() -> void:
@@ -31,6 +37,9 @@ func _ready() -> void:
 	objective_item.collected.connect(_on_objective_collected)
 	exit_zone.exit_requested.connect(_on_exit_requested)
 	exit_zone.feedback_requested.connect(_on_feedback_requested)
+	training_guard.capture_requested.connect(_on_guard_capture_requested)
+	training_guard.status_changed.connect(_on_guard_status_changed)
+	training_guard.state_changed.connect(_on_guard_state_changed)
 	_cache_resettables()
 	_is_initialized = object_registry.rebuild(self)
 	queue_redraw()
@@ -45,6 +54,9 @@ func validate_level() -> bool:
 		return false
 	if PLAYER_SCENE == null or GHOST_SCENE == null:
 		push_error("PrototypeLevel requires Player and Ghost scenes")
+		return false
+	if not training_guard.has_valid_patrol_route():
+		push_error("PrototypeLevel requires at least two authored Guard patrol points")
 		return false
 	return object_registry.validate_registry()
 
@@ -151,6 +163,37 @@ func _on_interaction_prompt_changed(message: String) -> void:
 	interaction_prompt_changed.emit(message)
 
 
+func _on_guard_capture_requested(player: PlayerController) -> void:
+	if player != current_player:
+		push_warning("Guard ignored capture request for a non-live Player")
+		return
+	hint_changed.emit("CAUGHT — THIS TIMELINE WAS SAVED")
+	player_captured.emit(player)
+
+
+func _on_guard_status_changed(
+	state_name: StringName,
+	suspicion: float,
+	target_id: StringName
+) -> void:
+	guard_status_changed.emit(state_name, suspicion, target_id)
+	if state_name != &"suspicious":
+		return
+	if target_id == PlayerController.DETECTION_ID and not _shown_player_detection_hint:
+		_shown_player_detection_hint = true
+		hint_changed.emit("SEEN — BREAK LINE OF SIGHT OR LEAD THE GUARD UP TOP")
+	elif String(target_id).begins_with("ghost_") and not _shown_ghost_detection_hint:
+		_shown_ghost_detection_hint = true
+		hint_changed.emit("YOUR GHOST IS DISTRACTING THE GUARD — TAKE THE LOWER LANE")
+
+
+func _on_guard_state_changed(
+	_previous_state: GuardController.GuardState,
+	current_state: GuardController.GuardState
+) -> void:
+	guard_state_changed.emit(StringName(GuardController.STATE_NAMES.get(current_state, &"unknown")))
+
+
 func _draw() -> void:
 	draw_rect(Rect2(160.0, 128.0, 960.0, 512.0), Color("4b6780"), false, 3.0)
 	draw_dashed_line(
@@ -160,3 +203,15 @@ func _draw() -> void:
 		3.0,
 		10.0
 	)
+	var patrol_points: Array[Vector2] = []
+	for child: Node in guard_patrol_route.get_children():
+		if child is Marker2D:
+			patrol_points.append((child as Marker2D).position)
+	if patrol_points.size() >= 2:
+		draw_dashed_line(
+			guard_patrol_route.position + patrol_points[0],
+			guard_patrol_route.position + patrol_points[1],
+			Color(1.0, 0.52, 0.2, 0.55),
+			2.0,
+			8.0
+		)
