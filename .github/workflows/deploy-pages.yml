@@ -6,10 +6,7 @@ on:
       - main
   workflow_dispatch:
 
-permissions:
-  contents: read
-  pages: write
-  id-token: write
+permissions: {}
 
 concurrency:
   group: pages
@@ -26,10 +23,25 @@ jobs:
     name: Build single-threaded Web export
     runs-on: ubuntu-latest
     timeout-minutes: 20
+    permissions:
+      contents: read
+      pages: read
 
     steps:
       - name: Check out source
         uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+
+      - name: Set up Python 3.12
+        uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6.3.0
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      - name: Validate committed art derivatives
+        run: |
+          set -euo pipefail
+          python3 -m pip install --disable-pip-version-check -r requirements-tools.txt
+          PYTHON_BIN=python3 bash tools/validate_assets.sh
 
       - name: Configure Pages
         uses: actions/configure-pages@45bfe0192ca1faeb007ade9deae92b16b8254a0d # v6.0.0
@@ -78,6 +90,7 @@ jobs:
           set -euo pipefail
           mkdir -p build/web
           godot --headless --path . --export-release "Web" build/web/index.html
+          bash tools/copy_notices.sh build/web/licenses
           touch build/web/.nojekyll
 
       - name: Validate Pages artifact root
@@ -87,6 +100,9 @@ jobs:
           find build/web -maxdepth 1 -type f -name '*.wasm' -print -quit | grep -q .
           find build/web -maxdepth 1 -type f -name '*.pck' -print -quit | grep -q .
           find build/web -maxdepth 1 -type f -name '*.js' -print -quit | grep -q .
+          test -f build/web/licenses/PROJECT_LICENSE.txt
+          test -f build/web/licenses/THIRD_PARTY_NOTICES.md
+          test -f build/web/licenses/GODOT_ENGINE_LICENSE.txt
           find build/web -maxdepth 1 -type f -print | sort
 
       - name: Upload Pages artifact
@@ -99,6 +115,9 @@ jobs:
     needs: build
     runs-on: ubuntu-latest
     timeout-minutes: 10
+    permissions:
+      pages: write
+      id-token: write
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
