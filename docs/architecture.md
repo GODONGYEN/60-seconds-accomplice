@@ -348,6 +348,19 @@ Loop-end reason arbitration and Ghost count remain the responsibility of `Timeli
 - Temporary snapshot data contains value types only.
 - Reset must not accumulate signal connections, orphan Echoes, or stale reservations.
 
+### Environment presentation boundary
+
+Operation environment art is deliberately split from gameplay geometry:
+
+- the original `Walls` TileMap and `facility_tileset.tres` own collision and occlusion;
+- `WallArt`, `Floor`, `FloorDetails`, and `PropsAbove` use `facility_environment_art.tres`, which has zero physics and occlusion layers;
+- `facility_environment_catalog.gd` is generated beside the TileSet and is the runtime source for room families, seeded variants, semantic-solid mappings, and atlas coordinates;
+- semantic furniture is placed only on the blueprint's existing `internal_solid_rects`;
+- room variation uses stable room seeds and integer cell hashes, never runtime randomness;
+- dynamic doors, terminals, cameras, lasers, cards, the Core, extraction, actors, and Echoes remain independent gameplay scenes.
+
+This lets an art rebuild change pixels without changing pathing, LOS, registry IDs, reset order, or Recall snapshots. The environment pipeline validates the boundary before CI accepts generated derivatives.
+
 ## 17. Testing layers
 
 1. parser/import and scene load;
@@ -394,6 +407,8 @@ scripts/recording/chrono_recall_manager.gd       Recall transaction/Echo lifecyc
 scripts/recording/recall_history.gd              bounded branch recording
 scripts/recording/rewind_state_registry.gd       value snapshot contracts
 scripts/presentation/operation_black_minute_map.gd blueprint-driven map layers
+tools/environment_art_pipeline.py              deterministic visual-only HELIX atlas
+resources/environment/facility_environment_catalog.gd generated runtime art mapping
 scripts/ui/mission_briefing.gd                   pre-mission briefing
 scripts/ui/facility_map_overlay.gd                tactical map
 scripts/ui/heist_hud.gd                           operation HUD/decisions

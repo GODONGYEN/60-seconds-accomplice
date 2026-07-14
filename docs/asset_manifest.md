@@ -15,6 +15,8 @@ All three art-pipeline inputs and the separate map blueprint reference were supp
 
 `assets/concept/player_design_reference.png` is a separate 1536×1024 RGBA player design reference (SHA-256 `48d5fbf6e2646ed1f749a40a4a34c257fad1496d73c5b80a38ce93e957cbe2c1`). It is retained as an unused concept reference and is not an input to `tools/asset_pipeline.py` or a runtime dependency.
 
+`assets/source/environment/helix_environment_concept_v1.png` is a 1536×1024 RGB direction board generated for this project (SHA-256 `b66dabd4a5ea38373b6d1f6cfa9e8ec9d03bcf25ee31a608c689d05e48239c93`). It establishes HELIX material and room-identity targets but is not sampled, cropped, or loaded by gameplay. Deterministic pixel assets are generated from the reviewed JSON specification instead.
+
 That character/environment art pass added no external stock or commercial art, audio, font, or shader. The later Operation briefing adds one open-source Noto Sans KR subset; its provenance and SIL OFL 1.1 terms are recorded below and in `THIRD_PARTY_NOTICES.md`.
 
 ## Player derivatives
@@ -102,6 +104,28 @@ Neither the processed preview nor the 824×807 blueprint reference is placed beh
 
 The facility blueprint describes `26×25` logical cells at `32×32 px` (`832×800 px` world bounds). Runtime topology and object coordinates are documented in `docs/maps/facility_level_01_layout.md`. Wall/light/information visibility is documented in `docs/visibility_system.md`.
 
+## Authored Operation environment derivatives
+
+| Item | Value |
+|---|---|
+| Specification | `assets/source/environment/facility_environment_spec.json` |
+| Direction reference | `assets/source/environment/helix_environment_concept_v1.png` |
+| Processed atlas | `assets/processed/environment/authored/facility_environment_atlas.png` |
+| Runtime atlas | `assets/sprites/environment/facility_environment_atlas.png` |
+| Manifest | `assets/processed/environment/authored/facility_environment_manifest.json` |
+| Review contact sheet | `assets/processed/environment/authored/facility_environment_preview.png` |
+| Palette preview | `assets/processed/environment/authored/facility_palette_preview.png` |
+| Godot resource | `resources/tilesets/facility_environment_art.tres` |
+| Generated runtime catalog | `resources/environment/facility_environment_catalog.gd` |
+| Atlas / tile size | 512×320 RGBA / 32×32 |
+| Named cells | 100 |
+| Runtime collision / occlusion | 0 / 0; visual-only |
+| Runtime use | `OperationBlackMinuteMap` floor, detail, wall-art, and semantic-solid layers |
+
+The atlas defines seven room material families, two deterministic floor variants per family, sparse overlays for six families, 16 neighbor masks with two wall variants, 33 reusable multi-cell furniture segments, and a nine-cell Chronos Vault circuit. Every one of the blueprint's 16 `internal_solid_rects` maps to an explicit motif, covering 64 already-solid cells. No prop placement creates new collision.
+
+The original `Walls` TileMap remains present, collision-enabled, occlusion-enabled, and visually transparent. `WallArt` supplies the visible reinforced panels without becoming gameplay geometry. Dynamic doors and mission objects remain independent scenes.
+
 ## Bilingual UI font
 
 The Operation: Black Minute briefing uses `assets/fonts/noto_sans_kr_ui_subset.ttf`, a 70 KB weight-500 subset of Noto Sans KR containing printable ASCII plus the Korean mission-identity glyphs used by that screen. This is a runtime dependency, not an AI-generated asset. Its source revision, hashes, copyright, and SIL OFL 1.1 license are recorded in `THIRD_PARTY_NOTICES.md`; the license text is stored at `assets/fonts/OFL-NotoSansKR.txt`.
@@ -114,7 +138,8 @@ The generated Godot resources and bilingual briefing reference only these commit
 assets/sprites/characters/player_atlas.png
 assets/sprites/characters/guard_atlas.png
 assets/sprites/environment/facility_tileset.png
+assets/sprites/environment/facility_environment_atlas.png
 assets/fonts/noto_sans_kr_ui_subset.ttf
 ```
 
-Source sheets, concept references, processed atlases, manifests, previews, and both map references are not gameplay dependencies. `tools/asset_pipeline.py validate` scans `.gd`, `.tscn`, `.tres`, and `project.godot` files and fails if a runtime resource points into `assets/source/`, `assets/processed/`, or `assets/concept/`. `facility_map_reference.png` is intentionally not an input to `process-all`; clean checkouts use the committed blueprint JSON and project-authored map script for runtime reconstruction.
+Source sheets, concept references, processed atlases, manifests, previews, and both map references are not gameplay dependencies. `tools/asset_pipeline.py validate` scans `.gd`, `.tscn`, `.tres`, and `project.godot` files and fails if a runtime resource points into `assets/source/`, `assets/processed/`, or `assets/concept/`. `tools/environment_art_pipeline.py validate` additionally verifies all room and solid mappings, exact generated pixels, 100 unique registered tiles, RGBA/alpha/grid integrity, transparent unused cells, source concept hash, runtime/processed equality, generated runtime-catalog equality, and the absence of physics/occlusion in its TileSet. Clean checkouts use committed blueprints and generated/project-authored map scripts for runtime reconstruction.

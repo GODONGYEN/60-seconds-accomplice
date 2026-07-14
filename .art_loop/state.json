@@ -1,0 +1,30 @@
+{
+  "schema_version": 1,
+  "last_completed_cycle": 2,
+  "last_verified_commit": "34bf403",
+  "current_area": "facility-wide environment foundation",
+  "current_visual_problem": "practical lighting and stateful environment animation remain under-authored",
+  "completed_areas": [
+    "global floor material families",
+    "reinforced wall visual masks",
+    "sixteen blueprint-aligned semantic solid motifs",
+    "Chronos Vault circuit dais"
+  ],
+  "areas_needing_revision": [
+    "practical room lighting",
+    "dynamic door visual consistency",
+    "Staff Office and Guard Break storytelling",
+    "CCTV/server/electrical stateful presentation"
+  ],
+  "failed_visual_experiments": [
+    "per-tile research and vault emissive accents created a new repeated rhythm; revised to sparse variants before acceptance"
+  ],
+  "next_candidates": [
+    "visibility-safe CCTV/Electrical/Research practical-light prototype",
+    "deterministic monitor/server/breaker micro-animation",
+    "access-door frame and silhouette pass"
+  ],
+  "last_screenshot_set": "docs/screenshots/environment",
+  "last_ci_url": "",
+  "last_pages_url": "https://godongyen.github.io/60-seconds-accomplice/"
+}

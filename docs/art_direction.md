@@ -56,6 +56,8 @@ The gameplay vision cone is a low-alpha cyan shape during patrol, orange with a 
 
 ## Facility language
 
+The formal heist environment follows `docs/environment_art_bible.md`, which is the source of truth for its canonical palette, material ramps, lighting constraints, dressing density, and room identity. The rules below remain the common minimum for preserved prototype/facility modes.
+
 The tutorial room is a dark science-fiction security facility:
 
 - Floors are low-contrast dark panels.
@@ -64,7 +66,7 @@ The tutorial room is a dark science-fiction security facility:
 - Orange is reserved for guard/danger emphasis.
 - Small props do not block movement unless their collision is clearly visible.
 
-The AI facility image is a concept sheet, not a production TileSet. Its left-side map preview, perspective wall pieces, baked lighting examples, and non-seamless floor variations are reference-only. The runtime base floor and walls use deterministic project-authored placeholders derived from the sheet's palette; only selected source panels and props are used sparingly. Door, pressure plate, objective, and exit remain stateful scenes rather than baked map tiles.
+The AI facility image is a concept sheet, not a production TileSet. Its left-side map preview, perspective wall pieces, baked lighting examples, and non-seamless floor variations are reference-only. Preserved regression maps use deterministic project-authored derivatives. Operation: Black Minute uses a second deterministic HELIX atlas with seven floor families, walkable-neighbor wall masks, semantic furniture aligned to existing blueprint solids, and a vault signature circuit. Door, pressure plate, objective, exit, access card, terminal, camera, and laser remain stateful scenes rather than baked map tiles.
 
 ## UI integration
 
@@ -72,6 +74,6 @@ UI panels use dark navy or charcoal with high-contrast text. Time and Ghost info
 
 ## Source and licensing rule
 
-The three generated source sheets are project-supplied AI-generated inputs retained for reproducibility. They are never referenced directly by gameplay. Derivative atlases, metadata, and previews are produced by `tools/asset_pipeline.py`; runtime resources reference only `assets/sprites/`.
+The three generated source sheets and the HELIX environment direction board are project-supplied or project-generated AI concept inputs retained for reproducibility. They are never referenced directly by gameplay. Derivative atlases, metadata, and previews are produced by `tools/asset_pipeline.py` and `tools/environment_art_pipeline.py`; runtime resources reference only `assets/sprites/`.
 
 No externally sourced commercial art, audio, font, or shader is used by this pipeline. Any future third-party asset must be license-reviewed and entered in `THIRD_PARTY_NOTICES.md` before it can be committed or shipped.

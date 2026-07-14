@@ -52,6 +52,45 @@ Run commands from the repository root:
 
 `process-all` is the canonical clean-checkout command. The generated JSON and `.tres` files should not be hand-edited; change source mappings or generation rules in the tool and regenerate them together.
 
+## Authored Operation environment pipeline
+
+`tools/environment_art_pipeline.py` is intentionally separate from the generated-sheet extractor. It converts a reviewed HELIX palette/material specification into a small visual-only atlas for Operation: Black Minute:
+
+```bash
+.tools/venv/bin/python tools/environment_art_pipeline.py inspect
+.tools/venv/bin/python tools/environment_art_pipeline.py process-all
+.tools/venv/bin/python tools/environment_art_pipeline.py validate
+.tools/venv/bin/python tools/environment_art_pipeline.py fingerprint
+```
+
+Inputs:
+
+- `assets/source/environment/facility_environment_spec.json`: canonical palette, room-family, seed, and semantic-solid mapping;
+- `assets/source/environment/helix_environment_concept_v1.png`: visual-direction reference only, never sampled into or referenced by runtime.
+
+Outputs:
+
+- `assets/processed/environment/authored/facility_environment_atlas.png`;
+- `assets/processed/environment/authored/facility_environment_manifest.json`;
+- `assets/processed/environment/authored/facility_environment_preview.png`;
+- `assets/processed/environment/authored/facility_palette_preview.png`;
+- `assets/sprites/environment/facility_environment_atlas.png`;
+- `resources/tilesets/facility_environment_art.tres`;
+- `resources/environment/facility_environment_catalog.gd`.
+
+The 512×320 RGBA atlas contains 100 named 32 px cells: 14 base floors, 12 sparse floor overlays, 32 wall masks, 33 semantic-solid pieces, and a nine-cell Vault circuit. There is no runtime randomness. Room-specific integer seeds select a sparse alternate or detail deterministically. The same build writes the runtime GDScript catalog consumed by `OperationBlackMinuteMap`, so atlas packing, room families, seeds, solid motifs, and Vault coordinates cannot drift from the Python source of truth.
+
+The generated TileSet contains zero physics and zero occlusion layers. `resources/tilesets/facility_tileset.tres` and the mission blueprint continue to own collision, LOS, navigation, and topology. `tools/validate_assets.sh` fingerprints both pipelines before and after regeneration so CI rejects stale derivatives.
+
+For visual review, `tools/capture_environment_screenshots.gd` renders eight fixed room centers and one unlit whole-map composition overview. It must run with a graphical renderer, not `--headless`; a missing render image, requested/rendered size mismatch, or PNG write failure exits nonzero. Use a real browser viewport for non-16:9 responsive checks such as 1024×768. This static capture set does not claim Ghost, door-state, or security-state coverage, which belongs to the targeted screenshot matrix backlog.
+
+```bash
+godot --path . --script tools/capture_environment_screenshots.gd -- \
+  --output-dir=/tmp/60sa-environment-captures --size=1280x720
+```
+
+These captures validate composition and readability, not path completion. Gameplay acceptance remains the responsibility of the headless physical route tests.
+
 ## Player extraction
 
 The 1448×1086 player sheet is RGB and has a light checkerboard baked into its pixels. It is divided into the observed 4×8 candidate layout, then each candidate is processed independently:
@@ -110,6 +149,7 @@ The processed and runtime atlas copies have identical pixel hashes. Runtime scen
 res://assets/sprites/characters/player_atlas.png
 res://assets/sprites/characters/guard_atlas.png
 res://assets/sprites/environment/facility_tileset.png
+res://assets/sprites/environment/facility_environment_atlas.png
 ```
 
 They never use a source sheet, preview, or processed-reference path.

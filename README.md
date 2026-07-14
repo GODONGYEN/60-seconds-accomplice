@@ -147,9 +147,22 @@ python3 -m venv .tools/venv
 .tools/venv/bin/python -m pip install --requirement requirements-tools.txt
 .tools/venv/bin/python tools/asset_pipeline.py process-all
 .tools/venv/bin/python tools/asset_pipeline.py validate
+.tools/venv/bin/python tools/environment_art_pipeline.py process-all
+.tools/venv/bin/python tools/environment_art_pipeline.py validate
 ```
 
-See [Art Pipeline](docs/art_pipeline.md), [Asset Manifest](docs/asset_manifest.md), and [Art Direction](docs/art_direction.md).
+Operation: Black Minute now uses deterministic room material families, reinforced wall art, collision-aligned reception/locker/CCTV/electrical/server/research/maintenance props, and a dedicated Chronos Vault circuit dais. The visual TileSet has no physics or occlusion; the original blueprint and wall layer remain gameplay authority.
+
+![Operation: Black Minute environment overview](docs/screenshots/environment/after/overview_1280x720.png)
+
+Generate repeatable native visual-QA captures (a graphical Compatibility backend is required):
+
+```bash
+godot --path . --script tools/capture_environment_screenshots.gd -- \
+  --output-dir=/tmp/60sa-environment-captures --size=1280x720
+```
+
+See [Environment Art Bible](docs/environment_art_bible.md), [Visual Improvement Log](docs/visual_improvement_log.md), [Art Pipeline](docs/art_pipeline.md), [Asset Manifest](docs/asset_manifest.md), and [Art Direction](docs/art_direction.md).
 
 ## Export for Web
 
