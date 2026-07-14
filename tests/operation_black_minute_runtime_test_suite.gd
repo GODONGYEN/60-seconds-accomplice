@@ -179,6 +179,7 @@ func _test_modal_pause_freeze(operation: OperationBlackMinuteLevel) -> void:
 	_check(
 		_tree.paused
 		and director.state == MissionDirector.MissionState.CAPTURE_DECISION
+		and operation.performance_tracker.get_capture_count() == 1
 		and not terminal.can_process()
 		and hud.can_process()
 		and capture_recall_button.visible,
@@ -196,8 +197,9 @@ func _test_modal_pause_freeze(operation: OperationBlackMinuteLevel) -> void:
 		recall.remaining_charges == charges_before_capture - 1
 		and director.is_mission_active()
 		and not _tree.paused
-		and not hud.capture_panel.visible,
-		"Q and the visible Recall choice resolve capture through the same available branch"
+		and not hud.capture_panel.visible
+		and operation.performance_tracker.get_capture_count() == 1,
+		"Recall resolves capture while preserving the accepted capture in the attempt ledger"
 	)
 	_check(operation.reset_operation(), "Recall recovery permits a clean checkpoint restart")
 	var charges_without_history := recall.remaining_charges
@@ -214,7 +216,11 @@ func _test_modal_pause_freeze(operation: OperationBlackMinuteLevel) -> void:
 		"Q cannot bypass the unavailable Recall state shown by the capture UI"
 	)
 	_check(operation.reset_operation(), "checkpoint recovery exits capture pause into a clean mission")
-	_check(not _tree.paused, "checkpoint recovery releases the modal SceneTree pause")
+	_check(
+		not _tree.paused
+		and operation.performance_tracker.get_capture_count() == 0,
+		"checkpoint recovery releases pause and resets the Recall-persistent attempt ledger"
+	)
 	_disable_security_simulation(operation)
 
 
@@ -304,17 +310,57 @@ func _test_no_recall_solution(operation: OperationBlackMinuteLevel) -> void:
 		recall.remaining_charges == recall.maximum_charges,
 		"the complete authored heist route is solvable without Chrono Recall"
 	)
+	var result := operation.get_last_mission_result()
+	_check(
+		int(result.get("total_score", 0)) == 10_000
+		and result.get("grade", StringName()) == &"S"
+		and int(result.get("recalls_used", -1)) == 0,
+		"clean no-Recall extraction earns the transparent 10,000-point S debrief"
+	)
+	_check(
+		result.get("authorization_route", StringName()) == &"SERVER OVERRIDE"
+		and bool(result.get("cctv_disabled", false))
+		and bool(result.get("lasers_disabled", false)),
+		"debrief reports the actual security route and final network state"
+	)
+	var hud: HeistHUD = operation.get_node("HeistHUD")
 	await _tree.process_frame
+	_check(
+		hud.victory_panel.visible,
+		"successful extraction presents the operation debrief modal"
+	)
+	_check(
+		(hud.get_node("%VictoryGrade") as Label).text == "S"
+		and (hud.get_node("%RecallValue") as Label).text == "0 / 3"
+		and (hud.get_node("%RouteValue") as Label).text == "SERVER OVERRIDE",
+		"debrief renders grade, Recall usage, and the selected authorization route"
+	)
+	var bonus_text := (hud.get_node("%BonusList") as Label).text
+	var victory_card := hud.get_node("%VictoryCard") as Control
+	_check(
+		bonus_text.contains("SHADOW")
+		and bonus_text.contains("TEMPORAL DISCIPLINE")
+		and bonus_text.contains("BLACKOUT")
+		and victory_card.size.x <= 1280.0
+		and victory_card.size.y <= 720.0,
+		"debrief lists named directives and remains inside the 1280x720 reference viewport"
+	)
 
 
 func _test_recall_and_echo(operation: OperationBlackMinuteLevel) -> void:
 	_check(operation.reset_operation(), "mission checkpoint restart rebuilds a clean operation")
+	_check(
+		operation.get_last_mission_result().is_empty()
+		and not operation.performance_tracker.is_finalized(),
+		"replay starts a fresh mutable performance ledger without stale debrief data"
+	)
 	_disable_security_simulation(operation)
 	var registry: ObjectRegistry = operation.get_node("Systems/ObjectRegistry")
 	var recall: ChronoRecallManager = operation.get_node("Systems/ChronoRecallManager")
 	var player := operation.get_player()
 	var start_position := player.global_position
 	var reception := registry.get_object(&"door_reception_checkpoint_01") as AccessDoor
+	operation.performance_tracker.record_detection(player.get_detection_id())
 
 	for tick: int in range(202):
 		player.global_position = start_position + Vector2(float(tick) * 1.5, 0.0)
@@ -337,6 +383,15 @@ func _test_recall_and_echo(operation: OperationBlackMinuteLevel) -> void:
 		is_equal_approx(recall.get_world_time(), monotonic_time),
 		"Recall never rewinds the mission's monotonic security clock"
 	)
+	_check(
+		operation.performance_tracker.get_live_player_detection_count() == 1,
+		"Recall never erases a live-Player detection from the persistent attempt ledger"
+	)
+	var hud := operation.get_node("HeistHUD") as HeistHUD
+	_check(
+		(hud.get_node("%TimeLabel") as Label).text == "TIME\n00:10",
+		"operation HUD displays the monotonic pause-safe mission clock after Recall"
+	)
 	var echoes := recall.get_echoes()
 	var echo: GhostPlayback = echoes[0] if not echoes.is_empty() else null
 	_check(
@@ -345,6 +400,17 @@ func _test_recall_and_echo(operation: OperationBlackMinuteLevel) -> void:
 		and echo.is_detectable_by_guard()
 		and String(echo.get_detection_id()).begins_with("echo_"),
 		"abandoned movement becomes a Guard/CCTV-detectable Echo, not a second inventory owner"
+	)
+	if echo != null:
+		var guard := (
+			operation.get_node("ActorLayer/GuardContainer").get_child(0)
+			as GuardController
+		)
+		guard.last_seen_position = echo.global_position
+		guard.alert_raised.emit(echo.get_detection_id())
+	_check(
+		operation.performance_tracker.get_echo_detection_count() == 1,
+		"an actual Guard alert records the abandoned Echo as a Paradox Decoy candidate"
 	)
 	await _tree.process_frame
 

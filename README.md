@@ -55,6 +55,8 @@ Briefing and tactical map
 
 A perfect no-Recall route is part of the mission contract. Recall is an optional recovery and improvisation tool: rewinding leaves the abandoned movement and permitted interactions behind as an Echo that Guards and cameras can see.
 
+Extraction now produces a transparent `5,000–10,000` point operation report. `SHADOW`, `TEMPORAL DISCIPLINE` or `PARADOX DECOY`, `UNTOUCHABLE`, and `BLACKOUT` directives reward clean planning and meaningful Echo use. Both a perfect no-Recall route and a clean Echo-distraction route can earn S rank. Elapsed time is shown but is deliberately not scored.
+
 ## Controls
 
 | Input | Operation: Black Minute | Loop regression modes |
@@ -81,6 +83,7 @@ In a browser, click the game once before using the keyboard. If the tab loses fo
 - `GuardZoneManager`: zone assignment, bounded response, and alert recipients;
 - `PatrolScheduler`: deterministic patrol phases, tile/choke reservation, and overlap prevention;
 - `ChronoRecallManager`: bounded history, world snapshots, persistent charge spending, restore, and Echo creation;
+- `MissionPerformanceTracker`: Recall-persistent detection/capture ledger and immutable extraction report;
 - `OperationBlackMinuteMap`: blueprint-driven TileMap layers and facility layout.
 
 The preserved loop modes continue to use `GameManager` + `TimelineManager`; the formal heist does not turn `TimelineManager` into a cross-mode god object. See [Technical Architecture](docs/architecture.md).
@@ -193,13 +196,14 @@ See [Release Guide](docs/release.md).
 - [Security systems](docs/security_systems.md)
 - [Access control](docs/access_control.md)
 - [Chrono Recall](docs/chrono_recall.md)
+- [Mission performance and debrief](docs/mission_performance.md)
 - [Guard zones and patrol scheduling](docs/guard_zones.md)
 - [Onboarding](docs/onboarding.md)
 - [Roadmap](docs/roadmap.md)
 
 ## Known limitations
 
-- There is one formal heist mission. Campaign progression, persistent saves, mission scoring, and `CONTINUE` are not implemented.
+- There is one formal heist mission. Campaign progression, persistent saves, online leaderboards, and `CONTINUE` are not implemented; mission results are session-only.
 - The only checkpoint is mission start. Capturing after Core theft does not create an extraction-phase checkpoint.
 - Chrono Recall keeps only the current bounded branch; it cannot cross a previous Recall branch. At the three-Echo cap, the oldest Echo is removed.
 - Guard movement uses deterministic authored routes, bounded zones, collision-aware steering, and reservations rather than a general navigation mesh.

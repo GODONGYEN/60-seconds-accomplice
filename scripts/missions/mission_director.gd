@@ -141,6 +141,24 @@ func has_vault_authorization() -> bool:
 	)
 
 
+func get_vault_authorization_route() -> StringName:
+	var used_biometric := (
+		objective_graph.get_state(OBJECTIVE_BIOMETRIC)
+		== ObjectiveGraph.ObjectiveState.COMPLETED
+	)
+	var used_server := (
+		objective_graph.get_state(OBJECTIVE_SERVER_OVERRIDE)
+		== ObjectiveGraph.ObjectiveState.COMPLETED
+	)
+	if used_biometric and used_server:
+		return &"BIOMETRIC + SERVER"
+	if used_biometric:
+		return &"BIOMETRIC"
+	if used_server:
+		return &"SERVER OVERRIDE"
+	return &"UNCONFIRMED"
+
+
 func capture_recall_state() -> Dictionary:
 	return {
 		"mission_state": state,

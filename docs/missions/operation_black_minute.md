@@ -70,7 +70,7 @@ Only the live Player can collect the Core. Theft sets facility `LOCKDOWN`, activ
 
 ### 9. Extract
 
-Return to `extraction_yard_01` with the Core. Extraction ends simulation and shows the mission result.
+Return to `extraction_yard_01` with the Core. Extraction ends simulation and shows the immutable operation report. Both a clean no-Recall route and a clean Recall route whose Echo is actually detected can reach S rank; elapsed time is reported but not scored. See [Mission Performance and Debrief](../mission_performance.md).
 
 ## Route contracts
 

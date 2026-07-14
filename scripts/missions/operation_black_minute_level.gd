@@ -33,8 +33,10 @@ const EXTRACTION_SCENE: PackedScene = preload(
 @onready var chrono_recall: ChronoRecallManager = %ChronoRecallManager
 @onready var hud: HeistHUD = %HeistHUD
 @onready var map_overlay: FacilityMapOverlay = %FacilityMapOverlay
+@onready var audio_feedback: AudioFeedback = %AudioFeedback
 
 var player: PlayerController = null
+var performance_tracker: MissionPerformanceTracker = MissionPerformanceTracker.new()
 var _blueprint: Dictionary = {}
 var _guards: Array[GuardController] = []
 var _cameras: Array[SecurityCamera] = []
@@ -51,6 +53,7 @@ var _capture_recall_available: bool = false
 var _pause_open: bool = false
 var _map_update_accumulator: float = 0.0
 var _tutorial_flags: Dictionary[StringName, bool] = {}
+var _last_mission_result: Dictionary = {}
 
 
 func _ready() -> void:
@@ -124,8 +127,9 @@ func reset_operation() -> bool:
 	_capture_pending = false
 	_capture_recall_available = false
 	map_overlay.close_map()
-	hud.hide_capture_choice()
-	hud.hide_victory()
+	hud.reset_presentation()
+	performance_tracker.begin_mission()
+	_last_mission_result.clear()
 	chrono_recall.clear_echoes()
 	patrol_scheduler.clear_runtime(false)
 	guard_zone_manager.reset_for_mission()
@@ -160,6 +164,7 @@ func reset_operation() -> bool:
 	visibility_controller.set_enabled(true)
 	_set_runtime_simulation(true)
 	_sync_all_ui()
+	audio_feedback.play_loop_start()
 	hud.show_toast(
 		"PRIMARY OBJECTIVE  //  STEAL THE CHRONOS CORE\nOPEN THE TACTICAL MAP WITH M",
 		4.0
@@ -181,6 +186,10 @@ func get_laser_count() -> int:
 
 func get_player() -> PlayerController:
 	return player
+
+
+func get_last_mission_result() -> Dictionary:
+	return _last_mission_result.duplicate(true)
 
 
 func is_pause_open() -> bool:
@@ -233,6 +242,7 @@ func _connect_manager_signals() -> void:
 	security_system.alert_level_changed.connect(_on_alert_level_changed)
 	security_system.zone_alert_requested.connect(_on_zone_alert_requested)
 	chrono_recall.charges_changed.connect(hud.set_recall_charges)
+	chrono_recall.world_time_updated.connect(hud.set_mission_time)
 	chrono_recall.recall_completed.connect(_on_recall_completed)
 	chrono_recall.recall_rejected.connect(_on_recall_rejected)
 	chrono_recall.echo_spawned.connect(_on_echo_spawned)
@@ -585,11 +595,10 @@ func _set_runtime_simulation(enabled: bool) -> void:
 func _request_manual_recall() -> void:
 	if _capture_pending or map_overlay.visible or not mission_director.is_mission_active():
 		return
-	if chrono_recall.request_recall():
-		hud.show_toast("CHRONO RECALL  //  ECHO CREATED", 2.0)
+	chrono_recall.request_recall()
 
 
-func _request_capture(source: StringName) -> void:
+func _request_capture(_source: StringName) -> void:
 	if _capture_pending or not mission_director.is_mission_active():
 		return
 	# Availability must be sampled while the live branch is still running.
@@ -609,7 +618,8 @@ func _request_capture(source: StringName) -> void:
 		player.set_facility_visibility_enabled(true)
 		_set_runtime_simulation(true)
 		return
-	hud.show_toast("CAUGHT  //  %s" % String(source).to_upper(), 1.0)
+	performance_tracker.record_capture()
+	audio_feedback.play_capture()
 
 
 func _resolve_capture_with_recall() -> void:
@@ -659,7 +669,8 @@ func _on_access_card_collected(
 		if level == AccessControlManager.AccessLevel.LEVEL_1
 		else &"level_2_acquired"
 	)
-	hud.show_toast("%s ACCESS ACQUIRED" % access_control.get_access_label(), 2.0)
+	hud.show_access_cue(String(access_control.get_access_label()))
+	audio_feedback.play_access()
 
 
 func _on_terminal_completed(action_id: StringName, actor: Node) -> void:
@@ -667,11 +678,13 @@ func _on_terminal_completed(action_id: StringName, actor: Node) -> void:
 		&"disable_cctv":
 			security_system.disable_cctv_network()
 			mission_director.report_event(&"cctv_disabled")
-			hud.show_toast("CCTV NETWORK OFFLINE", 2.2)
+			hud.show_security_cue("CCTV NETWORK OFFLINE")
+			audio_feedback.play_security_offline()
 		&"disable_lasers":
 			security_system.disable_laser_network()
 			mission_director.report_event(&"laser_disabled")
-			hud.show_toast("LASER NETWORK OFFLINE", 2.2)
+			hud.show_security_cue("LASER NETWORK OFFLINE")
+			audio_feedback.play_security_offline()
 		&"server_override", &"biometric_authorization":
 			var is_live_player := (
 				actor != null
@@ -694,7 +707,8 @@ func _on_terminal_completed(action_id: StringName, actor: Node) -> void:
 				AccessControlManager.AccessLevel.VAULT,
 				StringName("credential_%s" % action_id)
 			)
-			hud.show_toast("VAULT AUTHORIZATION GRANTED", 2.4)
+			hud.show_access_cue("VAULT AUTHORIZATION")
+			audio_feedback.play_access()
 		&"terminal_security_map_01":
 			_maintenance_discovered = true
 			hud.show_toast("MAINTENANCE PASSAGE ADDED TO MAP", 2.0)
@@ -717,6 +731,7 @@ func _on_camera_threshold_reached(
 	_actor_id: StringName,
 	_last_seen: Vector2
 ) -> void:
+	performance_tracker.record_detection(_actor_id)
 	_show_tutorial_once(
 		&"camera_alert",
 		"CAMERA ALERT  //  NEARBY GUARDS ARE INVESTIGATING"
@@ -739,6 +754,7 @@ func _on_guard_capture_requested(captured_player: PlayerController) -> void:
 
 
 func _on_guard_alert_raised(target_id: StringName, guard: GuardController) -> void:
+	performance_tracker.record_detection(target_id)
 	security_system.raise_zone_alert(
 		guard.zone_id,
 		guard.last_seen_position,
@@ -792,7 +808,8 @@ func _on_core_stolen(actor: Node) -> void:
 	]:
 		if _doors.has(door_id):
 			_doors[door_id].unlock_and_open()
-	hud.show_toast("CHRONOS CORE SECURED  //  RETURN TO EXTRACTION", 3.0)
+	hud.show_core_cue()
+	audio_feedback.play_core()
 	_sync_all_ui()
 
 
@@ -805,9 +822,17 @@ func _on_mission_completed(_mission_id: StringName) -> void:
 	_set_runtime_simulation(false)
 	player.set_facility_visibility_enabled(true)
 	get_tree().paused = false
-	hud.show_victory(
-		chrono_recall.maximum_charges - chrono_recall.remaining_charges
+	_last_mission_result = performance_tracker.finalize_result(
+		_mission_id,
+		chrono_recall.get_world_time(),
+		chrono_recall.maximum_charges - chrono_recall.remaining_charges,
+		chrono_recall.maximum_charges,
+		not security_system.cctv_online,
+		not security_system.laser_online,
+		mission_director.get_vault_authorization_route()
 	)
+	hud.show_victory(_last_mission_result)
+	audio_feedback.play_victory()
 
 
 func _on_objectives_changed(_objective_ids: Array[StringName]) -> void:
@@ -816,8 +841,13 @@ func _on_objectives_changed(_objective_ids: Array[StringName]) -> void:
 	map_overlay.set_objectives(lines)
 
 
-func _on_objective_completed(_objective_id: StringName, title: String) -> void:
-	hud.show_toast("OBJECTIVE COMPLETE\n%s" % title.to_upper(), 1.8)
+func _on_objective_completed(objective_id: StringName, title: String) -> void:
+	if objective_id in [
+		MissionDirector.OBJECTIVE_INFILTRATE,
+		MissionDirector.OBJECTIVE_ENTER_VAULT,
+	]:
+		hud.show_objective_cue(title)
+		audio_feedback.play_objective()
 
 
 func _on_core_state_changed(is_carried: bool) -> void:
@@ -840,11 +870,11 @@ func _on_access_denied(
 	_door_id: StringName,
 	required: AccessControlManager.AccessLevel
 ) -> void:
-	hud.show_toast(
-		"ACCESS DENIED  //  %s CARD REQUIRED"
-		% AccessControlManager.ACCESS_NAMES.get(required, &"SECURITY"),
-		2.0
+	var required_name := String(
+		AccessControlManager.ACCESS_NAMES.get(required, &"SECURITY")
 	)
+	hud.show_danger_cue("ACCESS DENIED", "%s CARD REQUIRED" % required_name)
+	audio_feedback.play_denied()
 
 
 func _on_cctv_network_changed(is_online: bool) -> void:
@@ -863,6 +893,12 @@ func _on_alert_level_changed(
 	_previous: SecuritySystemManager.AlertLevel,
 	_current: SecuritySystemManager.AlertLevel
 ) -> void:
+	if _current != _previous and _current == SecuritySystemManager.AlertLevel.ALERTED:
+		performance_tracker.record_alert_raised()
+		hud.show_danger_cue("SECURITY ALERT", "LOCAL RESPONSE DEPLOYED")
+		audio_feedback.play_alert()
+	elif _current != _previous and _current == SecuritySystemManager.AlertLevel.SUSPICIOUS:
+		audio_feedback.play_suspicion()
 	_sync_security_ui()
 
 
@@ -873,6 +909,8 @@ func _on_recall_completed(
 	succeeded: bool
 ) -> void:
 	if succeeded:
+		hud.show_recall_cue("TIMELINE REWRITTEN  //  ECHO ACTIVE")
+		audio_feedback.play_recall()
 		if _capture_pending:
 			_finish_capture_resolution()
 		_sync_all_ui()
@@ -884,7 +922,6 @@ func _on_recall_rejected(reason: String) -> void:
 
 func _on_echo_spawned(echo: GhostPlayback, _sequence: int) -> void:
 	visibility_controller.register_target(echo)
-	hud.show_toast("ECHO DEPLOYED  //  SECURITY CAN SEE IT", 1.5)
 
 
 func _finish_capture_resolution() -> void:

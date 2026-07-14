@@ -33,6 +33,9 @@ const OPERATION_BLUEPRINT_TEST_SUITE: Script = preload(
 const OPERATION_RUNTIME_TEST_SUITE: Script = preload(
 	"res://tests/operation_black_minute_runtime_test_suite.gd"
 )
+const MISSION_PERFORMANCE_TEST_SUITE: Script = preload(
+	"res://tests/mission_performance_test_suite.gd"
+)
 const OPERATION_PHYSICAL_ACCEPTANCE_TEST_SUITE: Script = preload(
 	"res://tests/operation_black_minute_physical_acceptance_test_suite.gd"
 )
@@ -112,6 +115,7 @@ func _run_all_tests() -> void:
 	await _test_two_loop_stealth_distraction_acceptance()
 	await _test_full_level_acceptance_flow()
 	await _run_modular_suite(OPERATION_BLUEPRINT_TEST_SUITE)
+	await _run_modular_suite(MISSION_PERFORMANCE_TEST_SUITE)
 	await _run_modular_suite(OPERATION_RUNTIME_TEST_SUITE)
 	await _run_modular_suite(OPERATION_PHYSICAL_ACCEPTANCE_TEST_SUITE)
 	await _run_modular_suite(HEIST_SYSTEMS_TEST_SUITE)

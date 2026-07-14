@@ -40,16 +40,17 @@ Implemented architecture and content:
 - rewindable value snapshots and maximum three Echoes;
 - tactical pause map and heist HUD;
 - mission solvability validator;
-- deterministic 180-second patrol simulation.
+- deterministic 180-second patrol simulation;
+- typed mission-beat feedback and procedural operation audio;
+- Recall-persistent performance directives and extraction debrief.
 
-Remaining acceptance work for this milestone must be reported from actual execution, not inferred:
+Automated acceptance now covers the complete collision-respecting no-Recall route, bounded Recall/Echo behavior, capture recovery, deterministic patrols, extraction scoring, and responsive debrief bounds. Local-HTTP browser checks cover the 1280×720 reference viewport and a resized 1024×768 viewport. Clean Web export, console review, CI, Pages deployment, and deployed HTTP confirmation remain mandatory per-release checks rather than unfinished gameplay scope.
 
-1. complete no-Recall playthrough;
-2. complete Recall-assisted playthrough with Echo distraction;
-3. capture → Recall and capture → checkpoint manual review;
-4. 1280×720 and resized local-HTTP browser visual/input pass;
-5. browser console review;
-6. clean Web export, CI, Pages deployment, and deployed HTTP confirmation.
+Remaining manual acceptance work must be reported from actual execution, not inferred:
+
+1. complete the full formal operation with a Recall-assisted Echo-distraction route;
+2. repeat capture → Recall and capture → checkpoint with first-time players;
+3. profile 10 Guards + 3 Echoes + 8 cameras on representative Web hardware.
 
 ## Next milestone — Heist usability hardening
 
@@ -57,20 +58,20 @@ Remaining acceptance work for this milestone must be reported from actual execut
 - add an explicit tutorial-message replay setting;
 - improve tactical-map legend and locked-door readability;
 - verify fullscreen/mute presentation in every GameMode and browser environment;
-- profile 10 Guards + 3 Echoes + 8 cameras on representative Web hardware;
 - audit repeated Recall/checkpoint cycles for orphan nodes and stale signals;
 - capture verified screenshots/GIF after browser visual acceptance.
 
-## Later decision gate — One deeper heist choice
+## Completed decision gate — Score and optional directives
 
-Choose only after Black Minute is consistently completable and understandable. Candidate directions:
+The selected deeper-heist choice is session-only mission performance. It adds positive-only `SHADOW`, temporal-style, `UNTOUCHABLE`, and `BLACKOUT` directives without a leaderboard, grind, or time-pressure score. Both no-Recall and useful-Echo mastery remain first-class.
+
+The unselected candidates remain deferred:
 
 - one additional mission with a different security order;
 - one non-combat gadget that deepens route planning;
 - one additional deterministic security device;
-- score/optional objectives for perfect infiltration.
 
-Do not build all candidates at once. Any choice must preserve no-Recall solvability, stable IDs, bounded Recall history, and fast restart.
+Do not build all deferred candidates at once. Any future choice must preserve no-Recall solvability, stable IDs, bounded Recall history, and fast restart.
 
 ## Deferred infrastructure
 

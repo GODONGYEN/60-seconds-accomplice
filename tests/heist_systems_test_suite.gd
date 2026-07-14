@@ -85,6 +85,7 @@ func _test_objective_progression_and_or_authorization() -> void:
 	_check(
 		director.report_event(&"server_override")
 		and director.has_vault_authorization()
+		and director.get_vault_authorization_route() == &"SERVER OVERRIDE"
 		and director.objective_graph.get_state(MissionDirector.OBJECTIVE_BIOMETRIC)
 		!= ObjectiveGraph.ObjectiveState.COMPLETED,
 		"Level 2 Server override satisfies the authorization OR without biometric completion"

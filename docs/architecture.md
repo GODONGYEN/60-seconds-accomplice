@@ -56,6 +56,7 @@ AppController
    ├── ChronoRecallManager
    │   ├── RecallHistory
    │   └── RewindStateRegistry
+   ├── MissionPerformanceTracker
    ├── OperationBlackMinuteMap
    ├── ObjectRegistry
    ├── WorldVisibilityController
@@ -106,6 +107,7 @@ OperationBlackMinuteLevel
 ├── GuardZoneManager
 ├── PatrolScheduler
 ├── ChronoRecallManager
+├── AudioFeedback
 ├── HeistHUD
 └── FacilityMapOverlay
 ```
@@ -308,7 +310,22 @@ Operation input/simulation gates are centralized in `OperationBlackMinuteLevel` 
 - checkpoint choice: full `reset_operation()` from mission start;
 - victory: simulation disabled, tree unpaused for victory UI, further capture ignored.
 
-## 14. Preserved hybrid replay
+## 14. Performance and feedback
+
+```text
+Guard/CCTV stable actor detection + accepted capture
+→ MissionPerformanceTracker persistent attempt ledger
+→ extraction samples Recall charges, security state, route, and monotonic world time
+→ positive-only directive scoring
+→ immutable deep-copied result
+→ HeistHUD debrief + AudioFeedback
+```
+
+The tracker is a focused `RefCounted` value object owned by `OperationBlackMinuteLevel`; it does not draw UI or mutate mission systems. It is deliberately absent from `recall_rewindable`, so abandoned-branch detections and captures cannot be erased by Recall. A mission-start checkpoint reset creates a fresh attempt ledger. Scripted Core `LOCKDOWN` is not classified as detection.
+
+HUD cues and the debrief use Canvas UI, Tween animation, and low-alpha color washes that are safe for the Web Compatibility renderer. Procedural audio is additive; text and shape remain authoritative when audio is muted or browser playback is unavailable.
+
+## 15. Preserved hybrid replay
 
 Regression modes retain the original model:
 
@@ -321,7 +338,7 @@ Regression modes retain the original model:
 
 Loop-end reason arbitration and Ghost count remain the responsibility of `TimelineManager` only inside those modes.
 
-## 15. Performance rules
+## 16. Performance rules
 
 - Do not call `get_nodes_in_group()` every frame; cache candidates/registries at setup or controlled rebuild points.
 - Camera/Guard physics rays operate on cached candidates and bounded update cadence.
@@ -331,7 +348,7 @@ Loop-end reason arbitration and Ghost count remain the responsibility of `Timeli
 - Temporary snapshot data contains value types only.
 - Reset must not accumulate signal connections, orphan Echoes, or stale reservations.
 
-## 16. Testing layers
+## 17. Testing layers
 
 1. parser/import and scene load;
 2. objective/access/security unit behavior;
@@ -357,7 +374,7 @@ GODOT_BIN=godot tools/run_tests.sh
 
 Headless tests cannot certify PointLight/TileMap shadow pixels, readable cone alpha, responsive UI, or browser console state.
 
-## 17. File ownership
+## 18. File ownership
 
 ```text
 scripts/core/app_controller.gd                  menu and session switching
@@ -366,6 +383,7 @@ scripts/missions/operation_black_minute_level.gd mission composition/orchestrati
 scripts/missions/mission_director.gd            mission lifecycle/objective events
 scripts/missions/objective_graph.gd              acyclic objective state
 scripts/missions/mission_solvability_validator.gd blueprint contract validation
+scripts/missions/mission_performance_tracker.gd Recall-persistent attempt metrics/result
 scripts/security/access_control_manager.gd      credentials/access ranks
 scripts/security/security_system_manager.gd     networks/alerts
 scripts/security/security_camera.gd             camera sweep/perception
@@ -379,10 +397,11 @@ scripts/presentation/operation_black_minute_map.gd blueprint-driven map layers
 scripts/ui/mission_briefing.gd                   pre-mission briefing
 scripts/ui/facility_map_overlay.gd                tactical map
 scripts/ui/heist_hud.gd                           operation HUD/decisions
+scripts/ui/audio_feedback.gd                      optional procedural event tones
 scripts/core/timeline_manager.gd                 preserved full-loop lifecycle only
 ```
 
-## 18. Known architectural limits
+## 19. Known architectural limits
 
 - Mission composition is specific to the one authored operation; it is not a generic campaign framework.
 - Guard movement is route/zone/reservation based, not NavigationServer-driven general pathfinding.

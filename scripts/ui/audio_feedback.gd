@@ -14,7 +14,7 @@ func _ready() -> void:
 		return
 	var generator := AudioStreamGenerator.new()
 	generator.mix_rate = MIX_RATE
-	generator.buffer_length = 0.35
+	generator.buffer_length = 0.55
 	player.playback_type = AudioServer.PLAYBACK_TYPE_STREAM
 	player.stream = generator
 	player.play()
@@ -55,14 +55,53 @@ func play_capture() -> void:
 	_push_tone(150.0, 0.16, 0.13)
 
 
-func _push_tone(frequency: float, duration: float, amplitude: float) -> void:
+func play_access() -> void:
+	_push_tone(520.0, 0.07, 0.08, 0.10)
+	_push_tone(780.0, 0.08, 0.09, 0.16)
+	_push_tone(1040.0, 0.10, 0.08, 0.20)
+
+
+func play_security_offline() -> void:
+	_push_tone(720.0, 0.07, 0.08, 0.12)
+	_push_tone(510.0, 0.09, 0.09, 0.08)
+	_push_tone(310.0, 0.12, 0.08)
+
+
+func play_recall() -> void:
+	_push_tone(1080.0, 0.07, 0.07, 0.18)
+	_push_tone(820.0, 0.08, 0.08, 0.14)
+	_push_tone(560.0, 0.11, 0.09, 0.10)
+
+
+func play_core() -> void:
+	_push_tone(470.0, 0.08, 0.08, 0.10)
+	_push_tone(710.0, 0.08, 0.09, 0.16)
+	_push_tone(1060.0, 0.10, 0.10, 0.20)
+	_push_tone(1420.0, 0.14, 0.09, 0.24)
+
+
+func play_denied() -> void:
+	_push_tone(245.0, 0.08, 0.10, 0.05)
+	_push_tone(190.0, 0.12, 0.10)
+
+
+func _push_tone(
+	frequency: float,
+	duration: float,
+	amplitude: float,
+	harmonic_mix: float = 0.0
+) -> void:
 	if _playback == null:
 		return
-	var frame_count := int(MIX_RATE * duration)
+	var frame_count := mini(int(MIX_RATE * duration), _playback.get_frames_available())
+	if frame_count <= 0:
+		return
 	var phase_step := frequency / MIX_RATE
 	for _frame: int in frame_count:
 		var envelope := minf(1.0, float(_frame) / 90.0)
 		envelope *= minf(1.0, float(frame_count - _frame) / 140.0)
-		var sample := sin(_phase * TAU) * amplitude * envelope
+		var fundamental := sin(_phase * TAU)
+		var harmonic := sin(_phase * TAU * 2.0) * harmonic_mix
+		var sample := (fundamental + harmonic) * amplitude * envelope / (1.0 + harmonic_mix)
 		_playback.push_frame(Vector2(sample, sample))
 		_phase = fmod(_phase + phase_step, 1.0)

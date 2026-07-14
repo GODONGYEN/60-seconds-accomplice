@@ -88,6 +88,8 @@ Current objectives communicate:
 
 Core theft changes the Core HUD from `NOT ACQUIRED` to `SECURED`, raises lockdown, opens the extraction route, and displays a return instruction.
 
+Extraction opens an operation debrief rather than immediately returning to the menu. It explains the result with grade, score, elapsed time, Recall use, live/Echo detections, captures, authorization route, and named directives. Hollow/filled directive symbols and text ensure the result is not color-only. `REPLAY OPERATION` starts a clean mission ledger; results are not persisted or uploaded.
+
 ## Tactical map policy
 
 `M` or `Tab` opens the map and pauses simulation. It may display:

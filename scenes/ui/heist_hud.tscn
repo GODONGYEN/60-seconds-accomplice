@@ -1,4 +1,4 @@
-[gd_scene load_steps=4 format=3]
+[gd_scene load_steps=5 format=3]
 
 [ext_resource type="Script" path="res://scripts/ui/heist_hud.gd" id="1_hud"]
 
@@ -33,6 +33,22 @@ content_margin_left = 30.0
 content_margin_top = 24.0
 content_margin_right = 30.0
 content_margin_bottom = 24.0
+
+[sub_resource type="StyleBoxFlat" id="Style_cue"]
+bg_color = Color(0.018, 0.055, 0.085, 0.97)
+border_width_left = 3
+border_width_top = 1
+border_width_right = 3
+border_width_bottom = 1
+border_color = Color(0.39, 0.94, 0.91, 0.95)
+corner_radius_top_left = 7
+corner_radius_top_right = 7
+corner_radius_bottom_right = 7
+corner_radius_bottom_left = 7
+content_margin_left = 26.0
+content_margin_top = 10.0
+content_margin_right = 26.0
+content_margin_bottom = 11.0
 
 [node name="HeistHUD" type="CanvasLayer"]
 process_mode = 3
@@ -101,6 +117,19 @@ theme_override_font_sizes/font_size = 12
 text = "ACCESS\nPUBLIC"
 horizontal_alignment = 1
 
+[node name="TimePanel" type="PanelContainer" parent="TopMargin/TopRow"]
+custom_minimum_size = Vector2(88, 0)
+layout_mode = 2
+theme_override_styles/panel = SubResource("Style_panel")
+
+[node name="TimeLabel" type="Label" parent="TopMargin/TopRow/TimePanel"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_colors/font_color = Color(0.83, 0.92, 1, 1)
+theme_override_font_sizes/font_size = 13
+text = "TIME\n00:00"
+horizontal_alignment = 1
+
 [node name="RecallButton" type="Button" parent="TopMargin/TopRow"]
 unique_name_in_owner = true
 custom_minimum_size = Vector2(82, 0)
@@ -130,17 +159,56 @@ theme_override_constants/outline_size = 4
 theme_override_font_sizes/font_size = 14
 text = "CORE\nNOT ACQUIRED"
 
-[node name="ToastLabel" type="Label" parent="."]
+[node name="CueWash" type="ColorRect" parent="."]
 unique_name_in_owner = true
+visible = false
+mouse_filter = 2
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0.39, 0.94, 0.91, 0.1)
+
+[node name="CueAnchor" type="CenterContainer" parent="."]
+mouse_filter = 2
 anchors_preset = 10
 anchor_right = 1.0
-offset_left = 290.0
-offset_top = 132.0
-offset_right = -290.0
-offset_bottom = 181.0
+offset_left = 150.0
+offset_top = 125.0
+offset_right = -150.0
+offset_bottom = 230.0
+
+[node name="CueCard" type="PanelContainer" parent="CueAnchor"]
+unique_name_in_owner = true
+visible = false
+custom_minimum_size = Vector2(500, 0)
+layout_mode = 2
+mouse_filter = 2
+theme_override_styles/panel = SubResource("Style_cue")
+
+[node name="Content" type="VBoxContainer" parent="CueAnchor/CueCard"]
+layout_mode = 2
+mouse_filter = 2
+theme_override_constants/separation = 2
+
+[node name="CueTitle" type="Label" parent="CueAnchor/CueCard/Content"]
+unique_name_in_owner = true
+layout_mode = 2
+mouse_filter = 2
+theme_override_colors/font_color = Color(0.39, 0.94, 0.91, 1)
+theme_override_font_sizes/font_size = 14
+text = "MISSION UPDATE"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="ToastLabel" type="Label" parent="CueAnchor/CueCard/Content"]
+unique_name_in_owner = true
+layout_mode = 2
+mouse_filter = 2
 theme_override_colors/font_color = Color(0.94, 0.98, 1, 1)
 theme_override_colors/font_outline_color = Color(0.01, 0.04, 0.07, 1)
-theme_override_constants/outline_size = 5
+theme_override_constants/outline_size = 3
 theme_override_font_sizes/font_size = 18
 text = "OBJECTIVE UPDATED"
 horizontal_alignment = 1
@@ -325,42 +393,188 @@ anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 
-[node name="Card" type="PanelContainer" parent="VictoryPanel/Center"]
-custom_minimum_size = Vector2(580, 0)
+[node name="VictoryCard" type="PanelContainer" parent="VictoryPanel/Center"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(720, 0)
 layout_mode = 2
 theme_override_styles/panel = SubResource("Style_modal")
 
-[node name="Content" type="VBoxContainer" parent="VictoryPanel/Center/Card"]
+[node name="Content" type="VBoxContainer" parent="VictoryPanel/Center/VictoryCard"]
 layout_mode = 2
-theme_override_constants/separation = 14
+theme_override_constants/separation = 8
 
-[node name="Title" type="Label" parent="VictoryPanel/Center/Card/Content"]
+[node name="Title" type="Label" parent="VictoryPanel/Center/VictoryCard/Content"]
 layout_mode = 2
 theme_override_colors/font_color = Color(0.34, 1, 0.72, 1)
-theme_override_font_sizes/font_size = 38
+theme_override_font_sizes/font_size = 30
 text = "OPERATION COMPLETE"
 horizontal_alignment = 1
 
-[node name="VictorySummary" type="Label" parent="VictoryPanel/Center/Card/Content"]
+[node name="VictorySummary" type="Label" parent="VictoryPanel/Center/VictoryCard/Content"]
 unique_name_in_owner = true
 layout_mode = 2
-theme_override_font_sizes/font_size = 18
-text = "CHRONOS CORE EXTRACTED"
+theme_override_colors/font_color = Color(0.67, 0.8, 0.9, 1)
+theme_override_font_sizes/font_size = 14
+text = "CHRONOS CORE EXTRACTED  //  TEMPORAL TRACE SEALED"
 horizontal_alignment = 1
 
-[node name="Buttons" type="HBoxContainer" parent="VictoryPanel/Center/Card/Content"]
+[node name="GradeRow" type="HBoxContainer" parent="VictoryPanel/Center/VictoryCard/Content"]
 layout_mode = 2
 alignment = 1
-theme_override_constants/separation = 12
+theme_override_constants/separation = 24
 
-[node name="RestartButton" type="Button" parent="VictoryPanel/Center/Card/Content/Buttons"]
+[node name="Grade" type="Label" parent="VictoryPanel/Center/VictoryCard/Content/GradeRow"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.6, 0.72, 0.8, 1)
+theme_override_font_sizes/font_size = 13
+text = "OPERATION GRADE"
+vertical_alignment = 1
+
+[node name="VictoryGrade" type="Label" parent="VictoryPanel/Center/VictoryCard/Content/GradeRow"]
 unique_name_in_owner = true
-custom_minimum_size = Vector2(230, 48)
+custom_minimum_size = Vector2(76, 72)
+layout_mode = 2
+theme_override_colors/font_color = Color(0.39, 0.95, 0.83, 1)
+theme_override_colors/font_outline_color = Color(0.01, 0.04, 0.07, 1)
+theme_override_constants/outline_size = 5
+theme_override_font_sizes/font_size = 58
+text = "S"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="ScoreBlock" type="VBoxContainer" parent="VictoryPanel/Center/VictoryCard/Content/GradeRow"]
+layout_mode = 2
+alignment = 1
+
+[node name="Label" type="Label" parent="VictoryPanel/Center/VictoryCard/Content/GradeRow/ScoreBlock"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.6, 0.72, 0.8, 1)
+theme_override_font_sizes/font_size = 13
+text = "HEIST SCORE"
+
+[node name="VictoryScore" type="Label" parent="VictoryPanel/Center/VictoryCard/Content/GradeRow/ScoreBlock"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(190, 38)
+layout_mode = 2
+theme_override_colors/font_color = Color(0.93, 0.98, 1, 1)
+theme_override_font_sizes/font_size = 27
+text = "10000 / 10000"
+vertical_alignment = 1
+
+[node name="StatsGrid" type="GridContainer" parent="VictoryPanel/Center/VictoryCard/Content"]
+layout_mode = 2
+theme_override_constants/h_separation = 14
+theme_override_constants/v_separation = 3
+columns = 4
+
+[node name="ElapsedLabel" type="Label" parent="VictoryPanel/Center/VictoryCard/Content/StatsGrid"]
+custom_minimum_size = Vector2(110, 0)
+layout_mode = 2
+theme_override_colors/font_color = Color(0.47, 0.65, 0.76, 1)
+theme_override_font_sizes/font_size = 12
+text = "ELAPSED"
+
+[node name="ElapsedValue" type="Label" parent="VictoryPanel/Center/VictoryCard/Content/StatsGrid"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(155, 0)
+layout_mode = 2
+theme_override_font_sizes/font_size = 14
+text = "00:00.0"
+
+[node name="RecallLabel" type="Label" parent="VictoryPanel/Center/VictoryCard/Content/StatsGrid"]
+custom_minimum_size = Vector2(120, 0)
+layout_mode = 2
+theme_override_colors/font_color = Color(0.47, 0.65, 0.76, 1)
+theme_override_font_sizes/font_size = 12
+text = "RECALLS USED"
+
+[node name="RecallValue" type="Label" parent="VictoryPanel/Center/VictoryCard/Content/StatsGrid"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(155, 0)
+layout_mode = 2
+theme_override_font_sizes/font_size = 14
+text = "0 / 3"
+
+[node name="DetectionLabel" type="Label" parent="VictoryPanel/Center/VictoryCard/Content/StatsGrid"]
+custom_minimum_size = Vector2(110, 0)
+layout_mode = 2
+theme_override_colors/font_color = Color(0.47, 0.65, 0.76, 1)
+theme_override_font_sizes/font_size = 12
+text = "DETECTIONS"
+
+[node name="DetectionValue" type="Label" parent="VictoryPanel/Center/VictoryCard/Content/StatsGrid"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(155, 0)
+layout_mode = 2
+theme_override_font_sizes/font_size = 14
+text = "0 LIVE  •  0 ECHO"
+
+[node name="CaptureLabel" type="Label" parent="VictoryPanel/Center/VictoryCard/Content/StatsGrid"]
+custom_minimum_size = Vector2(120, 0)
+layout_mode = 2
+theme_override_colors/font_color = Color(0.47, 0.65, 0.76, 1)
+theme_override_font_sizes/font_size = 12
+text = "CAPTURES"
+
+[node name="CaptureValue" type="Label" parent="VictoryPanel/Center/VictoryCard/Content/StatsGrid"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(155, 0)
+layout_mode = 2
+theme_override_font_sizes/font_size = 14
+text = "0"
+
+[node name="RouteLabel" type="Label" parent="VictoryPanel/Center/VictoryCard/Content/StatsGrid"]
+custom_minimum_size = Vector2(110, 0)
+layout_mode = 2
+theme_override_colors/font_color = Color(0.47, 0.65, 0.76, 1)
+theme_override_font_sizes/font_size = 12
+text = "AUTH ROUTE"
+
+[node name="RouteValue" type="Label" parent="VictoryPanel/Center/VictoryCard/Content/StatsGrid"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_colors/font_color = Color(0.52, 0.86, 0.96, 1)
+theme_override_font_sizes/font_size = 14
+text = "SERVER ROOM"
+
+[node name="BonusHeader" type="Label" parent="VictoryPanel/Center/VictoryCard/Content"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.47, 0.65, 0.76, 1)
+theme_override_font_sizes/font_size = 12
+text = "PERFORMANCE DIRECTIVES"
+
+[node name="BonusList" type="Label" parent="VictoryPanel/Center/VictoryCard/Content"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 66)
+layout_mode = 2
+theme_override_colors/font_color = Color(0.82, 0.9, 0.95, 1)
+theme_override_font_sizes/font_size = 13
+text = "◆ CLEAN INFILTRATION  +1500\n◆ NO RECALL  +1200\n◇ GHOST PROTOCOL  +0"
+autowrap_mode = 2
+
+[node name="VictoryDirective" type="Label" parent="VictoryPanel/Center/VictoryCard/Content"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_colors/font_color = Color(0.39, 0.94, 0.91, 1)
+theme_override_font_sizes/font_size = 13
+text = "DIRECTIVE // TEMPORAL HEIST MASTERED. TRY THE OTHER TIMELINE STYLE."
+horizontal_alignment = 1
+autowrap_mode = 2
+
+[node name="Buttons" type="HBoxContainer" parent="VictoryPanel/Center/VictoryCard/Content"]
+layout_mode = 2
+alignment = 1
+theme_override_constants/separation = 10
+
+[node name="RestartButton" type="Button" parent="VictoryPanel/Center/VictoryCard/Content/Buttons"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(230, 44)
 layout_mode = 2
 text = "REPLAY OPERATION"
 
-[node name="MenuButton" type="Button" parent="VictoryPanel/Center/Card/Content/Buttons"]
+[node name="MenuButton" type="Button" parent="VictoryPanel/Center/VictoryCard/Content/Buttons"]
 unique_name_in_owner = true
-custom_minimum_size = Vector2(180, 48)
+custom_minimum_size = Vector2(180, 44)
 layout_mode = 2
 text = "MAIN MENU"

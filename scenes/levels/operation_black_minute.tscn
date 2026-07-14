@@ -1,4 +1,4 @@
-[gd_scene load_steps=15 format=3]
+[gd_scene load_steps=16 format=3]
 
 [ext_resource type="Script" path="res://scripts/missions/operation_black_minute_level.gd" id="1_level"]
 [ext_resource type="Script" path="res://scripts/presentation/operation_black_minute_map.gd" id="2_map"]
@@ -13,6 +13,7 @@
 [ext_resource type="Script" path="res://scripts/recording/chrono_recall_manager.gd" id="11_recall"]
 [ext_resource type="PackedScene" path="res://scenes/ui/heist_hud.tscn" id="12_hud"]
 [ext_resource type="PackedScene" path="res://scenes/ui/facility_map_overlay.tscn" id="13_overlay"]
+[ext_resource type="Script" path="res://scripts/ui/audio_feedback.gd" id="14_audio"]
 
 [node name="OperationBlackMinute" type="Node2D"]
 process_mode = 3
@@ -116,6 +117,15 @@ rewind_duration_seconds = 10.0
 recording_frequency_hz = 20.0
 maximum_charges = 3
 maximum_echoes = 3
+
+[node name="AudioFeedback" type="Node" parent="."]
+unique_name_in_owner = true
+process_mode = 1
+script = ExtResource("14_audio")
+
+[node name="AudioStreamPlayer" type="AudioStreamPlayer" parent="AudioFeedback"]
+unique_name_in_owner = true
+volume_db = -6.0
 
 [node name="HeistHUD" parent="." instance=ExtResource("12_hud")]
 unique_name_in_owner = true
