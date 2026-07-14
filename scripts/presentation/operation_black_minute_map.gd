@@ -3,27 +3,96 @@ extends Node2D
 
 const BLUEPRINT_PATH: String = "res://resources/maps/operation_black_minute_blueprint.json"
 const FACILITY_TILESET: TileSet = preload("res://resources/tilesets/facility_tileset.tres")
+const ENVIRONMENT_ART_TILESET: TileSet = preload(
+	"res://resources/tilesets/facility_environment_art.tres"
+)
 const SOURCE_ID: int = 0
 const TILE_SIZE: int = 32
 const MAP_SIZE := Vector2i(64, 42)
 const WORLD_SIZE := Vector2i(2048, 1344)
 
-const BASE_FLOOR := Vector2i(7, 3)
-const FLOOR_VARIANTS: Array[Vector2i] = [
-	Vector2i(0, 0),
-	Vector2i(1, 0),
-	Vector2i(4, 0),
-]
-const WALL := Vector2i(0, 2)
-const WALL_CORNER := Vector2i(1, 2)
-const TERMINAL := Vector2i(4, 2)
-const SERVER := Vector2i(5, 2)
-const METAL_CRATE := Vector2i(3, 2)
-const PLANT := Vector2i(7, 2)
+const COLLISION_WALL := Vector2i(0, 2)
+const COLLISION_WALL_CORNER := Vector2i(1, 2)
+const VAULT_RING_ORIGIN := Vector2i(57, 7)
+
+const ROOM_FAMILIES: Dictionary[StringName, StringName] = {
+	&"external_infiltration_yard": &"yard",
+	&"reception_checkpoint": &"corporate",
+	&"staff_office": &"corporate",
+	&"locker_room": &"corporate",
+	&"security_office": &"corporate",
+	&"guard_break_room": &"corporate",
+	&"cctv_control_room": &"systems",
+	&"electrical_room": &"systems",
+	&"server_room": &"systems",
+	&"research_laboratory": &"research",
+	&"laser_corridor": &"research",
+	&"vault_antechamber": &"vault",
+	&"chronos_vault": &"vault",
+	&"maintenance_passage": &"service",
+	&"extraction_route": &"service",
+}
+
+const ROOM_SEEDS: Dictionary[StringName, int] = {
+	&"external_infiltration_yard": 17,
+	&"reception_checkpoint": 29,
+	&"staff_office": 37,
+	&"locker_room": 43,
+	&"security_office": 53,
+	&"guard_break_room": 61,
+	&"cctv_control_room": 71,
+	&"electrical_room": 79,
+	&"server_room": 89,
+	&"research_laboratory": 97,
+	&"laser_corridor": 107,
+	&"vault_antechamber": 113,
+	&"chronos_vault": 127,
+	&"maintenance_passage": 137,
+	&"extraction_route": 149,
+}
+
+const FLOOR_TILES: Dictionary[StringName, Array] = {
+	&"yard": [Vector2i(0, 0), Vector2i(1, 0)],
+	&"corporate": [Vector2i(2, 0), Vector2i(3, 0)],
+	&"systems": [Vector2i(4, 0), Vector2i(5, 0)],
+	&"research": [Vector2i(6, 0), Vector2i(7, 0)],
+	&"vault": [Vector2i(8, 0), Vector2i(9, 0)],
+	&"service": [Vector2i(10, 0), Vector2i(11, 0)],
+	&"neutral": [Vector2i(12, 0), Vector2i(13, 0)],
+}
+
+const DETAIL_TILES: Dictionary[StringName, Array] = {
+	&"yard": [Vector2i(0, 1), Vector2i(1, 1)],
+	&"corporate": [Vector2i(2, 1), Vector2i(3, 1)],
+	&"systems": [Vector2i(4, 1), Vector2i(5, 1)],
+	&"research": [Vector2i(6, 1), Vector2i(7, 1)],
+	&"vault": [Vector2i(8, 1), Vector2i(9, 1)],
+	&"service": [Vector2i(10, 1), Vector2i(11, 1)],
+}
+
+const SEMANTIC_SOLIDS: Dictionary[StringName, StringName] = {
+	&"reception_desk": &"reception_desk",
+	&"locker_bank_north": &"locker_bank",
+	&"locker_bank_south": &"locker_bank",
+	&"staff_desk_west": &"office_desk",
+	&"staff_desk_east": &"office_desk",
+	&"guard_break_table": &"break_table",
+	&"cctv_monitor_bank": &"cctv_monitor_bank",
+	&"security_desk": &"security_desk",
+	&"electrical_cabinet_west": &"electrical_cabinet",
+	&"electrical_cabinet_east": &"electrical_cabinet",
+	&"server_rack_west": &"server_rack",
+	&"server_rack_east": &"server_rack",
+	&"research_bench_north": &"research_bench",
+	&"research_bench_south": &"research_bench",
+	&"maintenance_machine_west": &"maintenance_machine",
+	&"maintenance_machine_east": &"maintenance_machine",
+}
 
 @onready var floor: TileMapLayer = %Floor
 @onready var floor_details: TileMapLayer = %FloorDetails
 @onready var walls: TileMapLayer = %Walls
+@onready var wall_art: TileMapLayer = %WallArt
 @onready var props_below: TileMapLayer = %PropsBelow
 @onready var props_above: TileMapLayer = %PropsAbove
 @onready var room_labels: Node2D = %RoomLabels
@@ -33,6 +102,7 @@ var _blueprint: Dictionary = {}
 var _walkable_cells: Dictionary[Vector2i, bool] = {}
 var _room_by_cell: Dictionary[Vector2i, StringName] = {}
 var _solid_cells: Dictionary[Vector2i, bool] = {}
+var _semantic_solid_cell_count: int = 0
 
 
 func _ready() -> void:
@@ -60,20 +130,22 @@ func load_blueprint() -> bool:
 
 func rebuild_map() -> void:
 	_configure_layers()
-	for layer: TileMapLayer in [floor, floor_details, walls, props_below, props_above]:
+	for layer: TileMapLayer in [floor, floor_details, walls, wall_art, props_below, props_above]:
 		layer.clear()
 	for y: int in range(MAP_SIZE.y):
 		for x: int in range(MAP_SIZE.x):
 			var cell := Vector2i(x, y)
 			if is_walkable_cell(cell):
-				floor.set_cell(cell, SOURCE_ID, BASE_FLOOR)
+				floor.set_cell(cell, SOURCE_ID, _select_floor_tile(cell))
 				_place_room_floor_detail(cell)
 			else:
-				walls.set_cell(cell, SOURCE_ID, _select_wall_tile(cell))
-	_place_functional_props()
+				walls.set_cell(cell, SOURCE_ID, _select_collision_wall_tile(cell))
+				wall_art.set_cell(cell, SOURCE_ID, _select_wall_art_tile(cell))
+	_place_semantic_solids()
+	_place_signature_floor_details()
 	_build_room_labels()
 	_build_observation_windows()
-	for layer: TileMapLayer in [floor, floor_details, walls, props_below, props_above]:
+	for layer: TileMapLayer in [floor, floor_details, walls, wall_art, props_below, props_above]:
 		layer.update_internals()
 
 
@@ -87,6 +159,22 @@ func get_map_size() -> Vector2i:
 
 func get_world_size() -> Vector2i:
 	return WORLD_SIZE
+
+
+func get_environment_art_tileset() -> TileSet:
+	return ENVIRONMENT_ART_TILESET
+
+
+func get_room_material_family(room_id: StringName) -> StringName:
+	return ROOM_FAMILIES.get(room_id, &"neutral")
+
+
+func get_semantic_solid_cell_count() -> int:
+	return _semantic_solid_cell_count
+
+
+func get_floor_detail_cell_count() -> int:
+	return floor_details.get_used_cells().size()
 
 
 func is_walkable_cell(cell: Vector2i) -> bool:
@@ -120,14 +208,17 @@ static func is_cell_in_bounds(cell: Vector2i) -> bool:
 
 
 func _configure_layers() -> void:
-	for layer: TileMapLayer in [floor, floor_details, walls, props_below, props_above]:
-		layer.tile_set = FACILITY_TILESET
+	walls.tile_set = FACILITY_TILESET
+	for layer: TileMapLayer in [floor, floor_details, wall_art, props_below, props_above]:
+		layer.tile_set = ENVIRONMENT_ART_TILESET
 	floor.collision_enabled = false
 	floor.occlusion_enabled = false
 	floor_details.collision_enabled = false
 	floor_details.occlusion_enabled = false
 	walls.collision_enabled = true
 	walls.occlusion_enabled = true
+	wall_art.collision_enabled = false
+	wall_art.occlusion_enabled = false
 	props_below.collision_enabled = false
 	props_below.occlusion_enabled = false
 	props_above.collision_enabled = false
@@ -175,31 +266,106 @@ func _mark_rect_walkable(rect: Rect2i, room_id: StringName) -> void:
 
 func _place_room_floor_detail(cell: Vector2i) -> void:
 	var room_id := get_room_at_cell(cell)
-	if room_id == StringName() or (cell.x + cell.y) % 3 != 0:
+	if room_id == StringName():
 		return
-	var variant_index: int = absi(String(room_id).hash()) % FLOOR_VARIANTS.size()
-	floor_details.set_cell(cell, SOURCE_ID, FLOOR_VARIANTS[variant_index])
+	var family := get_room_material_family(room_id)
+	if not DETAIL_TILES.has(family):
+		return
+	var seed: int = ROOM_SEEDS.get(room_id, 0)
+	var value := _stable_cell_hash(cell, seed)
+	if value % 17 != 0:
+		return
+	var variants: Array = DETAIL_TILES[family]
+	var variant_index := int(value / 17) % variants.size()
+	floor_details.set_cell(cell, SOURCE_ID, variants[variant_index])
 
 
-func _place_functional_props() -> void:
-	var placements: Dictionary = {
-		&"cctv_control_room": [TERMINAL, SERVER, SERVER],
-		&"electrical_room": [TERMINAL, METAL_CRATE, METAL_CRATE],
-		&"server_room": [SERVER, SERVER, SERVER],
-		&"research_laboratory": [TERMINAL, METAL_CRATE, PLANT],
-		&"security_office": [TERMINAL, METAL_CRATE, PLANT],
-		&"guard_break_room": [METAL_CRATE, PLANT],
-		&"staff_office": [TERMINAL, PLANT],
-	}
-	for room_variant: Variant in placements.keys():
-		var room_id := StringName(str(room_variant))
-		var rect := get_room_rect(room_id)
-		var tiles: Array = placements[room_variant] as Array
-		for index: int in range(tiles.size()):
-			var cell := rect.position + Vector2i(1 + index * 2, 1)
-			if is_walkable_cell(cell):
-				var atlas_coordinates: Vector2i = tiles[index]
-				props_above.set_cell(cell, SOURCE_ID, atlas_coordinates)
+func _select_floor_tile(cell: Vector2i) -> Vector2i:
+	var room_id := get_room_at_cell(cell)
+	var family := get_room_material_family(room_id)
+	var variants: Array = FLOOR_TILES[family]
+	var seed: int = ROOM_SEEDS.get(room_id, 163)
+	var value := _stable_cell_hash(cell, seed)
+	var variant_index := 1 if value % 11 == 0 else 0
+	return variants[variant_index]
+
+
+func _place_signature_floor_details() -> void:
+	for local_y: int in range(3):
+		for local_x: int in range(3):
+			var cell := VAULT_RING_ORIGIN + Vector2i(local_x, local_y)
+			if not is_walkable_cell(cell):
+				push_warning("Chronos Vault signature art skipped non-walkable cell %s" % cell)
+				continue
+			floor_details.set_cell(cell, SOURCE_ID, Vector2i(local_x + local_y * 3, 8))
+
+
+func _place_semantic_solids() -> void:
+	_semantic_solid_cell_count = 0
+	var solids_variant: Variant = _blueprint.get("internal_solid_rects", [])
+	if not solids_variant is Array:
+		return
+	for solid_variant: Variant in solids_variant as Array:
+		if not solid_variant is Dictionary:
+			continue
+		var solid := solid_variant as Dictionary
+		var solid_id := StringName(str(solid.get("id", "")))
+		var motif: StringName = SEMANTIC_SOLIDS.get(solid_id, StringName())
+		var rect := _json_rect(solid.get("rect", []))
+		if motif == StringName():
+			push_warning("Operation environment has no semantic art for solid '%s'" % solid_id)
+			continue
+		for cell: Vector2i in _cells_in_rect(rect):
+			var local := cell - rect.position
+			var atlas_coordinates := _semantic_tile_for(motif, local, rect.size)
+			if atlas_coordinates == Vector2i(-1, -1):
+				push_warning("Operation environment cannot map solid '%s' at local cell %s" % [solid_id, local])
+				continue
+			props_above.set_cell(cell, SOURCE_ID, atlas_coordinates)
+			_semantic_solid_cell_count += 1
+
+
+func _semantic_tile_for(motif: StringName, local: Vector2i, size: Vector2i) -> Vector2i:
+	match motif:
+		&"reception_desk":
+			return [Vector2i(0, 4), Vector2i(1, 4), Vector2i(2, 4)][clampi(local.x, 0, 2)]
+		&"locker_bank":
+			if local.x == 0:
+				return Vector2i(3, 4)
+			if local.x == size.x - 1:
+				return Vector2i(5, 4)
+			return Vector2i(4, 4)
+		&"office_desk":
+			return Vector2i(6 + clampi(local.x, 0, 1), 4)
+		&"break_table":
+			return Vector2i(8 + clampi(local.x, 0, 1), 4)
+		&"cctv_monitor_bank":
+			return Vector2i(10 + clampi(local.x, 0, 1) + clampi(local.y, 0, 1) * 2, 4)
+		&"security_desk":
+			return [Vector2i(14, 4), Vector2i(15, 4), Vector2i(0, 5), Vector2i(1, 5)][clampi(local.x, 0, 3)]
+		&"electrical_cabinet":
+			return Vector2i(2 + _vertical_segment(local.y, size.y), 5)
+		&"server_rack":
+			return Vector2i(5 + _vertical_segment(local.y, size.y), 5)
+		&"research_bench":
+			return Vector2i(8 + clampi(local.x, 0, 2), 5)
+		&"maintenance_machine":
+			var segment := _vertical_segment(local.y, size.y)
+			var lookup: Array[Vector2i] = [
+				Vector2i(11, 5), Vector2i(12, 5),
+				Vector2i(13, 5), Vector2i(14, 5),
+				Vector2i(15, 5), Vector2i(0, 6),
+			]
+			return lookup[segment * 2 + clampi(local.x, 0, 1)]
+	return Vector2i(-1, -1)
+
+
+func _vertical_segment(local_y: int, height: int) -> int:
+	if local_y == 0:
+		return 0
+	if local_y == height - 1:
+		return 2
+	return 1
 
 
 func _build_room_labels() -> void:
@@ -256,12 +422,31 @@ func _build_observation_windows() -> void:
 		observation_windows.add_child(body)
 
 
-func _select_wall_tile(cell: Vector2i) -> Vector2i:
+func _select_collision_wall_tile(cell: Vector2i) -> Vector2i:
 	var adjacent_floor_count := 0
 	for offset: Vector2i in [Vector2i.LEFT, Vector2i.RIGHT, Vector2i.UP, Vector2i.DOWN]:
 		if is_walkable_cell(cell + offset):
 			adjacent_floor_count += 1
-	return WALL_CORNER if adjacent_floor_count >= 2 else WALL
+	return COLLISION_WALL_CORNER if adjacent_floor_count >= 2 else COLLISION_WALL
+
+
+func _select_wall_art_tile(cell: Vector2i) -> Vector2i:
+	var mask := 0
+	if is_walkable_cell(cell + Vector2i.UP):
+		mask |= 1
+	if is_walkable_cell(cell + Vector2i.RIGHT):
+		mask |= 2
+	if is_walkable_cell(cell + Vector2i.DOWN):
+		mask |= 4
+	if is_walkable_cell(cell + Vector2i.LEFT):
+		mask |= 8
+	var variant := 1 if _stable_cell_hash(cell, 211) % 13 == 0 else 0
+	return Vector2i(mask, 2 + variant)
+
+
+static func _stable_cell_hash(cell: Vector2i, seed: int) -> int:
+	var value: int = (cell.x * 73856093) ^ (cell.y * 19349663) ^ (seed * 83492791)
+	return absi(value)
 
 
 func _cells_in_rect(rect: Rect2i) -> Array[Vector2i]:

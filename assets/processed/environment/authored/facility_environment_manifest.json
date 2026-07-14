@@ -1,0 +1,495 @@
+{
+  "atlas_grid": [
+    16,
+    10
+  ],
+  "atlas_size": [
+    512,
+    320
+  ],
+  "blueprint_solid_count": 16,
+  "collision_authority": "resources/tilesets/facility_tileset.tres",
+  "generation_rules": {
+    "filter": "nearest",
+    "floor_detail_density_target": "approximately 6 percent per room before signature overlays",
+    "randomness": "none",
+    "runtime_collision_layers": 0,
+    "runtime_occlusion_layers": 0
+  },
+  "generator": "tools/environment_art_pipeline.py",
+  "godot_tileset": "resources/tilesets/facility_environment_art.tres",
+  "mode": "RGBA",
+  "room_families": {
+    "cctv_control_room": "systems",
+    "chronos_vault": "vault",
+    "electrical_room": "systems",
+    "external_infiltration_yard": "yard",
+    "extraction_route": "service",
+    "guard_break_room": "corporate",
+    "laser_corridor": "research",
+    "locker_room": "corporate",
+    "maintenance_passage": "service",
+    "reception_checkpoint": "corporate",
+    "research_laboratory": "research",
+    "security_office": "corporate",
+    "server_room": "systems",
+    "staff_office": "corporate",
+    "vault_antechamber": "vault"
+  },
+  "room_seeds": {
+    "cctv_control_room": 71,
+    "chronos_vault": 127,
+    "electrical_room": 79,
+    "external_infiltration_yard": 17,
+    "extraction_route": 149,
+    "guard_break_room": 61,
+    "laser_corridor": 107,
+    "locker_room": 43,
+    "maintenance_passage": 137,
+    "reception_checkpoint": 29,
+    "research_laboratory": 97,
+    "security_office": 53,
+    "server_room": 89,
+    "staff_office": 37,
+    "vault_antechamber": 113
+  },
+  "runtime_atlas": "assets/sprites/environment/facility_environment_atlas.png",
+  "schema_version": 1,
+  "semantic_solids": {
+    "cctv_monitor_bank": "cctv_monitor_bank",
+    "electrical_cabinet_east": "electrical_cabinet",
+    "electrical_cabinet_west": "electrical_cabinet",
+    "guard_break_table": "break_table",
+    "locker_bank_north": "locker_bank",
+    "locker_bank_south": "locker_bank",
+    "maintenance_machine_east": "maintenance_machine",
+    "maintenance_machine_west": "maintenance_machine",
+    "reception_desk": "reception_desk",
+    "research_bench_north": "research_bench",
+    "research_bench_south": "research_bench",
+    "security_desk": "security_desk",
+    "server_rack_east": "server_rack",
+    "server_rack_west": "server_rack",
+    "staff_desk_east": "office_desk",
+    "staff_desk_west": "office_desk"
+  },
+  "source_concept": {
+    "path": "assets/source/environment/helix_environment_concept_v1.png",
+    "sha256": "b66dabd4a5ea38373b6d1f6cfa9e8ec9d03bcf25ee31a608c689d05e48239c93",
+    "usage": "visual direction reference only; no runtime dependency"
+  },
+  "tile_counts": {
+    "floor": 14,
+    "floor_detail": 12,
+    "semantic_solid": 33,
+    "total": 100,
+    "vault_signature": 9,
+    "wall": 32
+  },
+  "tile_size": [
+    32,
+    32
+  ],
+  "tiles": {
+    "bench_left": [
+      8,
+      5
+    ],
+    "bench_middle": [
+      9,
+      5
+    ],
+    "bench_right": [
+      10,
+      5
+    ],
+    "cctv_bottom_left": [
+      12,
+      4
+    ],
+    "cctv_bottom_right": [
+      13,
+      4
+    ],
+    "cctv_top_left": [
+      10,
+      4
+    ],
+    "cctv_top_right": [
+      11,
+      4
+    ],
+    "desk_left": [
+      0,
+      4
+    ],
+    "desk_middle": [
+      1,
+      4
+    ],
+    "desk_right": [
+      2,
+      4
+    ],
+    "detail_corporate_a": [
+      2,
+      1
+    ],
+    "detail_corporate_b": [
+      3,
+      1
+    ],
+    "detail_research_a": [
+      6,
+      1
+    ],
+    "detail_research_b": [
+      7,
+      1
+    ],
+    "detail_service_a": [
+      10,
+      1
+    ],
+    "detail_service_b": [
+      11,
+      1
+    ],
+    "detail_systems_a": [
+      4,
+      1
+    ],
+    "detail_systems_b": [
+      5,
+      1
+    ],
+    "detail_vault_a": [
+      8,
+      1
+    ],
+    "detail_vault_b": [
+      9,
+      1
+    ],
+    "detail_yard_a": [
+      0,
+      1
+    ],
+    "detail_yard_b": [
+      1,
+      1
+    ],
+    "electrical_bottom": [
+      4,
+      5
+    ],
+    "electrical_middle": [
+      3,
+      5
+    ],
+    "electrical_top": [
+      2,
+      5
+    ],
+    "floor_corporate_alternate": [
+      3,
+      0
+    ],
+    "floor_corporate_base": [
+      2,
+      0
+    ],
+    "floor_neutral_alternate": [
+      13,
+      0
+    ],
+    "floor_neutral_base": [
+      12,
+      0
+    ],
+    "floor_research_alternate": [
+      7,
+      0
+    ],
+    "floor_research_base": [
+      6,
+      0
+    ],
+    "floor_service_alternate": [
+      11,
+      0
+    ],
+    "floor_service_base": [
+      10,
+      0
+    ],
+    "floor_systems_alternate": [
+      5,
+      0
+    ],
+    "floor_systems_base": [
+      4,
+      0
+    ],
+    "floor_vault_alternate": [
+      9,
+      0
+    ],
+    "floor_vault_base": [
+      8,
+      0
+    ],
+    "floor_yard_alternate": [
+      1,
+      0
+    ],
+    "floor_yard_base": [
+      0,
+      0
+    ],
+    "locker_left": [
+      3,
+      4
+    ],
+    "locker_middle": [
+      4,
+      4
+    ],
+    "locker_right": [
+      5,
+      4
+    ],
+    "machine_bottom_left": [
+      15,
+      5
+    ],
+    "machine_bottom_right": [
+      0,
+      6
+    ],
+    "machine_middle_left": [
+      13,
+      5
+    ],
+    "machine_middle_right": [
+      14,
+      5
+    ],
+    "machine_top_left": [
+      11,
+      5
+    ],
+    "machine_top_right": [
+      12,
+      5
+    ],
+    "office_left": [
+      6,
+      4
+    ],
+    "office_right": [
+      7,
+      4
+    ],
+    "security_left": [
+      14,
+      4
+    ],
+    "security_middle_left": [
+      15,
+      4
+    ],
+    "security_middle_right": [
+      0,
+      5
+    ],
+    "security_right": [
+      1,
+      5
+    ],
+    "server_bottom": [
+      7,
+      5
+    ],
+    "server_middle": [
+      6,
+      5
+    ],
+    "server_top": [
+      5,
+      5
+    ],
+    "table_left": [
+      8,
+      4
+    ],
+    "table_right": [
+      9,
+      4
+    ],
+    "vault_ring_0_0": [
+      0,
+      8
+    ],
+    "vault_ring_0_1": [
+      3,
+      8
+    ],
+    "vault_ring_0_2": [
+      6,
+      8
+    ],
+    "vault_ring_1_0": [
+      1,
+      8
+    ],
+    "vault_ring_1_1": [
+      4,
+      8
+    ],
+    "vault_ring_1_2": [
+      7,
+      8
+    ],
+    "vault_ring_2_0": [
+      2,
+      8
+    ],
+    "vault_ring_2_1": [
+      5,
+      8
+    ],
+    "vault_ring_2_2": [
+      8,
+      8
+    ],
+    "wall_mask_00_variant_0": [
+      0,
+      2
+    ],
+    "wall_mask_00_variant_1": [
+      0,
+      3
+    ],
+    "wall_mask_01_variant_0": [
+      1,
+      2
+    ],
+    "wall_mask_01_variant_1": [
+      1,
+      3
+    ],
+    "wall_mask_02_variant_0": [
+      2,
+      2
+    ],
+    "wall_mask_02_variant_1": [
+      2,
+      3
+    ],
+    "wall_mask_03_variant_0": [
+      3,
+      2
+    ],
+    "wall_mask_03_variant_1": [
+      3,
+      3
+    ],
+    "wall_mask_04_variant_0": [
+      4,
+      2
+    ],
+    "wall_mask_04_variant_1": [
+      4,
+      3
+    ],
+    "wall_mask_05_variant_0": [
+      5,
+      2
+    ],
+    "wall_mask_05_variant_1": [
+      5,
+      3
+    ],
+    "wall_mask_06_variant_0": [
+      6,
+      2
+    ],
+    "wall_mask_06_variant_1": [
+      6,
+      3
+    ],
+    "wall_mask_07_variant_0": [
+      7,
+      2
+    ],
+    "wall_mask_07_variant_1": [
+      7,
+      3
+    ],
+    "wall_mask_08_variant_0": [
+      8,
+      2
+    ],
+    "wall_mask_08_variant_1": [
+      8,
+      3
+    ],
+    "wall_mask_09_variant_0": [
+      9,
+      2
+    ],
+    "wall_mask_09_variant_1": [
+      9,
+      3
+    ],
+    "wall_mask_10_variant_0": [
+      10,
+      2
+    ],
+    "wall_mask_10_variant_1": [
+      10,
+      3
+    ],
+    "wall_mask_11_variant_0": [
+      11,
+      2
+    ],
+    "wall_mask_11_variant_1": [
+      11,
+      3
+    ],
+    "wall_mask_12_variant_0": [
+      12,
+      2
+    ],
+    "wall_mask_12_variant_1": [
+      12,
+      3
+    ],
+    "wall_mask_13_variant_0": [
+      13,
+      2
+    ],
+    "wall_mask_13_variant_1": [
+      13,
+      3
+    ],
+    "wall_mask_14_variant_0": [
+      14,
+      2
+    ],
+    "wall_mask_14_variant_1": [
+      14,
+      3
+    ],
+    "wall_mask_15_variant_0": [
+      15,
+      2
+    ],
+    "wall_mask_15_variant_1": [
+      15,
+      3
+    ]
+  }
+}

@@ -38,6 +38,11 @@ z_index = -5
 [node name="Walls" type="TileMapLayer" parent="OperationMap"]
 unique_name_in_owner = true
 z_index = 1
+self_modulate = Color(1, 1, 1, 0)
+
+[node name="WallArt" type="TileMapLayer" parent="OperationMap"]
+unique_name_in_owner = true
+z_index = 1
 
 [node name="PropsBelow" type="TileMapLayer" parent="OperationMap"]
 unique_name_in_owner = true

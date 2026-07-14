@@ -4,6 +4,12 @@ extends Node
 const OPERATION_SCENE: PackedScene = preload(
 	"res://scenes/levels/operation_black_minute.tscn"
 )
+const ENVIRONMENT_ART_TILESET: TileSet = preload(
+	"res://resources/tilesets/facility_environment_art.tres"
+)
+const ENVIRONMENT_ART_ATLAS_PATH: String = (
+	"res://assets/sprites/environment/facility_environment_atlas.png"
+)
 const STEP_SECONDS: float = 0.05
 
 var _tree: SceneTree
@@ -39,6 +45,65 @@ func _test_runtime_contract(operation: OperationBlackMinuteLevel) -> void:
 		operation_map.get_map_size() == Vector2i(64, 42)
 		and operation_map.get_world_size() == Vector2i(2048, 1344),
 		"runtime mission builds the authored 64x42 facility instead of scaling the prototype"
+	)
+	_check(
+		ENVIRONMENT_ART_TILESET.tile_size == Vector2i(32, 32)
+		and ENVIRONMENT_ART_TILESET.get_physics_layers_count() == 0
+		and ENVIRONMENT_ART_TILESET.get_occlusion_layers_count() == 0,
+		"environment art TileSet is a visual-only 32px overlay with no gameplay geometry"
+	)
+	var environment_atlas := ENVIRONMENT_ART_TILESET.get_source(0) as TileSetAtlasSource
+	_check(
+		environment_atlas != null
+		and environment_atlas.texture != null
+		and environment_atlas.texture.resource_path == ENVIRONMENT_ART_ATLAS_PATH,
+		"environment art TileSet references only the committed runtime atlas"
+	)
+	_check(
+		operation_map.floor.tile_set == ENVIRONMENT_ART_TILESET
+		and operation_map.floor_details.tile_set == ENVIRONMENT_ART_TILESET
+		and operation_map.wall_art.tile_set == ENVIRONMENT_ART_TILESET
+		and operation_map.props_above.tile_set == ENVIRONMENT_ART_TILESET
+		and operation_map.walls.tile_set != ENVIRONMENT_ART_TILESET,
+		"visual layers use authored art while the original wall layer remains collision authority"
+	)
+	_check(
+		operation_map.walls.collision_enabled
+		and operation_map.walls.occlusion_enabled
+		and is_zero_approx(operation_map.walls.self_modulate.a)
+		and not operation_map.wall_art.collision_enabled
+		and not operation_map.wall_art.occlusion_enabled,
+		"hidden collision walls and visible wall art preserve exact movement and LOS boundaries"
+	)
+	_check(
+		operation_map.get_semantic_solid_cell_count() == 64
+		and operation_map.props_above.get_used_cells().size() == 64,
+		"all sixteen blueprint solids receive collision-aligned semantic furniture art"
+	)
+	_check(
+		operation_map.get_floor_detail_cell_count() >= 60
+		and operation_map.get_floor_detail_cell_count() <= 110,
+		"room detail placement is sparse and avoids the former every-third-cell pattern"
+	)
+	var vault_signature_complete := true
+	for local_y: int in range(3):
+		for local_x: int in range(3):
+			vault_signature_complete = (
+				vault_signature_complete
+				and operation_map.floor_details.get_cell_atlas_coords(
+					Vector2i(57 + local_x, 7 + local_y)
+				) == Vector2i(local_x + local_y * 3, 8)
+			)
+	_check(
+		vault_signature_complete,
+		"Chronos Vault receives a deterministic nine-tile signature circuit beneath the Core"
+	)
+	_check(
+		operation_map.get_room_material_family(&"external_infiltration_yard") == &"yard"
+		and operation_map.get_room_material_family(&"cctv_control_room") == &"systems"
+		and operation_map.get_room_material_family(&"research_laboratory") == &"research"
+		and operation_map.get_room_material_family(&"chronos_vault") == &"vault",
+		"major mission zones resolve to distinct authored material families"
 	)
 	_check(
 		operation.get_guard_count() == 10
