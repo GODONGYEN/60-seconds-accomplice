@@ -56,7 +56,7 @@ func _capture() -> void:
 	var player: PlayerController = operation.get_player()
 	if player == null:
 		push_error("Environment capture could not find the operation Player")
-		quit(2)
+		await _quit_capture_failure(operation)
 		return
 	operation.hud.reset_presentation()
 	operation.process_mode = Node.PROCESS_MODE_DISABLED
@@ -64,20 +64,30 @@ func _capture() -> void:
 		player.global_position = ROOM_TARGETS[room_name]
 		await process_frame
 		await process_frame
-		_save_viewport("operation_%s_%dx%d.png" % [
+		if not _save_viewport("operation_%s_%dx%d.png" % [
 			room_name, _capture_size.x, _capture_size.y,
-		])
-	await _capture_overview(operation, player)
+		]):
+			await _quit_capture_failure(operation)
+			return
+	if not await _capture_overview(operation, player):
+		await _quit_capture_failure(operation)
+		return
 	print("[environment-capture] wrote %d room views and one overview to %s" % [
 		ROOM_TARGETS.size(), _output_directory,
 	])
 	quit()
 
 
+func _quit_capture_failure(operation: Node) -> void:
+	operation.queue_free()
+	await process_frame
+	quit(2)
+
+
 func _capture_overview(
 	operation: OperationBlackMinuteLevel,
 	player: PlayerController
-) -> void:
+) -> bool:
 	operation.hud.visible = false
 	operation.map_overlay.visible = false
 	operation.get_node(^"CanvasModulate").color = Color.WHITE
@@ -92,15 +102,31 @@ func _capture_overview(
 	player.player_camera.zoom = Vector2.ONE * fit_scale
 	await process_frame
 	await process_frame
-	_save_viewport("operation_overview_%dx%d.png" % [_capture_size.x, _capture_size.y])
+	return _save_viewport(
+		"operation_overview_%dx%d.png" % [_capture_size.x, _capture_size.y]
+	)
 
 
-func _save_viewport(file_name: String) -> void:
+func _save_viewport(file_name: String) -> bool:
+	if DisplayServer.get_name() == "headless":
+		push_error("Environment capture requires a non-headless rendering backend")
+		return false
 	var texture := root.get_texture()
 	if texture == null:
 		push_error("Environment capture requires a non-headless rendering backend")
-		quit(2)
-		return
-	var error := texture.get_image().save_png(_output_directory.path_join(file_name))
+		return false
+	var image := texture.get_image()
+	if image == null:
+		push_error("Environment capture could not read the rendered viewport image")
+		return false
+	if image.get_size() != _capture_size:
+		push_error(
+			"Environment capture size mismatch: requested %s, rendered %s"
+			% [_capture_size, image.get_size()]
+		)
+		return false
+	var error := image.save_png(_output_directory.path_join(file_name))
 	if error != OK:
 		push_error("Failed to save environment capture '%s': %s" % [file_name, error_string(error)])
+		return false
+	return true

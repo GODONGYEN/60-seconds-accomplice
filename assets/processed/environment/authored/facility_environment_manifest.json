@@ -54,6 +54,7 @@
     "vault_antechamber": 113
   },
   "runtime_atlas": "assets/sprites/environment/facility_environment_atlas.png",
+  "runtime_catalog": "resources/environment/facility_environment_catalog.gd",
   "schema_version": 1,
   "semantic_solids": {
     "cctv_monitor_bank": "cctv_monitor_bank",

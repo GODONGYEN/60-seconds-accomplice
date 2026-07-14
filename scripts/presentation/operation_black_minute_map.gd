@@ -6,6 +6,9 @@ const FACILITY_TILESET: TileSet = preload("res://resources/tilesets/facility_til
 const ENVIRONMENT_ART_TILESET: TileSet = preload(
 	"res://resources/tilesets/facility_environment_art.tres"
 )
+const ENVIRONMENT_CATALOG: GDScript = preload(
+	"res://resources/environment/facility_environment_catalog.gd"
+)
 const SOURCE_ID: int = 0
 const TILE_SIZE: int = 32
 const MAP_SIZE := Vector2i(64, 42)
@@ -14,80 +17,6 @@ const WORLD_SIZE := Vector2i(2048, 1344)
 const COLLISION_WALL := Vector2i(0, 2)
 const COLLISION_WALL_CORNER := Vector2i(1, 2)
 const VAULT_RING_ORIGIN := Vector2i(57, 7)
-
-const ROOM_FAMILIES: Dictionary[StringName, StringName] = {
-	&"external_infiltration_yard": &"yard",
-	&"reception_checkpoint": &"corporate",
-	&"staff_office": &"corporate",
-	&"locker_room": &"corporate",
-	&"security_office": &"corporate",
-	&"guard_break_room": &"corporate",
-	&"cctv_control_room": &"systems",
-	&"electrical_room": &"systems",
-	&"server_room": &"systems",
-	&"research_laboratory": &"research",
-	&"laser_corridor": &"research",
-	&"vault_antechamber": &"vault",
-	&"chronos_vault": &"vault",
-	&"maintenance_passage": &"service",
-	&"extraction_route": &"service",
-}
-
-const ROOM_SEEDS: Dictionary[StringName, int] = {
-	&"external_infiltration_yard": 17,
-	&"reception_checkpoint": 29,
-	&"staff_office": 37,
-	&"locker_room": 43,
-	&"security_office": 53,
-	&"guard_break_room": 61,
-	&"cctv_control_room": 71,
-	&"electrical_room": 79,
-	&"server_room": 89,
-	&"research_laboratory": 97,
-	&"laser_corridor": 107,
-	&"vault_antechamber": 113,
-	&"chronos_vault": 127,
-	&"maintenance_passage": 137,
-	&"extraction_route": 149,
-}
-
-const FLOOR_TILES: Dictionary[StringName, Array] = {
-	&"yard": [Vector2i(0, 0), Vector2i(1, 0)],
-	&"corporate": [Vector2i(2, 0), Vector2i(3, 0)],
-	&"systems": [Vector2i(4, 0), Vector2i(5, 0)],
-	&"research": [Vector2i(6, 0), Vector2i(7, 0)],
-	&"vault": [Vector2i(8, 0), Vector2i(9, 0)],
-	&"service": [Vector2i(10, 0), Vector2i(11, 0)],
-	&"neutral": [Vector2i(12, 0), Vector2i(13, 0)],
-}
-
-const DETAIL_TILES: Dictionary[StringName, Array] = {
-	&"yard": [Vector2i(0, 1), Vector2i(1, 1)],
-	&"corporate": [Vector2i(2, 1), Vector2i(3, 1)],
-	&"systems": [Vector2i(4, 1), Vector2i(5, 1)],
-	&"research": [Vector2i(6, 1), Vector2i(7, 1)],
-	&"vault": [Vector2i(8, 1), Vector2i(9, 1)],
-	&"service": [Vector2i(10, 1), Vector2i(11, 1)],
-}
-
-const SEMANTIC_SOLIDS: Dictionary[StringName, StringName] = {
-	&"reception_desk": &"reception_desk",
-	&"locker_bank_north": &"locker_bank",
-	&"locker_bank_south": &"locker_bank",
-	&"staff_desk_west": &"office_desk",
-	&"staff_desk_east": &"office_desk",
-	&"guard_break_table": &"break_table",
-	&"cctv_monitor_bank": &"cctv_monitor_bank",
-	&"security_desk": &"security_desk",
-	&"electrical_cabinet_west": &"electrical_cabinet",
-	&"electrical_cabinet_east": &"electrical_cabinet",
-	&"server_rack_west": &"server_rack",
-	&"server_rack_east": &"server_rack",
-	&"research_bench_north": &"research_bench",
-	&"research_bench_south": &"research_bench",
-	&"maintenance_machine_west": &"maintenance_machine",
-	&"maintenance_machine_east": &"maintenance_machine",
-}
 
 @onready var floor: TileMapLayer = %Floor
 @onready var floor_details: TileMapLayer = %FloorDetails
@@ -166,7 +95,7 @@ func get_environment_art_tileset() -> TileSet:
 
 
 func get_room_material_family(room_id: StringName) -> StringName:
-	return ROOM_FAMILIES.get(room_id, &"neutral")
+	return ENVIRONMENT_CATALOG.ROOM_FAMILIES.get(room_id, &"neutral")
 
 
 func get_semantic_solid_cell_count() -> int:
@@ -269,13 +198,13 @@ func _place_room_floor_detail(cell: Vector2i) -> void:
 	if room_id == StringName():
 		return
 	var family := get_room_material_family(room_id)
-	if not DETAIL_TILES.has(family):
+	if not ENVIRONMENT_CATALOG.DETAIL_TILES.has(family):
 		return
-	var seed: int = ROOM_SEEDS.get(room_id, 0)
+	var seed: int = ENVIRONMENT_CATALOG.ROOM_SEEDS.get(room_id, 0)
 	var value := _stable_cell_hash(cell, seed)
 	if value % 17 != 0:
 		return
-	var variants: Array = DETAIL_TILES[family]
+	var variants: Array = ENVIRONMENT_CATALOG.DETAIL_TILES[family]
 	var variant_index := int(value / 17) % variants.size()
 	floor_details.set_cell(cell, SOURCE_ID, variants[variant_index])
 
@@ -283,8 +212,8 @@ func _place_room_floor_detail(cell: Vector2i) -> void:
 func _select_floor_tile(cell: Vector2i) -> Vector2i:
 	var room_id := get_room_at_cell(cell)
 	var family := get_room_material_family(room_id)
-	var variants: Array = FLOOR_TILES[family]
-	var seed: int = ROOM_SEEDS.get(room_id, 163)
+	var variants: Array = ENVIRONMENT_CATALOG.FLOOR_TILES[family]
+	var seed: int = ENVIRONMENT_CATALOG.ROOM_SEEDS.get(room_id, 163)
 	var value := _stable_cell_hash(cell, seed)
 	var variant_index := 1 if value % 11 == 0 else 0
 	return variants[variant_index]
@@ -297,7 +226,11 @@ func _place_signature_floor_details() -> void:
 			if not is_walkable_cell(cell):
 				push_warning("Chronos Vault signature art skipped non-walkable cell %s" % cell)
 				continue
-			floor_details.set_cell(cell, SOURCE_ID, Vector2i(local_x + local_y * 3, 8))
+			floor_details.set_cell(
+				cell,
+				SOURCE_ID,
+				ENVIRONMENT_CATALOG.VAULT_RING_TILES[Vector2i(local_x, local_y)]
+			)
 
 
 func _place_semantic_solids() -> void:
@@ -310,7 +243,9 @@ func _place_semantic_solids() -> void:
 			continue
 		var solid := solid_variant as Dictionary
 		var solid_id := StringName(str(solid.get("id", "")))
-		var motif: StringName = SEMANTIC_SOLIDS.get(solid_id, StringName())
+		var motif: StringName = ENVIRONMENT_CATALOG.SEMANTIC_SOLIDS.get(
+			solid_id, StringName()
+		)
 		var rect := _json_rect(solid.get("rect", []))
 		if motif == StringName():
 			push_warning("Operation environment has no semantic art for solid '%s'" % solid_id)
@@ -326,37 +261,35 @@ func _place_semantic_solids() -> void:
 
 
 func _semantic_tile_for(motif: StringName, local: Vector2i, size: Vector2i) -> Vector2i:
+	var tiles: Array = ENVIRONMENT_CATALOG.MOTIF_TILES.get(motif, [])
+	if tiles.is_empty():
+		return Vector2i(-1, -1)
 	match motif:
 		&"reception_desk":
-			return [Vector2i(0, 4), Vector2i(1, 4), Vector2i(2, 4)][clampi(local.x, 0, 2)]
+			return tiles[clampi(local.x, 0, 2)]
 		&"locker_bank":
 			if local.x == 0:
-				return Vector2i(3, 4)
+				return tiles[0]
 			if local.x == size.x - 1:
-				return Vector2i(5, 4)
-			return Vector2i(4, 4)
+				return tiles[2]
+			return tiles[1]
 		&"office_desk":
-			return Vector2i(6 + clampi(local.x, 0, 1), 4)
+			return tiles[clampi(local.x, 0, 1)]
 		&"break_table":
-			return Vector2i(8 + clampi(local.x, 0, 1), 4)
+			return tiles[clampi(local.x, 0, 1)]
 		&"cctv_monitor_bank":
-			return Vector2i(10 + clampi(local.x, 0, 1) + clampi(local.y, 0, 1) * 2, 4)
+			return tiles[clampi(local.x, 0, 1) + clampi(local.y, 0, 1) * 2]
 		&"security_desk":
-			return [Vector2i(14, 4), Vector2i(15, 4), Vector2i(0, 5), Vector2i(1, 5)][clampi(local.x, 0, 3)]
+			return tiles[clampi(local.x, 0, 3)]
 		&"electrical_cabinet":
-			return Vector2i(2 + _vertical_segment(local.y, size.y), 5)
+			return tiles[_vertical_segment(local.y, size.y)]
 		&"server_rack":
-			return Vector2i(5 + _vertical_segment(local.y, size.y), 5)
+			return tiles[_vertical_segment(local.y, size.y)]
 		&"research_bench":
-			return Vector2i(8 + clampi(local.x, 0, 2), 5)
+			return tiles[clampi(local.x, 0, 2)]
 		&"maintenance_machine":
 			var segment := _vertical_segment(local.y, size.y)
-			var lookup: Array[Vector2i] = [
-				Vector2i(11, 5), Vector2i(12, 5),
-				Vector2i(13, 5), Vector2i(14, 5),
-				Vector2i(15, 5), Vector2i(0, 6),
-			]
-			return lookup[segment * 2 + clampi(local.x, 0, 1)]
+			return tiles[segment * 2 + clampi(local.x, 0, 1)]
 	return Vector2i(-1, -1)
 
 
