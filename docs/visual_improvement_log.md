@@ -146,3 +146,37 @@ warnings/errors at both 1280×720 and 1024×768. The latter preserves the full
 capture modal and HUD inside the letterboxed frame. The final PCK is 846,980
 bytes: +33,224 bytes (+4.1%) over the preceding art build and +47,292 bytes
 (+5.9%) over the original environment baseline.
+
+## Visual Cycle 6
+
+**Area:** Perceptual room identity correction
+
+**Observed visual problem:** The prior two-cell marks satisfied the generated
+metadata checklist but remained too small and too similar at gameplay zoom.
+Room labels were disabled, so several spaces had neither a readable landmark nor
+a secondary confirmation cue.
+
+**Art hypothesis:** Replace every 64×32 mark with a 64×64 label-blind landmark,
+give each room a concrete functional silhouette, move Security's landmark away
+from its command desk, restore restrained room plaques, and slightly lift the
+ambient value without touching gameplay geometry.
+
+**Result:** Kept after native Godot clean-art and initial-gameplay capture review.
+The atlas now contains fifteen distinct 2×2 landmarks: fence/floodlight, HELIX
+scanner, workstations, open locker, situation map, CCTV wall, breakers, racks,
+specimen pod, break-room furniture, laser emitters, vault portal, containment
+ring, pipe manifold, and extraction runway. Labels are secondary; the landmark
+must still read when captures hide them.
+
+**Gameplay readability:** The visual TileSet still owns zero collision and zero
+occlusion layers. All 60 landmark cells are validated against blueprint solids,
+objects, and portals. The ambient lift improves floor/material separation while
+leaving actors and interaction colors brighter than decoration.
+
+**Validation:** The authored pipeline registers 212 unique cells in a 512×512
+RGBA atlas. Asset regeneration/validation, Godot import/boot, 847 assertions,
+and the 1280×720 three-state 15-room capture matrix pass. The single-threaded
+Web export was served over local HTTP and reviewed at 1280×720 and 1024×768 with
+zero browser warnings/errors. Every room therefore passes the explicit ten-point
+gate in `visual_quality_scorecard.md`; future visual changes invalidate the
+affected score until evidence is regenerated.

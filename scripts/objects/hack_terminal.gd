@@ -5,6 +5,49 @@ signal hack_started(action_id: StringName, actor: Node)
 signal hack_progressed(action_id: StringName, normalized_progress: float)
 signal hack_completed(action_id: StringName, actor: Node)
 
+const ACTION_PRESENTATION: Dictionary = {
+	&"disable_cctv": {
+		&"label": "CCTV NETWORK",
+		&"code": "CAM",
+		&"color": Color("55e5ee"),
+	},
+	&"disable_lasers": {
+		&"label": "LASER GRID",
+		&"code": "LZR",
+		&"color": Color("ff9f43"),
+	},
+	&"server_override": {
+		&"label": "VAULT OVERRIDE",
+		&"code": "SVR",
+		&"color": Color("b98cff"),
+	},
+	&"biometric_authorization": {
+		&"label": "BIOMETRIC",
+		&"code": "BIO",
+		&"color": Color("d98cff"),
+	},
+	&"terminal_staff_intel_01": {
+		&"label": "LOCKER INTEL",
+		&"code": "DOC",
+		&"color": Color("58d6ee"),
+	},
+	&"terminal_guard_distraction_01": {
+		&"label": "DECOY BEACON",
+		&"code": "DEC",
+		&"color": Color("ffb34d"),
+	},
+	&"terminal_security_map_01": {
+		&"label": "FACILITY MAP",
+		&"code": "MAP",
+		&"color": Color("61e3a5"),
+	},
+}
+const DEFAULT_PRESENTATION: Dictionary = {
+	&"label": "SECURITY SYSTEM",
+	&"code": "SYS",
+	&"color": Color("ffb34d"),
+}
+
 @export var action_id: StringName = &"disable_cctv"
 @export_range(0.1, 10.0, 0.1) var hack_duration_seconds: float = 3.0
 @export var echo_replay_allowed: bool = true
@@ -76,16 +119,35 @@ func complete_hack_immediately() -> bool:
 
 
 func get_interaction_prompt(actor: Node) -> String:
+	var action_label := get_action_label()
 	if is_completed:
-		return "%s COMPLETE" % String(action_id).to_upper().replace("_", " ")
+		return "%s  COMPLETE" % action_label
 	if _hacking_actor != null:
-		return "HACKING  %d%%" % roundi(100.0 * hack_elapsed / hack_duration_seconds)
+		return "%s  %d%%" % [
+			action_label,
+			roundi(100.0 * hack_elapsed / hack_duration_seconds),
+		]
 	if actor != null and actor.is_in_group(&"player_actor") and not _has_required_access():
-		return "%s ACCESS REQUIRED" % AccessControlManager.ACCESS_NAMES.get(
-			required_access,
-			&"SECURITY"
-		)
-	return "E  HACK  %.1fs" % hack_duration_seconds
+		return "%s ACCESS REQUIRED  //  %s" % [
+			AccessControlManager.ACCESS_NAMES.get(required_access, &"SECURITY"),
+			action_label,
+		]
+	return "E  HACK %s  %.1fs" % [action_label, hack_duration_seconds]
+
+
+func get_action_label() -> String:
+	var presentation := _get_action_presentation()
+	if presentation == DEFAULT_PRESENTATION and action_id != StringName():
+		return String(action_id).to_upper().replace("_", " ")
+	return String(presentation.get(&"label", "SECURITY SYSTEM"))
+
+
+func get_action_code() -> String:
+	return String(_get_action_presentation().get(&"code", "SYS"))
+
+
+func get_action_color() -> Color:
+	return _get_action_presentation().get(&"color", Color("ffb34d"))
 
 
 func reset_mission() -> void:
@@ -105,11 +167,16 @@ func capture_recall_state() -> Dictionary:
 func restore_recall_state(snapshot: Dictionary) -> bool:
 	_cancel_hack()
 	is_completed = bool(snapshot.get("is_completed", false))
-	hack_elapsed = clampf(
+	var snapshot_elapsed := clampf(
 		float(snapshot.get("hack_elapsed", 0.0)),
 		0.0,
 		hack_duration_seconds
 	)
+	# Hack ownership is a live Node reference and is intentionally absent from a
+	# Recall snapshot. Treat an incomplete hack as an uncommitted transaction and
+	# restore it to an interactable 0% boundary instead of leaving inert progress
+	# that neither the Player nor an Echo can own.
+	hack_elapsed = snapshot_elapsed if is_completed else 0.0
 	queue_redraw()
 	return true
 
@@ -122,6 +189,10 @@ func _has_required_access() -> bool:
 	if _access_manager == null:
 		return required_access == AccessControlManager.AccessLevel.PUBLIC
 	return _access_manager.can_access(required_access)
+
+
+func _get_action_presentation() -> Dictionary:
+	return ACTION_PRESENTATION.get(action_id, DEFAULT_PRESENTATION) as Dictionary
 
 
 func _complete_hack() -> void:
@@ -145,9 +216,68 @@ func _cancel_hack() -> void:
 
 
 func _draw() -> void:
-	var accent := Color("4ce9dc") if is_completed else Color("ffb34d")
+	var action_color := get_action_color()
+	var accent := Color("4ce9a2") if is_completed else action_color
+	draw_rect(Rect2(-21.0, -25.0, 42.0, 50.0), Color("071420"), true)
 	draw_rect(Rect2(-20.0, -24.0, 40.0, 48.0), Color("13253a"), true)
-	draw_rect(Rect2(-15.0, -18.0, 30.0, 22.0), Color(accent, 0.22), true)
+	draw_rect(Rect2(-16.0, -19.0, 32.0, 24.0), Color(action_color, 0.18), true)
+	draw_rect(Rect2(-16.0, -19.0, 32.0, 24.0), action_color, false, 1.5)
+	_draw_action_glyph(action_id, action_color)
+	draw_string(
+		ThemeDB.fallback_font,
+		Vector2(-15.0, 20.0),
+		get_action_code(),
+		HORIZONTAL_ALIGNMENT_CENTER,
+		30.0,
+		9,
+		Color(action_color, 0.92)
+	)
 	var progress := 1.0 if is_completed else hack_elapsed / hack_duration_seconds
 	draw_rect(Rect2(-14.0, 11.0, 28.0, 5.0), Color("07131f"), true)
 	draw_rect(Rect2(-14.0, 11.0, 28.0 * progress, 5.0), accent, true)
+	if is_completed:
+		draw_line(Vector2(8.0, -10.0), Vector2(11.0, -6.0), accent, 2.0)
+		draw_line(Vector2(11.0, -6.0), Vector2(16.0, -14.0), accent, 2.0)
+
+
+func _draw_action_glyph(kind: StringName, color: Color) -> void:
+	match kind:
+		&"disable_cctv":
+			draw_rect(Rect2(-10.0, -15.0, 20.0, 12.0), color, false, 2.0)
+			draw_circle(Vector2(0.0, -9.0), 3.0, color)
+			draw_line(Vector2(-4.0, 0.0), Vector2(4.0, 0.0), color, 2.0)
+		&"disable_lasers":
+			draw_polyline(
+				PackedVector2Array([
+					Vector2(-9.0, -5.0), Vector2(-3.0, -15.0),
+					Vector2(0.0, -9.0), Vector2(7.0, -18.0),
+					Vector2(3.0, -6.0), Vector2(10.0, -6.0),
+				]),
+				color,
+				2.5
+			)
+		&"server_override":
+			for y_offset: float in [-15.0, -10.0, -5.0]:
+				draw_rect(Rect2(-10.0, y_offset, 20.0, 3.0), color, false, 1.5)
+				draw_circle(Vector2(7.0, y_offset + 1.5), 1.0, color)
+		&"biometric_authorization":
+			draw_arc(Vector2(0.0, -10.0), 8.0, -2.8, -0.3, 12, color, 2.0)
+			draw_arc(Vector2(0.0, -10.0), 4.0, -2.8, -0.3, 10, color, 1.5)
+			draw_line(Vector2(-6.0, -3.0), Vector2(6.0, -3.0), color, 1.5)
+		&"terminal_staff_intel_01":
+			draw_rect(Rect2(-8.0, -17.0, 16.0, 15.0), color, false, 1.5)
+			draw_line(Vector2(-5.0, -12.0), Vector2(5.0, -12.0), color, 1.5)
+			draw_line(Vector2(-5.0, -8.0), Vector2(3.0, -8.0), color, 1.5)
+		&"terminal_guard_distraction_01":
+			draw_circle(Vector2(0.0, -8.0), 2.5, color)
+			draw_arc(Vector2(0.0, -8.0), 7.0, -1.0, 1.0, 10, color, 1.5)
+			draw_arc(Vector2(0.0, -8.0), 11.0, -0.8, 0.8, 10, color, 1.5)
+		&"terminal_security_map_01":
+			draw_rect(Rect2(-10.0, -17.0, 20.0, 15.0), color, false, 1.5)
+			draw_line(Vector2(-3.0, -17.0), Vector2(-3.0, -2.0), color, 1.0)
+			draw_line(Vector2(4.0, -17.0), Vector2(4.0, -2.0), color, 1.0)
+			draw_line(Vector2(-10.0, -10.0), Vector2(10.0, -10.0), color, 1.0)
+		_:
+			draw_rect(Rect2(-9.0, -16.0, 18.0, 13.0), color, false, 1.5)
+			draw_line(Vector2(-5.0, -11.0), Vector2(5.0, -11.0), color, 1.5)
+			draw_line(Vector2(-5.0, -7.0), Vector2(2.0, -7.0), color, 1.5)

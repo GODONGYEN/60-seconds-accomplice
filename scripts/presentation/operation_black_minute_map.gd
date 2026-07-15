@@ -370,17 +370,42 @@ func _build_room_labels() -> void:
 	var rooms_variant: Variant = _blueprint.get("rooms", {})
 	if not rooms_variant is Dictionary:
 		return
+	var plaque_material := CanvasItemMaterial.new()
+	plaque_material.light_mode = CanvasItemMaterial.LIGHT_MODE_LIGHT_ONLY
 	for room_key: Variant in (rooms_variant as Dictionary).keys():
 		var room_data := (rooms_variant as Dictionary)[room_key] as Dictionary
 		var rect := _json_rect(room_data.get("rect", []))
+		var plaque := PanelContainer.new()
+		plaque.name = "RoomPlaque_%s" % String(room_key)
+		plaque.material = plaque_material
+		plaque.position = Vector2(rect.position * TILE_SIZE) + Vector2(
+			7.0,
+			float(rect.size.y * TILE_SIZE - 24)
+		)
+		plaque.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		var plaque_style := StyleBoxFlat.new()
+		plaque_style.bg_color = Color(0.015, 0.045, 0.07, 0.82)
+		plaque_style.border_color = Color(0.16, 0.58, 0.67, 0.72)
+		plaque_style.set_border_width_all(1)
+		plaque_style.corner_radius_top_left = 2
+		plaque_style.corner_radius_top_right = 2
+		plaque_style.corner_radius_bottom_left = 2
+		plaque_style.corner_radius_bottom_right = 2
+		plaque_style.content_margin_left = 5.0
+		plaque_style.content_margin_right = 5.0
+		plaque_style.content_margin_top = 2.0
+		plaque_style.content_margin_bottom = 2.0
+		plaque.add_theme_stylebox_override("panel", plaque_style)
 		var label := Label.new()
 		label.text = String(room_data.get("display_name", str(room_key))).to_upper()
-		label.position = Vector2(rect.position * TILE_SIZE) + Vector2(10.0, 30.0)
-		label.add_theme_font_size_override("font_size", 11)
-		label.add_theme_color_override("font_color", Color(0.42, 0.75, 0.82, 0.68))
-		label.add_theme_color_override("font_outline_color", Color(0.01, 0.03, 0.05, 0.9))
-		label.add_theme_constant_override("outline_size", 3)
-		room_labels.add_child(label)
+		label.use_parent_material = true
+		label.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		label.add_theme_font_size_override("font_size", 10)
+		label.add_theme_color_override("font_color", Color(0.64, 0.92, 0.96, 0.92))
+		label.add_theme_color_override("font_outline_color", Color(0.005, 0.02, 0.035, 1.0))
+		label.add_theme_constant_override("outline_size", 2)
+		plaque.add_child(label)
+		room_labels.add_child(plaque)
 
 
 func _build_observation_windows() -> void:

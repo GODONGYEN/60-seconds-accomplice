@@ -21,7 +21,7 @@ process_mode = 3
 script = ExtResource("1_level")
 
 [node name="CanvasModulate" type="CanvasModulate" parent="."]
-color = Color(0.48, 0.58, 0.68, 1)
+color = Color(0.58, 0.66, 0.76, 1)
 
 [node name="OperationMap" type="Node2D" parent="."]
 unique_name_in_owner = true
@@ -68,7 +68,6 @@ z_index = 2
 
 [node name="RoomLabels" type="Node2D" parent="OperationMap"]
 unique_name_in_owner = true
-visible = false
 z_index = 1
 
 [node name="ObservationWindows" type="Node2D" parent="OperationMap"]

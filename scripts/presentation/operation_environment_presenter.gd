@@ -181,12 +181,14 @@ func _place_room_heroes() -> void:
 		var profile: Dictionary = ENVIRONMENT_CATALOG.ROOM_ART.get(room_id, {})
 		var local_origin: Vector2i = profile.get(&"hero_origin", Vector2i(-1, -1))
 		var tiles: Array = ENVIRONMENT_CATALOG.ROOM_HERO_TILES.get(room_id, [])
-		if local_origin == Vector2i(-1, -1) or tiles.size() != 2:
+		if local_origin == Vector2i(-1, -1) or tiles.size() != 4:
 			push_warning("Operation environment skipped malformed hero profile '%s'" % room_id)
 			continue
-		for segment: int in range(2):
+		for segment: int in range(4):
 			hero_details.set_cell(
-				_room_rects[room_id].position + local_origin + Vector2i(segment, 0),
+				_room_rects[room_id].position
+				+ local_origin
+				+ Vector2i(segment % 2, segment >> 1),
 				SOURCE_ID,
 				tiles[segment]
 			)

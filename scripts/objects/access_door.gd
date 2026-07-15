@@ -2,7 +2,11 @@ class_name AccessDoor
 extends Interactable
 
 signal open_state_changed(is_open: bool)
-signal access_denied(required_level: AccessControlManager.AccessLevel)
+signal access_denied(
+	door_id: StringName,
+	required_level: AccessControlManager.AccessLevel,
+	reason: String
+)
 
 const CLOSED_COLOR := Color("dc5268")
 const OPEN_COLOR := Color("36e2c4")
@@ -20,18 +24,22 @@ const ACCESS_COLORS: Dictionary = {
 @export var required_access: AccessControlManager.AccessLevel = AccessControlManager.AccessLevel.PUBLIC
 @export var requires_vault_authorization: bool = false
 @export var starts_open: bool = false
+@export var starts_discovered: bool = true
 @export_range(32.0, 192.0, 32.0) var span_length_pixels: float = 96.0
 
 @onready var interaction_shape: CollisionShape2D = %InteractionShape
+@onready var blocker_body: StaticBody2D = $BlockerBody
 @onready var blocker: CollisionShape2D = %Blocker
 @onready var light_occluder: LightOccluder2D = %LightOccluder2D
 
 var is_open: bool = false
 var is_unlocked: bool = false
+var is_discovered: bool = true
 
 var _access_manager: AccessControlManager = null
 var _authorization_check: Callable
 var _authorization_denied_message: String = "VAULT AUTHORIZATION REQUIRED"
+var _authorization_denied_message_provider: Callable
 
 
 func _ready() -> void:
@@ -39,31 +47,35 @@ func _ready() -> void:
 	add_to_group(&"mission_resettable")
 	add_to_group(&"recall_rewindable")
 	_configure_geometry()
+	set_discovered(starts_discovered)
 	_apply_state(starts_open, starts_open, true)
 
 
 func configure(
 	access_manager: AccessControlManager,
 	authorization_check: Callable = Callable(),
-	authorization_denied_message: String = "VAULT AUTHORIZATION REQUIRED"
+	authorization_denied_message: String = "VAULT AUTHORIZATION REQUIRED",
+	authorization_denied_message_provider: Callable = Callable()
 ) -> void:
 	_access_manager = access_manager
 	_authorization_check = authorization_check
 	_authorization_denied_message = authorization_denied_message
+	_authorization_denied_message_provider = authorization_denied_message_provider
 
 
 func can_interact(actor: Node) -> bool:
-	if actor == null or is_open:
+	if actor == null or is_open or not is_discovered:
 		return false
 	if actor.is_in_group(&"ghost_actor"):
 		return is_unlocked
-	if not actor.is_in_group(&"player_actor"):
-		return false
-	return _is_authorized(false)
+	# A live Player must be able to attempt a locked door. Authorization is
+	# resolved by interact() so denial cues are not silently skipped by the
+	# Player's normal can_interact() preflight.
+	return actor.is_in_group(&"player_actor")
 
 
 func interact(actor: Node) -> bool:
-	if actor == null or is_open:
+	if actor == null or is_open or not is_discovered:
 		return false
 	if actor.is_in_group(&"ghost_actor"):
 		if not is_unlocked:
@@ -78,6 +90,11 @@ func interact(actor: Node) -> bool:
 
 func replay_event(event_type: StringName, actor: Node, payload: Dictionary) -> bool:
 	if event_type != &"interact" or actor == null or not actor.is_in_group(&"ghost_actor"):
+		return false
+	# Discovery belongs to the restored branch. An abandoned interaction may only
+	# replay after that branch has independently revealed the door; otherwise a
+	# Recall boundary inside the revealing terminal hack could open hidden geometry.
+	if not is_discovered:
 		return false
 	if not bool(payload.get("authorized", false)):
 		return false
@@ -98,12 +115,7 @@ func get_interaction_prompt(actor: Node) -> String:
 	if is_open:
 		return "DOOR OPEN"
 	if actor != null and actor.is_in_group(&"player_actor") and not _is_authorized(false):
-		if _requires_extra_authorization() and not _has_extra_authorization():
-			return _authorization_denied_message
-		return "%s ACCESS REQUIRED" % AccessControlManager.ACCESS_NAMES.get(
-			required_access,
-			&"SECURITY"
-		)
+		return _get_denial_reason()
 	return "E  OPEN SECURITY DOOR"
 
 
@@ -144,19 +156,42 @@ func get_occluder_size() -> Vector2:
 	return bounds.size
 
 
+func get_visibility_exclude_rids() -> Array[RID]:
+	# The closed blocker must occlude the room beyond the door, but not the door's
+	# own interaction surface when the Player stands on its near side.
+	return [blocker_body.get_rid()] if blocker_body != null else []
+
+
 func unlock_and_open() -> void:
 	_apply_state(true, true)
 
 
+func set_discovered(discovered: bool) -> void:
+	is_discovered = discovered
+	# Keep the CanvasItem alive so the child LightOccluder2D continues to block
+	# Player light while an undiscovered closed door hides only its own drawing.
+	var visual_modulate := self_modulate
+	visual_modulate.a = 1.0 if discovered else 0.0
+	self_modulate = visual_modulate
+	monitorable = discovered
+	queue_redraw()
+
+
 func reset_mission() -> void:
+	set_discovered(starts_discovered)
 	_apply_state(starts_open, starts_open, true)
 
 
 func capture_recall_state() -> Dictionary:
-	return {"is_open": is_open, "is_unlocked": is_unlocked}
+	return {
+		"is_open": is_open,
+		"is_unlocked": is_unlocked,
+		"is_discovered": is_discovered,
+	}
 
 
 func restore_recall_state(snapshot: Dictionary) -> bool:
+	set_discovered(bool(snapshot.get("is_discovered", starts_discovered)))
 	_apply_state(
 		bool(snapshot.get("is_open", false)),
 		bool(snapshot.get("is_unlocked", false)),
@@ -180,9 +215,9 @@ func _is_authorized(report_denial: bool) -> bool:
 	if access_granted and extra_authorization_granted:
 		return true
 	if report_denial:
-		if _access_manager != null:
-			_access_manager.authorize(object_id, required_access)
-		access_denied.emit(required_access)
+		# The door owns the complete reason: access tier plus any live world
+		# condition. Emitting one reason-bearing signal avoids competing HUD paths.
+		access_denied.emit(object_id, required_access, _get_denial_reason())
 	return false
 
 
@@ -192,6 +227,23 @@ func _requires_extra_authorization() -> bool:
 
 func _has_extra_authorization() -> bool:
 	return _authorization_check.is_valid() and bool(_authorization_check.call())
+
+
+func _get_authorization_denied_message() -> String:
+	if _authorization_denied_message_provider.is_valid():
+		var provided: Variant = _authorization_denied_message_provider.call()
+		if provided is String and not (provided as String).is_empty():
+			return provided as String
+	return _authorization_denied_message
+
+
+func _get_denial_reason() -> String:
+	if _requires_extra_authorization() and not _has_extra_authorization():
+		return _get_authorization_denied_message()
+	return "%s CARD REQUIRED" % AccessControlManager.ACCESS_NAMES.get(
+		required_access,
+		&"SECURITY"
+	)
 
 
 func _apply_state(open_value: bool, unlocked_value: bool, force: bool = false) -> void:

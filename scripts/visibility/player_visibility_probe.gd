@@ -58,6 +58,12 @@ func is_actor_visible(actor: Node2D) -> bool:
 	var collision_target := actor as CollisionObject2D
 	if collision_target != null:
 		target_excludes.append(collision_target.get_rid())
+	if actor.has_method(&"get_visibility_exclude_rids"):
+		var additional_variant: Variant = actor.call(&"get_visibility_exclude_rids")
+		if additional_variant is Array:
+			for rid_variant: Variant in additional_variant as Array:
+				if typeof(rid_variant) == TYPE_RID:
+					target_excludes.append(rid_variant as RID)
 	return _is_world_point_visible_with_excludes(sample_position, target_excludes)
 
 

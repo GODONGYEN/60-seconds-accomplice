@@ -3,6 +3,7 @@ extends CharacterBody2D
 
 const DETECTION_ID: StringName = &"player_live"
 const DETECTION_PRIORITY: int = 0
+const FACILITY_CAMERA_SAFE_TOP_OFFSET := Vector2(0.0, -28.0)
 
 signal restart_requested
 signal chrono_recall_requested
@@ -149,6 +150,10 @@ func configure_facility_view(
 	player_camera.limit_right = roundi(camera_bounds.end.x)
 	player_camera.limit_bottom = roundi(camera_bounds.end.y)
 	player_camera.zoom = camera_zoom
+	# The operation HUD occupies the top of the viewport. Biasing the world view
+	# upward keeps room landmarks and threats readable while the Player remains
+	# below the HUD rather than directly beneath it.
+	player_camera.offset = FACILITY_CAMERA_SAFE_TOP_OFFSET
 	player_camera.enabled = true
 
 
@@ -162,6 +167,7 @@ func disable_facility_view() -> void:
 	_facility_view_configured = false
 	visibility_probe.set_query_enabled(false)
 	vision_light.enabled = false
+	player_camera.offset = Vector2.ZERO
 	player_camera.enabled = false
 
 
@@ -257,7 +263,7 @@ func _find_nearest_interactable() -> Area2D:
 		if _facility_view_configured:
 			if not visibility_probe.is_query_enabled():
 				continue
-			if not visibility_probe.is_world_point_visible(candidate.global_position):
+			if not visibility_probe.is_actor_visible(candidate):
 				continue
 		var distance_squared := global_position.distance_squared_to(candidate.global_position)
 		if distance_squared < nearest_distance_squared:

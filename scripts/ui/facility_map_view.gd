@@ -3,6 +3,63 @@ extends Control
 
 const TILE_SIZE: float = 32.0
 const MAP_SIZE := Vector2(64.0, 42.0)
+const OBJECTIVE_TARGETS: Dictionary = {
+	&"infiltrate_facility": {
+		&"room_id": &"reception_checkpoint",
+		&"label": "TARGET // ENTRY",
+		&"color": Color("55e5ee"),
+	},
+	&"acquire_level_1_access": {
+		&"room_id": &"locker_room",
+		&"label": "TARGET // L1 CARD",
+		&"color": Color("55e5ee"),
+	},
+	&"disable_cctv_network": {
+		&"room_id": &"cctv_control_room",
+		&"label": "OPTION // CCTV",
+		&"color": Color("65cfe9"),
+	},
+	&"disable_laser_network": {
+		&"room_id": &"electrical_room",
+		&"label": "TARGET // LASERS",
+		&"color": Color("ffae45"),
+	},
+	&"acquire_level_2_access": {
+		&"room_id": &"security_office",
+		&"label": "TARGET // L2 CARD",
+		&"color": Color("ffae45"),
+	},
+	&"biometric_sample_acquired": {
+		&"room_id": &"research_laboratory",
+		&"label": "OPTION // BIOMETRIC",
+		&"color": Color("c889ff"),
+	},
+	&"server_override_completed": {
+		&"room_id": &"server_room",
+		&"label": "OPTION // OVERRIDE",
+		&"color": Color("c889ff"),
+	},
+	&"vault_authorized": {
+		&"room_id": &"vault_antechamber",
+		&"label": "TARGET // VAULT AUTH",
+		&"color": Color("c889ff"),
+	},
+	&"enter_chronos_vault": {
+		&"room_id": &"chronos_vault",
+		&"label": "TARGET // VAULT",
+		&"color": Color("c889ff"),
+	},
+	&"steal_chronos_core": {
+		&"room_id": &"chronos_vault",
+		&"label": "TARGET // CORE",
+		&"color": Color("d59aff"),
+	},
+	&"return_to_extraction": {
+		&"room_id": &"external_infiltration_yard",
+		&"label": "TARGET // EXTRACT",
+		&"color": Color("55e5a5"),
+	},
+}
 
 var _blueprint: Dictionary = {}
 var _player_world_position: Vector2 = Vector2(-1.0, -1.0)
@@ -10,6 +67,7 @@ var _cctv_online: bool = true
 var _laser_online: bool = true
 var _core_carried: bool = false
 var _maintenance_discovered: bool = false
+var _active_objective_ids: Array[StringName] = []
 
 
 func set_blueprint(blueprint: Dictionary) -> void:
@@ -45,6 +103,28 @@ func set_mission_status(core_carried: bool, maintenance_discovered: bool = false
 	queue_redraw()
 
 
+func set_active_objectives(objective_ids: Array[StringName]) -> void:
+	_active_objective_ids.clear()
+	for objective_id: StringName in objective_ids:
+		if OBJECTIVE_TARGETS.has(objective_id) and objective_id not in _active_objective_ids:
+			_active_objective_ids.append(objective_id)
+	queue_redraw()
+
+
+func get_target_room_ids() -> Array[StringName]:
+	var target_room_ids: Array[StringName] = []
+	for objective_id: StringName in _active_objective_ids:
+		var target := OBJECTIVE_TARGETS.get(objective_id, {}) as Dictionary
+		var room_id := StringName(target.get(&"room_id", StringName()))
+		if room_id != StringName() and room_id not in target_room_ids:
+			target_room_ids.append(room_id)
+	return target_room_ids
+
+
+func is_maintenance_discovered() -> bool:
+	return _maintenance_discovered
+
+
 func _draw() -> void:
 	var drawing_rect := Rect2(Vector2.ZERO, size)
 	draw_rect(drawing_rect, Color(0.008, 0.022, 0.038, 0.98), true)
@@ -56,6 +136,7 @@ func _draw() -> void:
 	var origin := (size - map_pixel_size) * 0.5
 	_draw_grid(origin, scale_factor, map_pixel_size)
 	_draw_rooms(origin, scale_factor)
+	_draw_target_rooms(origin, scale_factor)
 	_draw_doors(origin, scale_factor)
 	_draw_security(origin, scale_factor)
 	_draw_mission_markers(origin, scale_factor)
@@ -116,11 +197,73 @@ func _draw_doors(origin: Vector2, scale_factor: float) -> void:
 		if not portal_variant is Dictionary:
 			continue
 		var portal := portal_variant as Dictionary
+		if bool(portal.get("initially_hidden", false)) and not _maintenance_discovered:
+			continue
 		var anchor := _json_vector(portal.get("anchor", []))
 		var point := origin + (Vector2(anchor) + Vector2.ONE * 0.5) * scale_factor
 		var access := String(portal.get("required_access", "PUBLIC"))
 		var color := _access_color(access)
 		draw_rect(Rect2(point - Vector2.ONE * 3.0, Vector2.ONE * 6.0), color, true)
+
+
+func _draw_target_rooms(origin: Vector2, scale_factor: float) -> void:
+	var rooms_variant: Variant = _blueprint.get("rooms", {})
+	if not rooms_variant is Dictionary:
+		return
+	var rooms := rooms_variant as Dictionary
+	for objective_id: StringName in _active_objective_ids:
+		var target := OBJECTIVE_TARGETS.get(objective_id, {}) as Dictionary
+		var room_id := StringName(target.get(&"room_id", StringName()))
+		if room_id == StringName() or not rooms.has(String(room_id)):
+			continue
+		if room_id == &"maintenance_passage" and not _maintenance_discovered:
+			continue
+		var room_data := rooms[String(room_id)] as Dictionary
+		var cell_rect := _json_rect(room_data.get("rect", []))
+		var room_rect := Rect2(
+			origin + Vector2(cell_rect.position) * scale_factor,
+			Vector2(cell_rect.size) * scale_factor
+		).grow(2.0)
+		var color: Color = target.get(&"color", Color("f8e36b"))
+		var label := String(target.get(&"label", "TARGET"))
+		draw_rect(room_rect, Color(color, 0.1), true)
+		draw_rect(room_rect, color, false, 2.5)
+		_draw_target_corners(room_rect, color)
+		var center := room_rect.get_center()
+		draw_line(center + Vector2(-5.0, 0.0), center + Vector2(5.0, 0.0), color, 1.5)
+		draw_line(center + Vector2(0.0, -5.0), center + Vector2(0.0, 5.0), color, 1.5)
+		if scale_factor >= 7.0:
+			var label_width := maxf(82.0, minf(138.0, room_rect.size.x + 32.0))
+			var label_rect := Rect2(
+				Vector2(room_rect.position.x, room_rect.position.y - 17.0),
+				Vector2(label_width, 16.0)
+			)
+			draw_rect(label_rect, Color("07131f"), true)
+			draw_rect(label_rect, color, false, 1.0)
+			draw_string(
+				ThemeDB.fallback_font,
+				label_rect.position + Vector2(4.0, 12.0),
+				label,
+				HORIZONTAL_ALIGNMENT_LEFT,
+				label_rect.size.x - 8.0,
+				9,
+				Color("f2ffff")
+			)
+
+
+func _draw_target_corners(room_rect: Rect2, color: Color) -> void:
+	const CORNER_LENGTH: float = 9.0
+	var left := room_rect.position.x
+	var top := room_rect.position.y
+	var right := room_rect.end.x
+	var bottom := room_rect.end.y
+	for segment: PackedVector2Array in [
+		PackedVector2Array([Vector2(left, top + CORNER_LENGTH), Vector2(left, top), Vector2(left + CORNER_LENGTH, top)]),
+		PackedVector2Array([Vector2(right - CORNER_LENGTH, top), Vector2(right, top), Vector2(right, top + CORNER_LENGTH)]),
+		PackedVector2Array([Vector2(left, bottom - CORNER_LENGTH), Vector2(left, bottom), Vector2(left + CORNER_LENGTH, bottom)]),
+		PackedVector2Array([Vector2(right - CORNER_LENGTH, bottom), Vector2(right, bottom), Vector2(right, bottom - CORNER_LENGTH)]),
+	]:
+		draw_polyline(segment, color, 3.5)
 
 
 func _draw_security(origin: Vector2, scale_factor: float) -> void:

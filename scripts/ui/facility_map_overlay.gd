@@ -51,5 +51,13 @@ func set_mission_status(core_carried: bool, maintenance_discovered: bool = false
 	map_view.set_mission_status(core_carried, maintenance_discovered)
 
 
-func set_objectives(lines: PackedStringArray) -> void:
-	objective_label.text = "CURRENT OBJECTIVES\n• " + "\n• ".join(lines)
+func set_objectives(
+	lines: PackedStringArray,
+	objective_ids: Array[StringName] = []
+) -> void:
+	objective_label.text = (
+		"CURRENT OBJECTIVES\n• " + "\n• ".join(lines)
+		if not lines.is_empty()
+		else "CURRENT OBJECTIVES\n• Awaiting mission data"
+	)
+	map_view.set_active_objectives(objective_ids)

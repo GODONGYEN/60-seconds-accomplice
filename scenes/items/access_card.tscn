@@ -6,7 +6,7 @@
 size = Vector2(38, 24)
 
 [node name="AccessCard" type="Area2D"]
-z_index = 3
+z_index = 5
 collision_layer = 8
 collision_mask = 0
 monitoring = false

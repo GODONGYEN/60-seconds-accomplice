@@ -33,8 +33,10 @@ func run(tree: SceneTree, expect: Callable) -> void:
 	await _tree.process_frame
 	await _test_runtime_contract(operation)
 	await _test_modal_pause_freeze(operation)
+	await _test_locked_authorization_ledger(operation)
 	await _test_no_recall_solution(operation)
 	await _test_recall_and_echo(operation)
+	await _test_mid_hack_recall_boundary(operation)
 	operation.queue_free()
 	await _tree.process_frame
 	await _tree.physics_frame
@@ -192,6 +194,39 @@ func _test_runtime_contract(operation: OperationBlackMinuteLevel) -> void:
 		&"extraction_yard_01",
 	]:
 		_check(registry.has_object(required_id), "runtime registry contains '%s'" % required_id)
+	var level_one_card := registry.get_object(&"keycard_level_1_01") as AccessCard
+	var maintenance_door := registry.get_object(&"door_maintenance_l2_01") as AccessDoor
+	var map_overlay: FacilityMapOverlay = operation.get_node("FacilityMapOverlay")
+	var map_view: FacilityMapView = map_overlay.map_view
+	var player_camera := operation.get_player().get_node("PlayerCamera") as Camera2D
+	_check(
+		player_camera != null and player_camera.offset.y < 0.0,
+		"facility camera reserves a safe top area so the HUD does not cover room landmarks"
+	)
+	_check(
+		level_one_card != null
+		and level_one_card.visible
+		and level_one_card.monitorable
+		and level_one_card.get_access_badge_text() == "L1"
+		and level_one_card.get_beacon_extent().size.y >= 60.0
+		and level_one_card.z_index > operation.get_player().z_index,
+		"Locker Room card exposes a Player-overlap-safe L1 badge and elevated pickup beacon"
+	)
+	_check(
+		map_view.get_target_room_ids() == [&"reception_checkpoint"],
+		"tactical map begins by highlighting the current entry objective room"
+	)
+	_check(
+		maintenance_door != null
+		and not maintenance_door.is_discovered
+		and maintenance_door.visible
+		and is_zero_approx(maintenance_door.self_modulate.a)
+		and not maintenance_door.monitorable
+		and not maintenance_door.blocker.disabled
+		and maintenance_door.light_occluder.visible
+		and not map_view.is_maintenance_discovered(),
+		"maintenance door hides only its presentation while its blocker and light occluder remain active"
+	)
 	var recall: ChronoRecallManager = operation.get_node("Systems/ChronoRecallManager")
 	_check(
 		recall.remaining_charges == 3
@@ -251,9 +286,14 @@ func _test_environment_presentation(operation_map: OperationBlackMinuteMap) -> v
 	_check(
 		presenter != null
 		and presenter.get_room_profile_count() == 15
-		and presenter.get_room_hero_cell_count() == 30
+		and presenter.get_room_hero_cell_count() == 60
 		and presenter.get_active_animation_count() == 15,
-		"one pausable presenter supplies a two-tile hero, practical light, and deterministic motion to all 15 rooms"
+		"one pausable presenter supplies a 2x2 landmark, practical light, and deterministic motion to all 15 rooms"
+	)
+	_check(
+		operation_map.room_labels.visible
+		and operation_map.room_labels.get_child_count() == 15,
+		"all 15 rooms expose restrained diegetic plaques as a secondary navigation cue"
 	)
 	var room_assets_match_profiles := true
 	presenter.set_presentation_time_for_capture(0.0)
@@ -263,14 +303,15 @@ func _test_environment_presentation(operation_map: OperationBlackMinuteMap) -> v
 		var profile: Dictionary = ENVIRONMENT_CATALOG.ROOM_ART[room_id]
 		var hero_origin: Vector2i = profile[&"hero_origin"]
 		var hero_tiles: Array = ENVIRONMENT_CATALOG.ROOM_HERO_TILES[room_id]
-		room_assets_match_profiles = (
-			room_assets_match_profiles
-			and presenter.hero_details.get_cell_atlas_coords(room_rect.position + hero_origin)
-			== hero_tiles[0]
-			and presenter.hero_details.get_cell_atlas_coords(
-				room_rect.position + hero_origin + Vector2i.RIGHT
-			) == hero_tiles[1]
-		)
+		for hero_segment: int in range(4):
+			var local_offset := Vector2i(hero_segment % 2, hero_segment >> 1)
+			room_assets_match_profiles = (
+				room_assets_match_profiles
+				and hero_tiles.size() == 4
+				and presenter.hero_details.get_cell_atlas_coords(
+					room_rect.position + hero_origin + local_offset
+				) == hero_tiles[hero_segment]
+			)
 		var first_tile := presenter.get_room_animation_tile(room_id)
 		first_animation_tiles[room_id] = first_tile
 		room_assets_match_profiles = (
@@ -500,6 +541,40 @@ func _test_modal_pause_freeze(operation: OperationBlackMinuteLevel) -> void:
 	_disable_security_simulation(operation)
 
 
+func _test_locked_authorization_ledger(operation: OperationBlackMinuteLevel) -> void:
+	var director: MissionDirector = operation.get_node("Systems/MissionDirector")
+	var access: AccessControlManager = operation.get_node("Systems/AccessControlManager")
+	var player := operation.get_player()
+	_check(
+		access.grant_access(
+			AccessControlManager.AccessLevel.LEVEL_2,
+			&"test_out_of_order_level_2"
+		),
+		"authorization regression fixture can model an out-of-order Level 2 pickup"
+	)
+	operation.call(&"_on_terminal_completed", &"server_override", player)
+	_check(
+		director.has_latched_event(&"server_override")
+		and not director.has_vault_authorization()
+		and access.current_level == AccessControlManager.AccessLevel.LEVEL_2,
+		"a locked authorization fact is retained without prematurely granting vault access"
+	)
+	_check(
+		director.report_event(&"facility_entered")
+		and director.report_event(&"level_1_acquired")
+		and director.report_event(&"laser_disabled")
+		and director.report_event(&"level_2_acquired")
+		and director.has_vault_authorization()
+		and access.current_level == AccessControlManager.AccessLevel.VAULT,
+		"reconciling the full objective chain grants the retained vault authorization exactly then"
+	)
+	_check(
+		operation.reset_operation(),
+		"authorization ledger regression restores a clean operation for the acceptance route"
+	)
+	_disable_security_simulation(operation)
+
+
 func _test_no_recall_solution(operation: OperationBlackMinuteLevel) -> void:
 	var registry: ObjectRegistry = operation.get_node("Systems/ObjectRegistry")
 	var director: MissionDirector = operation.get_node("Systems/MissionDirector")
@@ -507,6 +582,11 @@ func _test_no_recall_solution(operation: OperationBlackMinuteLevel) -> void:
 	var security: SecuritySystemManager = operation.get_node("Systems/SecuritySystemManager")
 	var recall: ChronoRecallManager = operation.get_node("Systems/ChronoRecallManager")
 	var player := operation.get_player()
+	var vault_door := registry.get_object(&"door_vault_authorization_01") as AccessDoor
+	_check(
+		vault_door.get_interaction_prompt(player) == "LASER NETWORK MUST BE DISABLED",
+		"vault door denial names the first currently unmet world condition"
+	)
 
 	var reception := registry.get_object(&"door_reception_checkpoint_01") as AccessDoor
 	_check(reception.interact(player), "PUBLIC reception door opens through the interaction contract")
@@ -515,12 +595,23 @@ func _test_no_recall_solution(operation: OperationBlackMinuteLevel) -> void:
 		== ObjectiveGraph.ObjectiveState.COMPLETED,
 		"entering reception completes the first objective and exposes access progression"
 	)
+	var map_overlay: FacilityMapOverlay = operation.get_node("FacilityMapOverlay")
+	_check(
+		map_overlay.map_view.get_target_room_ids() == [&"locker_room"],
+		"after entry, the tactical map points to the Locker Room without revealing an exact route"
+	)
 
 	var level_one := registry.get_object(&"keycard_level_1_01") as AccessCard
 	_check(level_one.interact(player), "Player physically collects the locker-room Level 1 card")
 	_check(
 		access.current_level == AccessControlManager.AccessLevel.LEVEL_1,
 		"Level 1 card updates only the live mission inventory"
+	)
+	_check(
+		not map_overlay.map_view.get_target_room_ids().has(&"locker_room")
+		and map_overlay.map_view.get_target_room_ids().has(&"electrical_room")
+		and map_overlay.map_view.get_target_room_ids().has(&"security_office"),
+		"collecting L1 clears its map target and exposes the next required system rooms"
 	)
 
 	var cctv := registry.get_object(&"terminal_cctv_network_01") as HackTerminal
@@ -543,6 +634,10 @@ func _test_no_recall_solution(operation: OperationBlackMinuteLevel) -> void:
 	)
 	_check(not security.laser_online, "electrical terminal disables all physical laser triggers")
 	_check(
+		vault_door.get_interaction_prompt(player) == "VAULT AUTHORIZATION REQUIRED",
+		"vault denial prompt updates after laser shutdown instead of keeping stale spawn text"
+	)
+	_check(
 		operation.operation_map.environment_presenter.get_room_animation_tile(
 			&"laser_corridor"
 		) == ENVIRONMENT_CATALOG.STATE_TILES[&"laser_offline"],
@@ -554,6 +649,20 @@ func _test_no_recall_solution(operation: OperationBlackMinuteLevel) -> void:
 	_check(
 		access.current_level == AccessControlManager.AccessLevel.LEVEL_2,
 		"Level 2 access opens research and server routes without granting the vault itself"
+	)
+	var map_terminal := registry.get_object(&"terminal_security_map_01") as HackTerminal
+	var maintenance_door := registry.get_object(&"door_maintenance_l2_01") as AccessDoor
+	_check(
+		map_terminal.interact(player)
+		and map_terminal.complete_hack_immediately()
+		and maintenance_door.is_discovered
+		and maintenance_door.visible
+		and is_equal_approx(maintenance_door.self_modulate.a, 1.0)
+		and maintenance_door.monitorable
+		and not maintenance_door.blocker.disabled
+		and maintenance_door.light_occluder.visible
+		and map_overlay.map_view.is_maintenance_discovered(),
+		"security map hack reveals the maintenance door without changing its closed blocker or occluder"
 	)
 
 	var server := registry.get_object(&"terminal_server_override_01") as HackTerminal
@@ -567,7 +676,6 @@ func _test_no_recall_solution(operation: OperationBlackMinuteLevel) -> void:
 		"server override satisfies the biometric/server OR and grants vault credentials"
 	)
 
-	var vault_door := registry.get_object(&"door_vault_authorization_01") as AccessDoor
 	_check(vault_door.interact(player), "authorized Player opens the laser-safe Chronos Vault door")
 	_check(
 		director.report_event(&"vault_entered"),
@@ -646,6 +754,19 @@ func _test_no_recall_solution(operation: OperationBlackMinuteLevel) -> void:
 
 func _test_recall_and_echo(operation: OperationBlackMinuteLevel) -> void:
 	_check(operation.reset_operation(), "mission checkpoint restart rebuilds a clean operation")
+	var reset_registry: ObjectRegistry = operation.get_node("Systems/ObjectRegistry")
+	var reset_maintenance := reset_registry.get_object(&"door_maintenance_l2_01") as AccessDoor
+	var reset_map: FacilityMapOverlay = operation.get_node("FacilityMapOverlay")
+	_check(
+		reset_maintenance != null
+		and not reset_maintenance.is_discovered
+		and reset_maintenance.visible
+		and is_zero_approx(reset_maintenance.self_modulate.a)
+		and not reset_maintenance.blocker.disabled
+		and reset_maintenance.light_occluder.visible
+		and not reset_map.map_view.is_maintenance_discovered(),
+		"checkpoint reset hides maintenance presentation without removing its blocker or light occluder"
+	)
 	_check(
 		operation.operation_map.environment_presenter.get_room_animation_tile(
 			&"cctv_control_room"
@@ -719,6 +840,59 @@ func _test_recall_and_echo(operation: OperationBlackMinuteLevel) -> void:
 		"an actual Guard alert records the abandoned Echo as a Paradox Decoy candidate"
 	)
 	await _tree.process_frame
+
+
+func _test_mid_hack_recall_boundary(operation: OperationBlackMinuteLevel) -> void:
+	_check(operation.reset_operation(), "mid-hack Recall regression starts from a clean operation")
+	_disable_security_simulation(operation)
+	var registry: ObjectRegistry = operation.get_node("Systems/ObjectRegistry")
+	var access: AccessControlManager = operation.get_node("Systems/AccessControlManager")
+	var recall: ChronoRecallManager = operation.get_node("Systems/ChronoRecallManager")
+	var player := operation.get_player()
+	var map_terminal := registry.get_object(&"terminal_security_map_01") as HackTerminal
+	var maintenance_door := registry.get_object(&"door_maintenance_l2_01") as AccessDoor
+	_check(
+		access.grant_access(AccessControlManager.AccessLevel.LEVEL_2, &"boundary_test_level_2")
+		and map_terminal.interact(player)
+		and recall.record_interaction(map_terminal.object_id, &"interact"),
+		"abandoned branch begins a recorded map hack before the future Recall boundary"
+	)
+
+	var door_event_recorded := false
+	for _tick: int in range(211):
+		if not map_terminal.is_completed:
+			map_terminal.call(&"_process", STEP_SECONDS)
+		elif not door_event_recorded:
+			if maintenance_door.interact(player):
+				var door_payload := maintenance_door.get_recording_payload(player)
+				door_event_recorded = recall.record_interaction(
+					maintenance_door.object_id,
+					&"interact",
+					door_payload
+				)
+		recall.advance(STEP_SECONDS)
+
+	_check(
+		map_terminal.is_completed
+		and maintenance_door.is_discovered
+		and maintenance_door.is_open
+		and door_event_recorded,
+		"abandoned branch reveals and opens maintenance after the selected mid-hack snapshot"
+	)
+	_check(
+		recall.request_recall()
+		and not map_terminal.is_completed
+		and is_zero_approx(map_terminal.hack_elapsed)
+		and map_terminal.can_interact(player)
+		and not maintenance_door.is_discovered
+		and not maintenance_door.is_open,
+		"Recall restores the mid-hack world to a clean terminal and still-hidden closed maintenance door"
+	)
+	recall.advance(2.0)
+	_check(
+		not maintenance_door.is_discovered and not maintenance_door.is_open,
+		"Echo's later authorized door event cannot bypass discovery missing from the restored branch"
+	)
 
 
 func _disable_security_simulation(operation: OperationBlackMinuteLevel) -> void:

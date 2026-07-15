@@ -19,6 +19,13 @@ LOCKED → AVAILABLE → ACTIVE → COMPLETED
 
 Completion from an invalid state is rejected with a warning. Repeated signals cannot silently complete the same objective twice.
 
+One-shot world facts that may legitimately occur early—cards, network shutdowns,
+authorization sources, and Vault entry—enter a deterministic pending-event ledger.
+They reconcile in acquisition order whenever prerequisites unlock. This prevents a
+consumed card or Echo-replayed terminal from leaving a later objective permanently
+locked. Chronos Core theft is deliberately excluded and remains invalid until its
+full prerequisite chain is complete.
+
 ## Graph rules
 
 Each objective has:
@@ -84,6 +91,19 @@ Examples:
 
 Objective graph state and Core-carried state are rewindable value snapshots. Recall may undo an objective completed inside the abandoned segment. The Echo replay must still pass normal state checks; it cannot duplicate a terminal completion or collect the Core.
 
+The pending-event ledger is part of the Recall snapshot. Restoring a branch
+therefore restores both objective state and unconsumed facts, then runs the same
+deterministic reconciliation. Completing either Vault authorization source marks
+the unused optional source terminally failed so it no longer occupies the HUD.
+Accepting a pending fact is distinct from completing its objective: operation code
+grants the `VAULT` credential from the `vault_authorized` completion signal, never
+from the boolean return of an early terminal report.
+
+An incomplete terminal hack is an uncommitted transaction. Recall cancels its live
+Node owner and restores it to an interactable `0%` boundary. This prevents a branch
+snapshot from retaining ownerless partial progress while still allowing the
+abandoned Echo to replay events that remain valid in the restored branch.
+
 Mission completion is never emitted merely because a completed snapshot is restored. The current implementation prevents further Recall after victory by stopping mission simulation.
 
 ## Reset behavior
@@ -101,4 +121,8 @@ Tests should cover:
 - cycle and missing-ID rejection;
 - Recall restore without duplicate completion;
 - extraction before/after Core;
-- full reset.
+- full reset;
+- early Level 1 pickup followed by infiltration reconciliation;
+- out-of-order security facts and Recall restoration of pending facts;
+- required objectives appearing before optional objectives in the bounded HUD list;
+- mid-hack Recall boundaries and undiscovered-door Echo replay rejection.

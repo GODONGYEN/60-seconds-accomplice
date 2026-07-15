@@ -34,7 +34,7 @@ independent scenes.
 
 | Zone ID | Display name | Rect | Primary purpose |
 |---|---|---:|---|
-| `external_infiltration_yard` | External Infiltration Yard | `[1, 28, 11, 13]` | Safe spawn, first patrol observation, final extraction |
+| `external_infiltration_yard` | External Infiltration Yard | `[1, 29, 11, 12]` | Safe spawn, first patrol observation, final extraction |
 | `reception_checkpoint` | Reception Checkpoint | `[14, 28, 10, 9]` | Public entry, first camera and checkpoint Guard |
 | `staff_office` | Staff Office | `[14, 15, 10, 9]` | Locker clue, optional facility-intel terminal |
 | `locker_room` | Locker Room | `[2, 15, 9, 8]` | Level 1 access card; Office Guard periodically visits |
@@ -219,6 +219,8 @@ Player passage; that remains a gameplay acceptance check.
 
 - Floor has no collision or light occlusion.
 - The complement of rooms/connectors/dynamic portal underlays is a solid wall.
+- Row `y=28` remains solid between the Yard and west service hall. This prevents
+  a floor seam from bypassing the reception gate on the way to the Locker Room.
 - The map boundary is closed.
 - Static walls and listed internal cabinets use the existing
   `World | PlayerVisionBlocker` collision contract and matching TileSet light

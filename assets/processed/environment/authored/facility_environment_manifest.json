@@ -1,11 +1,11 @@
 {
   "atlas_grid": [
     16,
-    14
+    16
   ],
   "atlas_size": [
     512,
-    448
+    512
   ],
   "blueprint_solid_count": 16,
   "collision_authority": "resources/tilesets/facility_tileset.tres",
@@ -412,7 +412,7 @@
       ],
       "hero_origin": [
         4,
-        1
+        5
       ],
       "light_anchors": [
         [
@@ -603,11 +603,11 @@
     "floor": 14,
     "floor_detail": 12,
     "room_animation": 30,
-    "room_hero": 30,
+    "room_hero": 60,
     "room_signature": 15,
     "semantic_solid": 33,
     "state": 5,
-    "total": 182,
+    "total": 212,
     "vault_signature": 9,
     "wall": 32
   },
@@ -908,13 +908,29 @@
       11,
       12
     ],
+    "hero_cctv_control_room_2": [
+      10,
+      13
+    ],
+    "hero_cctv_control_room_3": [
+      11,
+      13
+    ],
     "hero_chronos_vault_0": [
       8,
-      13
+      14
     ],
     "hero_chronos_vault_1": [
       9,
-      13
+      14
+    ],
+    "hero_chronos_vault_2": [
+      8,
+      15
+    ],
+    "hero_chronos_vault_3": [
+      9,
+      15
     ],
     "hero_electrical_room_0": [
       12,
@@ -924,6 +940,14 @@
       13,
       12
     ],
+    "hero_electrical_room_2": [
+      12,
+      13
+    ],
+    "hero_electrical_room_3": [
+      13,
+      13
+    ],
     "hero_external_infiltration_yard_0": [
       0,
       12
@@ -932,29 +956,61 @@
       1,
       12
     ],
+    "hero_external_infiltration_yard_2": [
+      0,
+      13
+    ],
+    "hero_external_infiltration_yard_3": [
+      1,
+      13
+    ],
     "hero_extraction_route_0": [
       12,
-      13
+      14
     ],
     "hero_extraction_route_1": [
       13,
-      13
+      14
+    ],
+    "hero_extraction_route_2": [
+      12,
+      15
+    ],
+    "hero_extraction_route_3": [
+      13,
+      15
     ],
     "hero_guard_break_room_0": [
       2,
-      13
+      14
     ],
     "hero_guard_break_room_1": [
       3,
-      13
+      14
+    ],
+    "hero_guard_break_room_2": [
+      2,
+      15
+    ],
+    "hero_guard_break_room_3": [
+      3,
+      15
     ],
     "hero_laser_corridor_0": [
       4,
-      13
+      14
     ],
     "hero_laser_corridor_1": [
       5,
-      13
+      14
+    ],
+    "hero_laser_corridor_2": [
+      4,
+      15
+    ],
+    "hero_laser_corridor_3": [
+      5,
+      15
     ],
     "hero_locker_room_0": [
       6,
@@ -964,13 +1020,29 @@
       7,
       12
     ],
+    "hero_locker_room_2": [
+      6,
+      13
+    ],
+    "hero_locker_room_3": [
+      7,
+      13
+    ],
     "hero_maintenance_passage_0": [
       10,
-      13
+      14
     ],
     "hero_maintenance_passage_1": [
       11,
-      13
+      14
+    ],
+    "hero_maintenance_passage_2": [
+      10,
+      15
+    ],
+    "hero_maintenance_passage_3": [
+      11,
+      15
     ],
     "hero_reception_checkpoint_0": [
       2,
@@ -980,13 +1052,29 @@
       3,
       12
     ],
+    "hero_reception_checkpoint_2": [
+      2,
+      13
+    ],
+    "hero_reception_checkpoint_3": [
+      3,
+      13
+    ],
     "hero_research_laboratory_0": [
       0,
-      13
+      14
     ],
     "hero_research_laboratory_1": [
       1,
-      13
+      14
+    ],
+    "hero_research_laboratory_2": [
+      0,
+      15
+    ],
+    "hero_research_laboratory_3": [
+      1,
+      15
     ],
     "hero_security_office_0": [
       8,
@@ -996,6 +1084,14 @@
       9,
       12
     ],
+    "hero_security_office_2": [
+      8,
+      13
+    ],
+    "hero_security_office_3": [
+      9,
+      13
+    ],
     "hero_server_room_0": [
       14,
       12
@@ -1003,6 +1099,14 @@
     "hero_server_room_1": [
       15,
       12
+    ],
+    "hero_server_room_2": [
+      14,
+      13
+    ],
+    "hero_server_room_3": [
+      15,
+      13
     ],
     "hero_staff_office_0": [
       4,
@@ -1012,13 +1116,29 @@
       5,
       12
     ],
+    "hero_staff_office_2": [
+      4,
+      13
+    ],
+    "hero_staff_office_3": [
+      5,
+      13
+    ],
     "hero_vault_antechamber_0": [
       6,
-      13
+      14
     ],
     "hero_vault_antechamber_1": [
       7,
-      13
+      14
+    ],
+    "hero_vault_antechamber_2": [
+      6,
+      15
+    ],
+    "hero_vault_antechamber_3": [
+      7,
+      15
     ],
     "locker_left": [
       3,

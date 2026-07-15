@@ -141,6 +141,7 @@ func reset_operation() -> bool:
 	_infiltration_reported = false
 	_tutorial_flags.clear()
 	_reset_world_objects()
+	_apply_maintenance_discovery_state()
 	player.initialize_at(_object_world_position(&"player_spawn"))
 	player.configure_heist_controls(true)
 	player.configure_facility_view(
@@ -220,6 +221,7 @@ func restore_recall_state(snapshot: Dictionary) -> bool:
 	_maintenance_discovered = bool(snapshot.get("maintenance_discovered", false))
 	_infiltration_reported = bool(snapshot.get("infiltration_reported", false))
 	_tutorial_flags = (tutorial_variant as Dictionary).duplicate(true)
+	_apply_maintenance_discovery_state()
 	_sync_all_ui()
 	return true
 
@@ -237,7 +239,6 @@ func _connect_manager_signals() -> void:
 	mission_director.capture_decision_requested.connect(hud.show_capture_choice)
 	mission_director.mission_completed.connect(_on_mission_completed)
 	access_control.access_changed.connect(_on_access_changed)
-	access_control.access_denied.connect(_on_access_denied)
 	security_system.cctv_network_changed.connect(_on_cctv_network_changed)
 	security_system.laser_network_changed.connect(_on_laser_network_changed)
 	security_system.alert_level_changed.connect(_on_alert_level_changed)
@@ -302,6 +303,7 @@ func _spawn_access_doors() -> void:
 		door.object_id = door_id
 		door.required_access = _parse_access_level(String(portal.get("required_access", "PUBLIC")))
 		door.starts_open = bool(portal.get("initially_open", false))
+		door.starts_discovered = not bool(portal.get("initially_hidden", false))
 		door.position = _rect_world_center(span)
 		door.configure_span_length(float(maxi(span.size.x, span.size.y) * TILE_SIZE))
 		if span.size.x > span.size.y:
@@ -309,16 +311,15 @@ func _spawn_access_doors() -> void:
 		var required_flags := _string_name_array(portal.get("required_flags_all", []))
 		var condition := Callable()
 		var denial_message := "SECURITY CONDITION NOT MET"
+		var denial_message_provider := Callable()
 		if not required_flags.is_empty():
 			condition = _check_required_flags.bind(required_flags)
 			denial_message = _door_condition_message(required_flags)
+			denial_message_provider = _door_condition_message.bind(required_flags)
 			door.requires_vault_authorization = true
 		dynamic_objects.add_child(door)
-		door.configure(access_control, condition, denial_message)
-		door.access_denied.connect(
-			func(_level: AccessControlManager.AccessLevel) -> void:
-				hud.show_toast(door.get_interaction_prompt(player), 2.0)
-		)
+		door.configure(access_control, condition, denial_message, denial_message_provider)
+		door.access_denied.connect(_on_access_door_denied)
 		if door_id == &"door_reception_checkpoint_01":
 			door.open_state_changed.connect(_on_reception_door_changed)
 		_doors[door_id] = door
@@ -702,14 +703,12 @@ func _on_terminal_completed(action_id: StringName, actor: Node) -> void:
 				return
 			if not mission_director.report_event(action_id):
 				return
-			access_control.grant_access(
-				AccessControlManager.AccessLevel.VAULT,
-				StringName("credential_%s" % action_id)
-			)
-			hud.show_access_cue("VAULT AUTHORIZATION")
-			audio_feedback.play_access()
+			# report_event() also accepts a locked fact into the deterministic
+			# ledger. Vault access is granted only by the objective-completion
+			# callback once the full prerequisite chain has reconciled.
 		&"terminal_security_map_01":
 			_maintenance_discovered = true
+			_apply_maintenance_discovery_state()
 			hud.show_toast("MAINTENANCE PASSAGE ADDED TO MAP", 2.0)
 		&"terminal_guard_distraction_01":
 			security_system.raise_zone_alert(
@@ -834,13 +833,20 @@ func _on_mission_completed(_mission_id: StringName) -> void:
 	audio_feedback.play_victory()
 
 
-func _on_objectives_changed(_objective_ids: Array[StringName]) -> void:
+func _on_objectives_changed(objective_ids: Array[StringName]) -> void:
 	var lines := mission_director.get_current_objective_lines()
 	hud.set_objectives(lines)
-	map_overlay.set_objectives(lines)
+	map_overlay.set_objectives(lines, objective_ids)
 
 
 func _on_objective_completed(objective_id: StringName, title: String) -> void:
+	if objective_id == MissionDirector.OBJECTIVE_VAULT_AUTH:
+		if access_control.grant_access(
+			AccessControlManager.AccessLevel.VAULT,
+			&"credential_vault_authorization"
+		):
+			hud.show_access_cue("VAULT AUTHORIZATION")
+			audio_feedback.play_access()
 	if objective_id in [
 		MissionDirector.OBJECTIVE_INFILTRATE,
 		MissionDirector.OBJECTIVE_ENTER_VAULT,
@@ -867,14 +873,18 @@ func _on_access_changed(
 	hud.set_access(access_control.get_access_label())
 
 
-func _on_access_denied(
+func _on_access_door_denied(
 	_door_id: StringName,
-	required: AccessControlManager.AccessLevel
+	required: AccessControlManager.AccessLevel,
+	reason: String
 ) -> void:
-	var required_name := String(
-		AccessControlManager.ACCESS_NAMES.get(required, &"SECURITY")
-	)
-	hud.show_danger_cue("ACCESS DENIED", "%s CARD REQUIRED" % required_name)
+	var detail := reason.strip_edges()
+	if detail.is_empty():
+		var required_name := String(
+			AccessControlManager.ACCESS_NAMES.get(required, &"SECURITY")
+		)
+		detail = "%s CARD REQUIRED" % required_name
+	hud.show_danger_cue("ACCESS DENIED", detail)
 	audio_feedback.play_denied()
 
 
@@ -951,8 +961,11 @@ func _finish_capture_resolution() -> void:
 
 
 func _sync_all_ui() -> void:
+	var objective_ids := mission_director.get_current_objective_ids()
+	var objective_lines := mission_director.get_current_objective_lines()
 	hud.set_primary_objective(MissionDirector.PRIMARY_TITLE)
-	hud.set_objectives(mission_director.get_current_objective_lines())
+	hud.set_objectives(objective_lines)
+	map_overlay.set_objectives(objective_lines, objective_ids)
 	hud.set_access(access_control.get_access_label())
 	hud.set_recall_charges(chrono_recall.remaining_charges, chrono_recall.maximum_charges)
 	hud.set_core_carried(mission_director.chronos_core_carried)
@@ -980,6 +993,12 @@ func _sync_map_status() -> void:
 		mission_director.chronos_core_carried,
 		_maintenance_discovered
 	)
+
+
+func _apply_maintenance_discovery_state() -> void:
+	var maintenance_door: AccessDoor = _doors.get(&"door_maintenance_l2_01")
+	if maintenance_door != null:
+		maintenance_door.set_discovered(_maintenance_discovered)
 
 
 func _show_tutorial_once(flag: StringName, message: String) -> void:

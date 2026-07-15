@@ -1,7 +1,7 @@
 {
   "schema_version": 2,
   "tile_size": 32,
-  "atlas_grid": [16, 14],
+  "atlas_grid": [16, 16],
   "concept_reference": "assets/source/environment/helix_environment_concept_v1.png",
   "palette": {
     "void": "#07111D",
@@ -103,7 +103,7 @@
     "security_office": {
       "signature": "security_shield",
       "signature_cells": [[1, 6], [9, 2]],
-      "hero_origin": [4, 1],
+      "hero_origin": [4, 5],
       "animation_cell": [3, 2],
       "light_main": "#E6A83A",
       "light_secondary": "#30DDE3",

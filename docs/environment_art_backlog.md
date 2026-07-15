@@ -29,7 +29,7 @@ the browser review described in `docs/visual_improvement_log.md`.
 
 | Severity | Target | Evidence | Expected impact | Effort | Risk | Dependencies | Status |
 |---|---|---|---|---|---|---|---|
-| MEDIUM | Staff Office / Guard Break | unique two-cell heroes plus room signatures | controlled lived-in detail | M | MEDIUM: clutter and false collision | visual-only cells | **Complete** |
+| MEDIUM | Staff Office / Guard Break | unique 2×2 landmarks plus room signatures | controlled lived-in detail | M | MEDIUM: clutter and false collision | visual-only cells | **Complete** |
 | MEDIUM | Reception corporate identity | scanner/logo hero and desk silhouette | stronger first interior impression | S | LOW | symbol atlas additions | **Complete** |
 
 ## Hero assets
@@ -55,7 +55,7 @@ the browser review described in `docs/visual_improvement_log.md`.
 
 | Severity | Target | Evidence | Expected impact | Effort | Risk | Dependencies | Status |
 |---|---|---|---|---|---|---|---|
-| LOW | Room label/HUD overlap | dim room labels can sit behind the 120 px HUD band | cleaner composition | S | LOW | responsive 1024/1280 capture | Backlog |
+| LOW | Room label/HUD overlap | facility camera reserves a 28 px world-space safe-top offset; 1024/1280 Web frames pass | cleaner composition | S | LOW | responsive 1024/1280 capture | **Complete** |
 
 ## Performance and QA
 

@@ -35,6 +35,7 @@ The authored blueprint is a `64×42` grid of `32 px` cells (`2048×1344 px`) wit
 - 8 sweeping CCTV cameras;
 - 3 laser barriers;
 - Level 1, Level 2, and Vault access progression;
+- objective-room highlighting on the tactical map plus visible L1/L2 pickup beacons;
 - server override or research biometric authorization paths;
 - 15 declared choke points with safe windows of at least three seconds.
 
@@ -52,6 +53,11 @@ Briefing and tactical map
 → steal the Core
 → extract through the external yard
 ```
+
+The first credential is the cyan **L1 ACCESS** card in the **Locker Room**. Open
+the reception checkpoint, then press <kbd>M</kbd>/<kbd>Tab</kbd>: the tactical map
+marks `TARGET // L1 CARD` around the correct room. Locked doors and terminals now
+name the exact missing access or system action instead of failing silently.
 
 A perfect no-Recall route is part of the mission contract. Recall is an optional recovery and improvisation tool: rewinding leaves the abandoned movement and permitted interactions behind as an Echo that Guards and cameras can see.
 
@@ -152,7 +158,7 @@ python3 -m venv .tools/venv
 ```
 
 Operation: Black Minute now gives all 15 rooms a deterministic material family,
-unique two-cell hero, signatures, clipped practical-light recipe, and pause-safe
+unique 2×2 room landmark, signatures, clipped practical-light recipe, and pause-safe
 micro-animation. Reinforced deep walls and rank-specific access doors preserve
 the original blueprint, collision, occlusion, and Guard sight-line authority.
 Mission state is visible in CCTV, laser, alert, Vault, extraction, and door art.

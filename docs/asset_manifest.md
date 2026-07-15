@@ -117,15 +117,15 @@ The facility blueprint describes `26×25` logical cells at `32×32 px` (`832×80
 | Palette preview | `assets/processed/environment/authored/facility_palette_preview.png` |
 | Godot resource | `resources/tilesets/facility_environment_art.tres` |
 | Generated runtime catalog | `resources/environment/facility_environment_catalog.gd` |
-| Atlas / tile size | 512×448 RGBA / 32×32 |
-| Named cells | 182 |
+| Atlas / tile size | 512×512 RGBA / 32×32 |
+| Named cells | 212 |
 | Runtime collision / occlusion | 0 / 0; visual-only |
 | Runtime use | `OperationBlackMinuteMap` floor/detail/wall/solid layers plus `OperationEnvironmentPresenter` heroes, state motion, and painted practical pools |
 
 The atlas defines seven room material families, deterministic floor variants,
 sparse overlays, 16 neighbor masks with two wall variants, 33 reusable
 multi-cell furniture segments, a nine-cell Chronos Vault circuit, 15 room
-signatures, 30 hero segments, 30 animation cells, five state cells, and a
+signatures, 60 segments forming fifteen 64×64 landmarks, 30 animation cells, five state cells, and a
 deep-wall pair. Every blueprint room has a validated profile. Every one of the
 16 `internal_solid_rects` maps to an explicit motif covering 64 already-solid
 cells. No visual placement creates new collision.
@@ -153,6 +153,6 @@ both map references are not gameplay dependencies. `tools/asset_pipeline.py
 validate` scans runtime text resources and rejects references into source,
 processed, or concept directories. `tools/environment_art_pipeline.py validate`
 additionally verifies every room profile and semantic solid, exact generated
-pixels, 182 unique registered tiles, RGBA/alpha/grid integrity, transparent
+pixels, 212 unique registered tiles, RGBA/alpha/grid integrity, transparent
 unused cells, source concept hash, runtime/processed equality, generated
 catalog equality, and zero physics/occlusion in the art TileSet.

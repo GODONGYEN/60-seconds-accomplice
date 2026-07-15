@@ -78,7 +78,7 @@ const ROOM_ART: Dictionary[StringName, Dictionary] = {
 	&"security_office": {
 		&"signature": &"security_shield",
 		&"signature_cells": [Vector2i(1, 6), Vector2i(9, 2)],
-		&"hero_origin": Vector2i(4, 1),
+		&"hero_origin": Vector2i(4, 5),
 		&"animation_cell": Vector2i(3, 2),
 		&"light_main": Color("E6A83A"),
 		&"light_secondary": Color("30DDE3"),
@@ -246,21 +246,21 @@ const ROOM_SIGNATURE_TILES: Dictionary[StringName, Vector2i] = {
 }
 
 const ROOM_HERO_TILES: Dictionary[StringName, Array] = {
-	&"external_infiltration_yard": [Vector2i(0, 12), Vector2i(1, 12)],
-	&"reception_checkpoint": [Vector2i(2, 12), Vector2i(3, 12)],
-	&"staff_office": [Vector2i(4, 12), Vector2i(5, 12)],
-	&"locker_room": [Vector2i(6, 12), Vector2i(7, 12)],
-	&"security_office": [Vector2i(8, 12), Vector2i(9, 12)],
-	&"cctv_control_room": [Vector2i(10, 12), Vector2i(11, 12)],
-	&"electrical_room": [Vector2i(12, 12), Vector2i(13, 12)],
-	&"server_room": [Vector2i(14, 12), Vector2i(15, 12)],
-	&"research_laboratory": [Vector2i(0, 13), Vector2i(1, 13)],
-	&"guard_break_room": [Vector2i(2, 13), Vector2i(3, 13)],
-	&"laser_corridor": [Vector2i(4, 13), Vector2i(5, 13)],
-	&"vault_antechamber": [Vector2i(6, 13), Vector2i(7, 13)],
-	&"chronos_vault": [Vector2i(8, 13), Vector2i(9, 13)],
-	&"maintenance_passage": [Vector2i(10, 13), Vector2i(11, 13)],
-	&"extraction_route": [Vector2i(12, 13), Vector2i(13, 13)],
+	&"external_infiltration_yard": [Vector2i(0, 12), Vector2i(1, 12), Vector2i(0, 13), Vector2i(1, 13)],
+	&"reception_checkpoint": [Vector2i(2, 12), Vector2i(3, 12), Vector2i(2, 13), Vector2i(3, 13)],
+	&"staff_office": [Vector2i(4, 12), Vector2i(5, 12), Vector2i(4, 13), Vector2i(5, 13)],
+	&"locker_room": [Vector2i(6, 12), Vector2i(7, 12), Vector2i(6, 13), Vector2i(7, 13)],
+	&"security_office": [Vector2i(8, 12), Vector2i(9, 12), Vector2i(8, 13), Vector2i(9, 13)],
+	&"cctv_control_room": [Vector2i(10, 12), Vector2i(11, 12), Vector2i(10, 13), Vector2i(11, 13)],
+	&"electrical_room": [Vector2i(12, 12), Vector2i(13, 12), Vector2i(12, 13), Vector2i(13, 13)],
+	&"server_room": [Vector2i(14, 12), Vector2i(15, 12), Vector2i(14, 13), Vector2i(15, 13)],
+	&"research_laboratory": [Vector2i(0, 14), Vector2i(1, 14), Vector2i(0, 15), Vector2i(1, 15)],
+	&"guard_break_room": [Vector2i(2, 14), Vector2i(3, 14), Vector2i(2, 15), Vector2i(3, 15)],
+	&"laser_corridor": [Vector2i(4, 14), Vector2i(5, 14), Vector2i(4, 15), Vector2i(5, 15)],
+	&"vault_antechamber": [Vector2i(6, 14), Vector2i(7, 14), Vector2i(6, 15), Vector2i(7, 15)],
+	&"chronos_vault": [Vector2i(8, 14), Vector2i(9, 14), Vector2i(8, 15), Vector2i(9, 15)],
+	&"maintenance_passage": [Vector2i(10, 14), Vector2i(11, 14), Vector2i(10, 15), Vector2i(11, 15)],
+	&"extraction_route": [Vector2i(12, 14), Vector2i(13, 14), Vector2i(12, 15), Vector2i(13, 15)],
 }
 
 const ROOM_ANIMATION_TILES: Dictionary[StringName, Array] = {

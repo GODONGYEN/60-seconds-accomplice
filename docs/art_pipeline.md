@@ -80,15 +80,22 @@ Outputs:
 - `resources/tilesets/facility_environment_art.tres`;
 - `resources/environment/facility_environment_catalog.gd`.
 
-The 512×448 RGBA atlas contains 182 named 32 px cells: 14 base floors,
+The 512×512 RGBA atlas contains 212 named 32 px cells: 14 base floors,
 12 sparse overlays, 32 wall masks, 33 semantic-solid pieces, nine Vault-circuit
-cells, 15 room signatures, 30 room hero segments, 30 two-frame animation cells,
+cells, 15 room signatures, 60 room-landmark segments, 30 two-frame animation cells,
 five explicit mission-state cells, and a deep-wall pair. There
 is no runtime randomness. Room seeds choose variants and stable animation phases
 deterministically. The same build writes the runtime GDScript catalog consumed
 by `OperationBlackMinuteMap` and `OperationEnvironmentPresenter`, so packing,
 profiles, state cells, and Godot resources cannot drift from the Python source
 of truth.
+
+Each room landmark is authored as a 64×64 RGBA image, split row-major into four
+32 px atlas cells, and placed by `OperationEnvironmentPresenter` as a 2×2 block.
+Validation rejects out-of-bounds placements and overlap with blueprint solids,
+objects, or portals. The generator proves reproducibility, not perceptual
+quality: label-hidden gameplay captures and pickup-contrast review remain
+required before assigning a room a subjective score.
 
 The generated TileSet contains zero physics and zero occlusion layers. `resources/tilesets/facility_tileset.tres` and the mission blueprint continue to own collision, LOS, navigation, and topology. `tools/validate_assets.sh` fingerprints both pipelines before and after regeneration so CI rejects stale derivatives.
 

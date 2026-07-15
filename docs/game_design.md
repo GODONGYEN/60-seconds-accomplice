@@ -203,7 +203,7 @@ Checkpoint reset은 cards, access, doors, terminals, CCTV, lasers, alert, Guards
 
 Briefing은 조작 전에 operation/facility/target/security/Recall charge와 정적 시설 지도를 보여 준다.
 
-게임 중 `M` 또는 `Tab`으로 map을 열면 tactical pause가 적용된다. Map은 rooms, Player, objective region, extraction, security status, locked doors, 발견된 maintenance passage를 보여 주되 정답 경로나 실시간 Guard 위치를 기본 제공하지 않는다.
+게임 중 `M` 또는 `Tab`으로 map을 열면 tactical pause가 적용된다. Map은 rooms, Player, 현재 objective room의 문자/테두리 표식, extraction, security status, locked doors, 발견된 maintenance passage를 보여 주되 정확한 item 좌표, 정답 경로, 실시간 Guard 위치를 기본 제공하지 않는다.
 
 튜토리얼은 상황에 맞춰 한 번씩 표시한다.
 

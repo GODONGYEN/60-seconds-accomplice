@@ -66,7 +66,7 @@ func _test_zone_contract(blueprint: Dictionary) -> void:
 		"Operation Black Minute defines exactly seven bounded Guard zones"
 	)
 	_check(
-		manager.get_zone_rect_cells(&"zone_outer_yard") == Rect2i(1, 28, 13, 13)
+		manager.get_zone_rect_cells(&"zone_outer_yard") == Rect2i(1, 29, 13, 12)
 		and manager.get_zone_rect_cells(&"zone_vault") == Rect2i(52, 3, 11, 31),
 		"outer-yard and vault zone rectangles match the blueprint"
 	)

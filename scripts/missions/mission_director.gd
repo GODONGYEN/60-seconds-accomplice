@@ -30,6 +30,20 @@ const OBJECTIVE_ENTER_VAULT: StringName = &"enter_chronos_vault"
 const OBJECTIVE_CORE: StringName = &"steal_chronos_core"
 const OBJECTIVE_EXTRACT: StringName = &"return_to_extraction"
 
+# These events describe one-shot world facts whose source can be consumed before its
+# authored objective becomes available (for example, an early card pickup or Echo hack).
+# Acquisition order is retained so simultaneous authorization branches resolve the
+# same way after Recall and on every deterministic replay.
+const LATCHABLE_EVENTS: Array[StringName] = [
+	&"level_1_acquired",
+	&"cctv_disabled",
+	&"laser_disabled",
+	&"level_2_acquired",
+	&"biometric_authorization",
+	&"server_override",
+	&"vault_entered",
+]
+
 @export var mission_definition: MissionDefinition
 
 var state: MissionState = MissionState.BRIEFING
@@ -37,6 +51,7 @@ var objective_graph: ObjectiveGraph = ObjectiveGraph.new()
 var chronos_core_carried: bool = false
 
 var _completion_emitted: bool = false
+var _latched_events: Array[StringName] = []
 
 
 func _ready() -> void:
@@ -64,6 +79,7 @@ func reset_mission() -> void:
 	state = MissionState.BRIEFING
 	chronos_core_carried = false
 	_completion_emitted = false
+	_latched_events.clear()
 	objective_graph.initialize()
 	chronos_core_state_changed.emit(false)
 	mission_reset.emit()
@@ -76,14 +92,20 @@ func report_event(event_id: StringName) -> bool:
 	if objective_id == StringName():
 		push_warning("MissionDirector ignored unknown event '%s'" % event_id)
 		return false
-	if not objective_graph.complete_objective(objective_id):
+	var current_state := objective_graph.get_state(objective_id)
+	if (
+		current_state == ObjectiveGraph.ObjectiveState.COMPLETED
+		or current_state == ObjectiveGraph.ObjectiveState.FAILED
+	):
 		return false
-	if objective_id == OBJECTIVE_BIOMETRIC or objective_id == OBJECTIVE_SERVER_OVERRIDE:
-		if objective_graph.get_state(OBJECTIVE_VAULT_AUTH) == ObjectiveGraph.ObjectiveState.AVAILABLE:
-			objective_graph.complete_objective(OBJECTIVE_VAULT_AUTH)
-	if objective_id == OBJECTIVE_CORE:
-		chronos_core_carried = true
-		chronos_core_state_changed.emit(true)
+	var is_latchable := _is_latchable_event(event_id)
+	if is_latchable and not _latched_events.has(event_id):
+		_latched_events.append(event_id)
+	if not is_latchable and not _complete_objective(objective_id):
+		# Chronos Core theft intentionally remains strict: reaching it before the
+		# prerequisite chain never creates a deferred win condition.
+		return false
+	_reconcile_latched_events()
 	_activate_actionable_objectives()
 	objectives_changed.emit(get_current_objective_ids())
 	return true
@@ -116,7 +138,29 @@ func resume_after_capture_decision() -> void:
 
 
 func get_current_objective_ids() -> Array[StringName]:
-	return objective_graph.get_actionable_objectives(3)
+	var required: Array[StringName] = []
+	var optional: Array[StringName] = []
+	for objective_id: StringName in objective_graph.get_objective_ids():
+		var objective_state := objective_graph.get_state(objective_id)
+		if (
+			objective_state != ObjectiveGraph.ObjectiveState.AVAILABLE
+			and objective_state != ObjectiveGraph.ObjectiveState.ACTIVE
+		):
+			continue
+		if objective_graph.is_optional(objective_id):
+			optional.append(objective_id)
+		else:
+			required.append(objective_id)
+	var result: Array[StringName] = []
+	for objective_id: StringName in required:
+		result.append(objective_id)
+		if result.size() == 3:
+			return result
+	for objective_id: StringName in optional:
+		result.append(objective_id)
+		if result.size() == 3:
+			break
+	return result
 
 
 func get_current_objective_lines() -> PackedStringArray:
@@ -159,11 +203,20 @@ func get_vault_authorization_route() -> StringName:
 	return &"UNCONFIRMED"
 
 
+func has_latched_event(event_id: StringName) -> bool:
+	return _latched_events.has(event_id)
+
+
+func get_latched_events() -> Array[StringName]:
+	return _latched_events.duplicate()
+
+
 func capture_recall_state() -> Dictionary:
 	return {
 		"mission_state": state,
 		"chronos_core_carried": chronos_core_carried,
 		"objective_graph": objective_graph.capture_state(),
+		"latched_events": _latched_events.duplicate(),
 	}
 
 
@@ -179,6 +232,11 @@ func restore_recall_state(snapshot: Dictionary) -> bool:
 	_completion_emitted = state == MissionState.COMPLETED
 	chronos_core_carried = bool(snapshot.get("chronos_core_carried", false))
 	var restored := objective_graph.restore_state(snapshot.get("objective_graph", {}) as Dictionary)
+	if restored:
+		restored = _restore_latched_events(snapshot.get("latched_events", []))
+	if restored and state == MissionState.ACTIVE:
+		_reconcile_latched_events()
+		_activate_actionable_objectives()
 	chronos_core_state_changed.emit(chronos_core_carried)
 	objectives_changed.emit(get_current_objective_ids())
 	return restored
@@ -275,9 +333,77 @@ func _objective_for_event(event_id: StringName) -> StringName:
 
 func _activate_actionable_objectives() -> void:
 	objective_graph.refresh_availability()
-	for objective_id: StringName in objective_graph.get_actionable_objectives(3):
+	for objective_id: StringName in get_current_objective_ids():
 		if objective_graph.get_state(objective_id) == ObjectiveGraph.ObjectiveState.AVAILABLE:
 			objective_graph.activate_objective(objective_id)
+
+
+func _is_latchable_event(event_id: StringName) -> bool:
+	return LATCHABLE_EVENTS.has(event_id)
+
+
+func _complete_objective(objective_id: StringName) -> bool:
+	if not objective_graph.complete_objective(objective_id):
+		return false
+	if objective_id == OBJECTIVE_BIOMETRIC or objective_id == OBJECTIVE_SERVER_OVERRIDE:
+		_resolve_authorization_branch(objective_id)
+	if objective_id == OBJECTIVE_CORE:
+		chronos_core_carried = true
+		chronos_core_state_changed.emit(true)
+	return true
+
+
+func _resolve_authorization_branch(completed_source: StringName) -> void:
+	var unused_source := (
+		OBJECTIVE_SERVER_OVERRIDE
+		if completed_source == OBJECTIVE_BIOMETRIC
+		else OBJECTIVE_BIOMETRIC
+	)
+	objective_graph.fail_objective(unused_source)
+	var authorization_state := objective_graph.get_state(OBJECTIVE_VAULT_AUTH)
+	if (
+		authorization_state == ObjectiveGraph.ObjectiveState.AVAILABLE
+		or authorization_state == ObjectiveGraph.ObjectiveState.ACTIVE
+	):
+		objective_graph.complete_objective(OBJECTIVE_VAULT_AUTH)
+
+
+func _reconcile_latched_events() -> bool:
+	var completed_any := false
+	var made_progress := true
+	while made_progress:
+		made_progress = false
+		objective_graph.refresh_availability()
+		for event_id: StringName in _latched_events:
+			var objective_id := _objective_for_event(event_id)
+			var objective_state := objective_graph.get_state(objective_id)
+			if (
+				objective_state != ObjectiveGraph.ObjectiveState.AVAILABLE
+				and objective_state != ObjectiveGraph.ObjectiveState.ACTIVE
+			):
+				continue
+			if _complete_objective(objective_id):
+				made_progress = true
+				completed_any = true
+	return completed_any
+
+
+func _restore_latched_events(events_variant: Variant) -> bool:
+	if not events_variant is Array:
+		push_warning("MissionDirector rejected Recall state with invalid latched events")
+		return false
+	var restored_events: Array[StringName] = []
+	for event_variant: Variant in events_variant as Array:
+		var event_id := StringName(str(event_variant))
+		if not _is_latchable_event(event_id):
+			push_warning(
+				"MissionDirector rejected unknown latched event '%s' during Recall" % event_id
+			)
+			return false
+		if not restored_events.has(event_id):
+			restored_events.append(event_id)
+	_latched_events = restored_events
+	return true
 
 
 func _on_objective_state_changed(

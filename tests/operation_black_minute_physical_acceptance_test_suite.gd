@@ -47,6 +47,12 @@ func _test_physical_no_recall_route(operation: OperationBlackMinuteLevel) -> voi
 	var security: SecuritySystemManager = operation.get_node("Systems/SecuritySystemManager")
 	var recall: ChronoRecallManager = operation.get_node("Systems/ChronoRecallManager")
 	var player := operation.get_player()
+	var spawn_cell := _world_to_cell(player.global_position)
+
+	_check(
+		_find_path(operation, spawn_cell, CARD_LEVEL_1_CELL).is_empty(),
+		"closed reception checkpoint is the only initial ingress; Locker Room cannot be bypassed"
+	)
 
 	_check(
 		await _walk_to_cell(operation, Vector2i(7, 40), "yard south wall approach"),
@@ -80,6 +86,10 @@ func _test_physical_no_recall_route(operation: OperationBlackMinuteLevel) -> voi
 		"opening the reception gate removes the same production collision blocker"
 	)
 	_check(
+		not _find_path(operation, _world_to_cell(player.global_position), CARD_LEVEL_1_CELL).is_empty(),
+		"opening reception creates the intended route to the Locker Room Level 1 card"
+	)
+	_check(
 		await _walk_to_cell(operation, Vector2i(24, 33), "Level 1 security door west"),
 		"Player traverses the opened reception gate into the checkpoint"
 	)
@@ -90,11 +100,39 @@ func _test_physical_no_recall_route(operation: OperationBlackMinuteLevel) -> voi
 	)
 
 	var security_door := registry.get_object(&"door_security_l1_01") as AccessDoor
+	var physical_denial_count: Array[int] = [0]
+	var physical_denial_reason: Array[String] = [""]
+	var duplicate_manager_denial_count: Array[int] = [0]
+	access.access_denied.connect(
+		func(door_id: StringName, _required: AccessControlManager.AccessLevel) -> void:
+			if door_id == &"door_security_l1_01":
+				duplicate_manager_denial_count[0] += 1
+	)
+	security_door.access_denied.connect(
+		func(
+			door_id: StringName,
+			_required: AccessControlManager.AccessLevel,
+			reason: String
+		) -> void:
+			if door_id == &"door_security_l1_01":
+				physical_denial_count[0] += 1
+				physical_denial_reason[0] = reason
+	)
+	await _settle_physics()
+	var nearest_before_denial := player.call(&"_find_nearest_interactable") as Area2D
+	player.call(&"_try_interact")
+	await _tree.process_frame
 	_check(
 		security_door != null
 		and _is_in_interaction_range(player, security_door)
-		and not security_door.interact(player),
-		"Level 1 security door rejects the physically present PUBLIC Player"
+		and nearest_before_denial == security_door
+		and physical_denial_count[0] == 1
+		and duplicate_manager_denial_count[0] == 0
+		and physical_denial_reason[0] == "LEVEL 1 CARD REQUIRED"
+		and operation.hud.cue_title.text == "ACCESS DENIED"
+		and operation.hud.toast_label.text == "LEVEL 1 CARD REQUIRED"
+		and not security_door.is_open,
+		"real Player interaction presents one reason-bearing HUD denial at the locked door"
 	)
 	_check(
 		_crossing_is_blocked(player, Vector2i(26, 33)),
@@ -110,11 +148,16 @@ func _test_physical_no_recall_route(operation: OperationBlackMinuteLevel) -> voi
 		"Level 1 card is reached inside the authored Locker Room"
 	)
 	var level_one := registry.get_object(&"keycard_level_1_01") as AccessCard
+	await _settle_physics()
+	var nearest_level_one := player.call(&"_find_nearest_interactable") as Area2D
+	player.call(&"_try_interact")
+	await _tree.process_frame
 	_check(
 		level_one != null
 		and _is_in_interaction_range(player, level_one)
-		and level_one.interact(player),
-		"production AccessCard grants Level 1 only after physical arrival"
+		and nearest_level_one == level_one
+		and level_one.is_collected,
+		"real Player interaction selects and collects the Level 1 card after physical arrival"
 	)
 	_check(
 		access.current_level == AccessControlManager.AccessLevel.LEVEL_1,

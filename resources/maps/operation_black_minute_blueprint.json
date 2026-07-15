@@ -13,7 +13,7 @@
     "external_infiltration_yard": {
       "display_name": "External Infiltration Yard",
       "map_label": "External Yard",
-      "rect": [1, 28, 11, 13],
+      "rect": [1, 29, 11, 12],
       "initial_map_visibility": "FULL",
       "minimum_access": "PUBLIC"
     },
@@ -474,7 +474,7 @@
   "guard_zones": [
     {
       "id": "zone_outer_yard",
-      "allowed_rect": [1, 28, 13, 13],
+      "allowed_rect": [1, 29, 13, 12],
       "anchor": [6, 34],
       "max_active_guards": 2,
       "assigned_guards": ["guard_yard_01", "guard_yard_02"],

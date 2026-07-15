@@ -10,7 +10,7 @@ This is the visual source of truth for **Operation: Black Minute**. Gameplay top
 | Character frame | 48×64 px; bottom-center pivot `(24, 62)` |
 | Small prop | 32×32 px |
 | Tall prop | 32×64 or 32×96 px, assembled on solid cells |
-| Wide hero prop | 64×32, 96×32, 64×64, or 96×96 px |
+| Room landmark | 64×64 px (2×2 logical cells); larger only when blueprint solids already support it |
 | Outline | 1 px interior detail; up to 2 px for a hero silhouette |
 | Wall height cue | top cap 3–5 px, face/body, then a base/threshold strip |
 | Key light | upper-left; highlights must not reverse between rooms |
@@ -83,7 +83,7 @@ by one pause-safe presenter; no additional `PointLight2D` is used.
 
 Every room is composed in this order:
 
-1. One hero element.
+1. One label-blind, 2×2 landmark with a room-specific silhouette.
 2. Existing functional gameplay objects.
 3. One or two supporting prop groups placed only on blueprint solid cells.
 4. Sparse micro detail, normally around 6% of floor cells.
@@ -95,21 +95,21 @@ No tall decorative prop may be placed on a walkable cell unless gameplay collisi
 
 | Room | Material family | Hero / signature | Accent | Breathing-space rule |
 |---|---|---|---|---|
-| External Infiltration Yard | rough outdoor metal/concrete | barrier beacon and drainage/fence signatures | weathered amber | preserve the broad onboarding and extraction lane |
-| Reception Checkpoint | clean corporate panels | scanner/logo console plus reception desk | dim cyan | clear path between public gate and checkpoint |
-| Staff Office | corporate panels | paired workstation silhouette and lived-in marks | cyan + warm cue | desks remain on declared solids; work aisles stay empty |
-| Locker Room | corporate panels | two six-cell locker banks | muted steel | Level 1 card silhouette must remain isolated |
-| Security Office | corporate/security | four-cell command desk | amber | Level 2 card and door approaches remain quiet |
-| CCTV Control Room | systems floor | 2×2 camera-feed monitor bank | cyan + amber | hacking terminal and Guard cone remain unobscured |
-| Electrical Room | systems floor | vertical breaker cabinets | amber + red | central terminal approach stays open |
-| Server Room | systems floor | paired vertical server racks | cyan LEDs + amber service line | rack aisles remain legible and walkable |
-| Research Laboratory | clean research floor | paired temporal research benches | cool cyan + violet | experiment floor stays bright enough for actors |
-| Guard Break Room | corporate foundation | canteen/clock silhouette and warm practical light | warm amber | preserve patrol turn radius |
-| Laser Corridor | research/security floor | the live laser barriers | magenta/red | minimal dressing; lasers own the focal hierarchy |
-| Vault Antechamber | vault panels | reinforced portal and scanner path | restrained violet | intentionally sparse security threshold |
-| Chronos Vault | vault panels | 3×3 circuit dais beneath the Core | violet + cyan | Core silhouette and acquisition prompt always win |
-| Maintenance Passage | service floor | two large machine banks | amber utility | narrow path must never read as blocked by decoration |
-| Extraction Route | service floor | hazard/service marks leading outward | muted amber | long escape lane stays uncluttered |
+| External Infiltration Yard | rough outdoor metal/concrete | fence, floodlight, loading stripe | weathered amber | preserve the broad onboarding and extraction lane |
+| Reception Checkpoint | clean corporate panels | HELIX seal, scanner pedestal, turnstile line | dim cyan | clear path between public gate and checkpoint |
+| Staff Office | corporate panels | paired workstations, noticeboard, plant | cyan + warm cue | desks remain on declared solids; work aisles stay empty |
+| Locker Room | corporate panels | open locker and bench | muted steel + amber | Level 1 card silhouette must remain isolated |
+| Security Office | corporate/security | situation map and security shield | amber | Level 2 card and door approaches remain quiet |
+| CCTV Control Room | systems floor | six-feed video wall and operator console | cyan + amber | hacking terminal and Guard cone remain unobscured |
+| Electrical Room | systems floor | paired breaker banks and bus lightning mark | amber + red | central terminal approach stays open |
+| Server Room | systems floor | three rack faces and fan/LED language | cyan LEDs + violet | rack aisles remain legible and walkable |
+| Research Laboratory | clean research floor | specimen pod and biometric chamber | cool cyan + violet | experiment floor stays bright enough for actors |
+| Guard Break Room | corporate foundation | vending machine, sofa, and steaming mug | warm amber | preserve patrol turn radius |
+| Laser Corridor | research/security floor | paired emitter housings and beam stack | magenta/red | minimal dressing; lasers own the focal hierarchy |
+| Vault Antechamber | vault panels | reinforced circular portal and authorization scanner | restrained violet | intentionally sparse security threshold |
+| Chronos Vault | vault panels | containment arms and temporal ring | violet + cyan | Core silhouette and acquisition prompt always win |
+| Maintenance Passage | service floor | pipe manifold, valves, and service trench | amber utility | narrow path must never read as blocked by decoration |
+| Extraction Route | service floor | runway rails, arrows, and departure strobe | green + cyan | long escape lane stays uncluttered |
 
 ## Layer and geometry authority
 
@@ -119,7 +119,7 @@ No tall decorative prop may be placed on a walkable cell unless gameplay collisi
 - `WallArt`: visual-only reinforced walkable-facing masks plus a two-cell deep-wall ring.
 - `Floor` and `FloorDetails`: visual-only room-family materials and sparse overlays.
 - `PropsAbove`: visual-only semantic furniture placed exactly on existing `internal_solid_rects`.
-- `HeroDetails`: one visual-only two-cell hero silhouette for each of the 15 rooms.
+- `HeroDetails`: one visual-only 2×2 landmark for each of the 15 rooms (60 cells total).
 - `AnimatedDetails`: one state/motion cell per room, refreshed at a fixed presentation tick.
 - `EnvironmentPresenter`: room-clipped painted practical pools and deterministic state routing.
 - Dynamic doors, cards, terminals, lasers, Core, extraction, Guards, cameras, Player, and Echoes remain independent scenes.
@@ -142,7 +142,8 @@ No tall decorative prop may be placed on a walkable cell unless gameplay collisi
 Keep an art change only when:
 
 - a six-tile run is not dominated by an obvious repeated accent rhythm;
-- at least four of CCTV, Electrical, Server, Research, and Vault can be identified without labels;
+- all 15 rooms can be identified from their landmark silhouette in a label-hidden review; labels are only a secondary confirmation cue;
+- the Level 1 card and other mandatory pickups remain visually dominant from at least two tiles away;
 - wall art agrees exactly with collision and door openings;
 - Player, Ghost, Guard, keycards, terminals, lasers, Core, doors, and extraction remain more prominent than decoration;
 - no hidden-room information leaks through lighting;

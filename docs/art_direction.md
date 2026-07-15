@@ -73,7 +73,7 @@ deterministic project-authored derivatives. Operation: Black Minute uses a
 second deterministic HELIX atlas with seven floor families, walkable-neighbor
 wall masks, a deep-wall ring, semantic furniture aligned to existing blueprint
 solids, and a vault signature circuit. All 15 rooms receive a unique signature,
-two-cell hero, clipped practical-light recipe, and pause-safe state animation.
+2×2 label-blind landmark, clipped practical-light recipe, and pause-safe state animation.
 Access doors use exact-span industrial frames and rank-specific silhouettes.
 Pressure plate, objective, exit, access card, terminal, camera, laser, and door
 logic remain stateful scenes rather than baked map tiles.

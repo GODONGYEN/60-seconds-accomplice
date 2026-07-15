@@ -172,7 +172,16 @@ live Player interacts with card
 → door collision/LOS/visibility blocker state changes together
 ```
 
-Access ranks are `PUBLIC`, `LEVEL_1`, `LEVEL_2`, `VAULT`. Vault authorization is granted from either server override or biometric source after the required physical route. Echoes cannot collect cards or grant credentials. Access state is rewindable; Recall charge spending is not.
+Consumable one-shot facts first enter `MissionDirector`'s deterministic event
+ledger. If their objective is still locked, the fact remains pending and is
+reconciled after every prerequisite transition and Recall restore. The Chronos
+Core event is excluded, so an invalid early theft never becomes a deferred win.
+
+Access ranks are `PUBLIC`, `LEVEL_1`, `LEVEL_2`, `VAULT`. Server override or
+biometric completion may be retained early as a world fact, but the `VAULT` tier
+is granted only from the `vault_authorized` objective-completion signal after the
+required physical route. Echoes cannot collect cards or grant credentials. Access
+state is rewindable; Recall charge spending is not.
 
 ## 8. Security data flow
 
@@ -252,7 +261,7 @@ validate availability and target snapshot
 → resume simulation
 ```
 
-The world clock does not move backward. Snapshot state moves to the selected historical point while a new branch starts at the current monotonic timestamp. A later Recall cannot cross an earlier branch boundary. The oldest Echo is removed before exceeding the cap of three.
+The world clock does not move backward. Snapshot state moves to the selected historical point while a new branch starts at the current monotonic timestamp. A later Recall cannot cross an earlier branch boundary. The oldest Echo is removed before exceeding the cap of three. An incomplete `HackTerminal` snapshot is restored as an uncommitted, ownerless-safe `0%` interaction; live Node ownership is never serialized.
 
 ## 11. State categories
 
@@ -293,7 +302,7 @@ Player and Echo identity uses groups/contracts (`player_actor`, `ghost_actor`, `
 Object policy:
 
 - AccessCard: live Player only;
-- AccessDoor: live authorization; eligible Echo replay may reproduce an already-authorized interaction;
+- AccessDoor: live authorization; eligible Echo replay may reproduce an already-authorized interaction only if the door is discovered in the restored branch;
 - HackTerminal: live Player; explicitly allowed Echo replay;
 - ChronosCore and extraction: live Player only;
 - SecurityLaser: captures live Player, ignores Echo;

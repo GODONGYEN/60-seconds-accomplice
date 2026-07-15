@@ -30,7 +30,7 @@ TILESET_PATH = ROOT / "resources/tilesets/facility_environment_art.tres"
 CATALOG_PATH = ROOT / "resources/environment/facility_environment_catalog.gd"
 
 TILE_SIZE = 32
-ATLAS_GRID = (16, 14)
+ATLAS_GRID = (16, 16)
 
 FAMILY_ORDER = ("yard", "corporate", "systems", "research", "vault", "service", "neutral")
 ROOM_ORDER = (
@@ -138,8 +138,10 @@ DEEP_WALL_COORDS = ((5, 11), (6, 11))
 
 ROOM_HERO_COORDS = {
     room_id: (
-        ((index % 8) * 2, 12 + index // 8),
-        ((index % 8) * 2 + 1, 12 + index // 8),
+        ((index % 8) * 2, 12 + (index // 8) * 2),
+        ((index % 8) * 2 + 1, 12 + (index // 8) * 2),
+        ((index % 8) * 2, 13 + (index // 8) * 2),
+        ((index % 8) * 2 + 1, 13 + (index // 8) * 2),
     )
     for index, room_id in enumerate(ROOM_ORDER)
 }
@@ -549,140 +551,190 @@ def _draw_room_signature(room_id: str, index: int, palette: dict[str, str]) -> I
 
 
 def _draw_room_hero(room_id: str, index: int, palette: dict[str, str]) -> Image.Image:
-    """Draw a two-tile silhouette that explains a room without labels."""
-    image = Image.new("RGBA", (TILE_SIZE * 2, TILE_SIZE), (0, 0, 0, 0))
+    """Draw a 2x2 landmark whose silhouette remains readable without a room label."""
+    image = Image.new("RGBA", (TILE_SIZE * 2, TILE_SIZE * 2), (0, 0, 0, 0))
     draw = ImageDraw.Draw(image)
-    outline = _rgba(palette["outline"], 245)
-    dark = _rgba(palette["wall_dark"], 235)
-    face = _rgba(palette["wall_face"], 225)
-    steel = _rgba(palette["steel"], 230)
-    steel_light = _rgba(palette["steel_light"], 225)
-    cyan = _rgba(palette["cyan"], 225)
-    cyan_dim = _rgba(palette["cyan_dim"], 205)
-    amber = _rgba(palette["amber"], 225)
-    red = _rgba(palette["red"], 225)
-    violet = _rgba(palette["violet"], 225)
-    green = _rgba(palette["green"], 225)
-    warm = _rgba(palette["warm"], 225)
+    font = ImageFont.load_default()
+    outline = _rgba(palette["outline"], 250)
+    dark = _rgba(palette["wall_dark"], 242)
+    face = _rgba(palette["wall_face"], 235)
+    steel = _rgba(palette["steel"], 238)
+    steel_light = _rgba(palette["steel_light"], 235)
+    cyan = _rgba(palette["cyan"], 238)
+    cyan_dim = _rgba(palette["cyan_dim"], 218)
+    amber = _rgba(palette["amber"], 238)
+    red = _rgba(palette["red"], 238)
+    violet = _rgba(palette["violet"], 238)
+    green = _rgba(palette["green"], 238)
+    warm = _rgba(palette["warm"], 238)
+
+    captions = {
+        "external_infiltration_yard": ("YARD", amber),
+        "reception_checkpoint": ("HELIX IN", cyan),
+        "staff_office": ("STAFF", warm),
+        "locker_room": ("LOCKERS", steel_light),
+        "security_office": ("SEC OPS", amber),
+        "cctv_control_room": ("CCTV", cyan),
+        "electrical_room": ("POWER", amber),
+        "server_room": ("SERVERS", cyan),
+        "research_laboratory": ("BIO LAB", violet),
+        "guard_break_room": ("BREAK", warm),
+        "laser_corridor": ("LASER", red),
+        "vault_antechamber": ("VAULT IN", violet),
+        "chronos_vault": ("CHRONOS", violet),
+        "maintenance_passage": ("MAINT", amber),
+        "extraction_route": ("EXTRACT", green),
+    }
+    caption, caption_color = captions[room_id]
+    draw.rectangle((1, 1, 62, 11), fill=outline, outline=caption_color)
+    draw.text((5, 2), caption, fill=caption_color, font=font)
 
     if room_id == "external_infiltration_yard":
-        draw.line((3, 24, 61, 24), fill=steel_light, width=2)
-        for x in range(5, 49, 8):
-            draw.line((x, 8, x, 25), fill=steel)
-            draw.line((x, 9, x + 8, 21), fill=steel)
-        draw.line((52, 5, 52, 26), fill=steel_light, width=3)
-        draw.rectangle((47, 4, 61, 9), fill=outline, outline=amber)
-        draw.polygon(((49, 10), (59, 10), (63, 23), (45, 23)), fill=(230, 168, 58, 55))
+        draw.line((3, 56, 61, 56), fill=steel_light, width=3)
+        for x in range(5, 47, 8):
+            draw.line((x, 22, x, 57), fill=steel, width=2)
+            draw.line((x, 23, x + 8, 48), fill=steel)
+            draw.line((x + 8, 23, x, 48), fill=steel)
+        draw.line((53, 15, 53, 58), fill=steel_light, width=3)
+        draw.rectangle((47, 14, 61, 21), fill=outline, outline=amber)
+        draw.polygon(((47, 22), (60, 22), (63, 49), (40, 49)), fill=(230, 168, 58, 58))
+        draw.line((5, 61, 24, 61), fill=amber, width=2)
     elif room_id == "reception_checkpoint":
-        draw.rectangle((3, 5, 60, 27), fill=dark, outline=steel_light)
-        draw.polygon(((20, 8), (31, 16), (20, 24), (9, 16)), outline=cyan)
-        draw.line((16, 11, 16, 21), fill=cyan)
-        draw.line((24, 11, 24, 21), fill=cyan)
-        draw.line((16, 16, 24, 16), fill=cyan)
-        draw.rectangle((38, 9, 55, 23), fill=face, outline=amber)
-        draw.line((42, 13, 51, 13), fill=cyan_dim)
-        draw.rectangle((45, 18, 49, 21), fill=green)
+        draw.rectangle((3, 14, 60, 58), fill=dark, outline=steel_light)
+        draw.polygon(((19, 20), (31, 32), (19, 44), (7, 32)), outline=cyan, width=2)
+        draw.line((14, 24, 14, 40), fill=cyan, width=2)
+        draw.line((24, 24, 24, 40), fill=cyan, width=2)
+        draw.line((14, 32, 24, 32), fill=cyan, width=2)
+        draw.rectangle((38, 20, 55, 48), fill=face, outline=amber, width=2)
+        draw.line((42, 26, 51, 26), fill=cyan_dim, width=2)
+        draw.rectangle((44, 37, 50, 43), fill=green)
+        draw.line((34, 55, 59, 55), fill=cyan_dim, width=2)
     elif room_id == "staff_office":
-        draw.rectangle((3, 8, 60, 26), fill=steel, outline=steel_light)
-        draw.rectangle((7, 11, 22, 20), fill=dark, outline=cyan_dim)
-        draw.line((10, 17, 19, 14), fill=cyan)
-        draw.polygon(((30, 11), (42, 9), (44, 20), (32, 22)), fill=(220, 225, 205, 155), outline=warm)
-        draw.ellipse((47, 13, 55, 21), outline=warm, width=2)
-        draw.line((56, 23, 59, 12), fill=green, width=2)
-        draw.line((58, 15, 62, 10), fill=green)
+        for x in (4, 34):
+            draw.rectangle((x, 29, x + 26, 53), fill=steel, outline=steel_light)
+            draw.rectangle((x + 4, 20, x + 19, 34), fill=dark, outline=cyan_dim)
+            draw.line((x + 7, 29, x + 16, 25), fill=cyan)
+        draw.rectangle((7, 14, 28, 20), fill=(220, 225, 205, 150), outline=warm)
+        draw.line((11, 16, 18, 18, 24, 15), fill=warm)
+        draw.ellipse((49, 15, 57, 23), outline=green, width=2)
+        draw.line((53, 23, 53, 31), fill=green, width=2)
+        draw.rectangle((45, 53, 60, 58), fill=outline, outline=warm)
     elif room_id == "locker_room":
-        draw.rectangle((2, 16, 61, 25), fill=steel, outline=steel_light)
-        for x in (8, 22, 36, 50):
-            draw.line((x, 25, x - 2, 29), fill=outline, width=2)
-        draw.polygon(((8, 8), (16, 5), (22, 11), (18, 16), (9, 15)), fill=face, outline=amber)
-        draw.rectangle((30, 7, 43, 14), fill=dark, outline=cyan_dim)
-        draw.line((47, 7, 58, 7), fill=warm, width=2)
-        draw.line((50, 8, 48, 15, 57, 15, 54, 8), fill=warm)
+        for x in (3, 17, 31, 45):
+            draw.rectangle((x, 15, x + 12, 45), fill=face, outline=steel_light)
+            draw.line((x + 3, 22, x + 9, 22), fill=dark)
+            draw.rectangle((x + 9, 29, x + 10, 32), fill=warm)
+        draw.polygon(((17, 15), (30, 19), (30, 45), (17, 45)), fill=dark, outline=amber)
+        draw.line((19, 20, 27, 24), fill=cyan_dim)
+        draw.rectangle((6, 50, 57, 59), fill=steel, outline=steel_light)
+        for x in (12, 50):
+            draw.line((x, 59, x - 2, 63), fill=outline, width=2)
     elif room_id == "security_office":
-        draw.rectangle((2, 4, 61, 26), fill=dark, outline=amber)
-        draw.rectangle((6, 8, 41, 22), fill=face, outline=cyan_dim)
-        draw.line((9, 18, 16, 12, 23, 17, 31, 9, 38, 13), fill=amber, width=2)
-        for point in ((16, 12), (23, 17), (31, 9)):
-            draw.rectangle((point[0] - 1, point[1] - 1, point[0] + 1, point[1] + 1), fill=red)
-        draw.polygon(((51, 7), (59, 10), (57, 20), (51, 25), (45, 20), (43, 10)), outline=amber)
+        draw.rectangle((3, 15, 60, 58), fill=dark, outline=amber, width=2)
+        draw.rectangle((7, 20, 41, 48), fill=face, outline=cyan_dim)
+        draw.line((10, 42, 16, 30, 23, 38, 31, 24, 38, 31), fill=amber, width=2)
+        for point in ((16, 30), (23, 38), (31, 24)):
+            draw.rectangle((point[0] - 2, point[1] - 2, point[0] + 2, point[1] + 2), fill=red)
+        draw.polygon(((52, 19), (60, 23), (58, 42), (52, 52), (45, 42), (43, 23)), outline=amber, width=2)
+        draw.line((47, 31, 57, 31), fill=cyan)
+        draw.line((52, 26, 52, 42), fill=cyan)
     elif room_id == "cctv_control_room":
-        draw.rectangle((2, 3, 61, 27), fill=outline)
-        for x in (5, 24, 43):
-            draw.rectangle((x, 6, x + 15, 18), fill=dark, outline=cyan_dim)
-            draw.line((x + 2, 15, x + 6, 11, x + 10, 14, x + 13, 8), fill=cyan)
-        draw.rectangle((17, 22, 47, 26), fill=face, outline=amber)
-        draw.rectangle((51, 22, 56, 25), fill=green)
+        draw.rectangle((2, 14, 61, 56), fill=outline, outline=cyan_dim)
+        for y in (18, 35):
+            for x in (5, 24, 43):
+                draw.rectangle((x, y, x + 15, y + 13), fill=dark, outline=cyan_dim)
+                draw.line((x + 2, y + 10, x + 6, y + 6, x + 10, y + 9, x + 13, y + 4), fill=cyan)
+        draw.rectangle((14, 56, 50, 61), fill=face, outline=amber)
+        draw.rectangle((54, 57, 59, 60), fill=green)
     elif room_id == "electrical_room":
-        draw.rectangle((3, 5, 60, 27), fill=dark, outline=amber)
-        for y in (9, 16, 23):
-            draw.line((7, y, 30, y, 30, y - 3, 55, y - 3), fill=amber, width=2)
-        for x in (12, 24, 40, 52):
-            draw.rectangle((x, 7, x + 3, 11), fill=red if x > 30 else cyan)
-        draw.polygon(((33, 7), (28, 18), (34, 17), (30, 27), (42, 13), (35, 15)), fill=amber)
+        for x in (3, 33):
+            draw.rectangle((x, 15, x + 27, 59), fill=dark, outline=amber, width=2)
+            for y in (21, 31, 41, 51):
+                draw.line((x + 5, y, x + 22, y), fill=amber, width=2)
+                draw.rectangle((x + 7, y + 3, x + 10, y + 6), fill=cyan)
+                draw.rectangle((x + 17, y + 3, x + 20, y + 6), fill=red)
+        draw.polygon(((33, 16), (25, 35), (32, 33), (27, 51), (43, 28), (35, 31)), fill=amber)
     elif room_id == "server_room":
-        draw.rectangle((3, 4, 60, 28), fill=dark, outline=cyan_dim)
-        for x in (7, 25, 43):
-            draw.rectangle((x, 7, x + 13, 25), fill=face, outline=steel_light)
-            for y in (10, 14, 18, 22):
-                draw.line((x + 3, y, x + 10, y), fill=cyan_dim)
-                draw.point((x + 9, y - 1), fill=cyan if y % 8 else violet)
-        draw.line((7, 29, 57, 29), fill=cyan, width=2)
+        for x in (3, 23, 43):
+            draw.rectangle((x, 14, x + 17, 59), fill=dark, outline=steel_light)
+            for y in range(20, 55, 7):
+                draw.rectangle((x + 4, y, x + 13, y + 3), fill=face, outline=cyan_dim)
+                draw.point((x + 11, y + 1), fill=cyan if y % 14 else violet)
+        draw.line((5, 61, 59, 61), fill=cyan, width=2)
+        draw.arc((49, 18, 58, 27), 0, 359, fill=cyan_dim, width=1)
     elif room_id == "research_laboratory":
-        draw.rectangle((2, 6, 61, 27), fill=steel, outline=steel_light)
-        draw.rectangle((8, 9, 25, 24), fill=dark, outline=cyan)
-        draw.ellipse((13, 12, 21, 21), fill=(167, 123, 255, 90), outline=violet)
-        draw.line((16, 8, 16, 25), fill=cyan_dim)
-        draw.polygon(((42, 8), (55, 12), (55, 21), (42, 25), (32, 20), (32, 12)), outline=cyan)
-        draw.rectangle((41, 14, 46, 19), fill=violet)
+        draw.rectangle((3, 16, 29, 59), fill=steel, outline=steel_light)
+        draw.rectangle((8, 20, 24, 53), fill=dark, outline=cyan, width=2)
+        draw.ellipse((11, 27, 21, 42), fill=(167, 123, 255, 80), outline=violet, width=2)
+        draw.line((16, 18, 16, 55), fill=cyan_dim)
+        draw.polygon(((45, 17), (59, 25), (59, 47), (45, 56), (32, 47), (32, 25)), outline=cyan, width=2)
+        draw.rectangle((42, 31, 49, 40), fill=violet)
+        draw.line((35, 57, 57, 57), fill=cyan_dim)
     elif room_id == "guard_break_room":
-        draw.rectangle((3, 4, 26, 28), fill=dark, outline=warm)
-        draw.rectangle((7, 8, 22, 14), fill=(130, 43, 43, 220), outline=red)
-        for y in (18, 22):
-            draw.rectangle((8, y, 20, y + 2), fill=amber)
-        draw.rectangle((31, 11, 60, 27), fill=steel, outline=steel_light)
-        draw.ellipse((38, 15, 49, 24), outline=warm, width=2)
-        draw.arc((47, 15, 57, 25), 270, 90, fill=warm, width=2)
-        draw.line((42, 11, 44, 6), fill=warm)
+        draw.rectangle((3, 15, 27, 59), fill=dark, outline=warm)
+        draw.rectangle((7, 20, 23, 30), fill=(130, 43, 43, 220), outline=red)
+        for y in (37, 46, 53):
+            draw.rectangle((8, y, 21, y + 3), fill=amber)
+        draw.rectangle((32, 35, 61, 57), fill=steel, outline=steel_light)
+        draw.line((35, 45, 58, 45), fill=warm, width=2)
+        draw.ellipse((39, 20, 51, 32), outline=warm, width=2)
+        draw.arc((49, 21, 60, 32), 270, 90, fill=warm, width=2)
+        draw.line((43, 19, 45, 14), fill=warm)
     elif room_id == "laser_corridor":
-        draw.rectangle((2, 5, 61, 27), fill=dark, outline=red)
-        draw.polygon(((15, 8), (24, 8), (35, 16), (24, 24), (15, 24), (26, 16)), fill=red)
-        draw.rectangle((42, 8, 57, 23), outline=amber, width=2)
-        draw.line((46, 12, 53, 19), fill=red, width=2)
-        draw.line((53, 12, 46, 19), fill=red, width=2)
-        draw.rectangle((5, 13, 10, 19), fill=cyan_dim)
+        draw.rectangle((2, 14, 61, 59), fill=dark, outline=red, width=2)
+        for x in (5, 51):
+            draw.rectangle((x, 20, x + 8, 53), fill=face, outline=amber)
+            draw.rectangle((x + 2, 30, x + 6, 39), fill=red)
+        for y in (25, 36, 47):
+            draw.line((14, y, 50, y), fill=red, width=2)
+        for x in (19, 31, 43):
+            draw.polygon(((x, 54), (x + 7, 54), (x + 12, 59), (x + 5, 59)), fill=amber)
     elif room_id == "vault_antechamber":
-        draw.rectangle((2, 3, 61, 29), fill=outline)
-        draw.rectangle((5, 5, 58, 27), fill=dark, outline=steel_light)
-        draw.rectangle((9, 8, 31, 24), outline=violet, width=2)
-        draw.polygon(((20, 10), (27, 16), (20, 22), (13, 16)), outline=warm)
-        draw.rectangle((40, 8, 54, 24), fill=face, outline=amber)
-        draw.line((43, 12, 51, 12), fill=cyan)
-        draw.rectangle((46, 17, 49, 21), fill=green)
+        draw.rectangle((2, 13, 61, 61), fill=outline)
+        draw.rectangle((5, 16, 58, 58), fill=dark, outline=steel_light, width=2)
+        draw.ellipse((10, 20, 43, 55), outline=violet, width=3)
+        draw.ellipse((16, 26, 37, 49), outline=warm, width=2)
+        draw.line((26, 27, 26, 48), fill=violet, width=2)
+        draw.line((17, 38, 36, 38), fill=violet, width=2)
+        draw.rectangle((45, 23, 56, 51), fill=face, outline=amber)
+        draw.line((48, 29, 53, 29), fill=cyan)
+        draw.rectangle((49, 40, 53, 45), fill=green)
     elif room_id == "chronos_vault":
-        draw.rectangle((2, 22, 61, 28), fill=dark, outline=violet)
-        for center_x in (12, 52):
-            draw.rectangle((center_x - 5, 8, center_x + 5, 24), fill=face, outline=violet)
-            draw.ellipse((center_x - 4, 4, center_x + 4, 12), outline=cyan, width=2)
-        draw.ellipse((22, 4, 42, 24), outline=violet, width=2)
-        draw.ellipse((27, 9, 37, 19), fill=(48, 221, 227, 80), outline=cyan)
-        draw.line((17, 16, 22, 14), fill=violet)
-        draw.line((42, 14, 47, 16), fill=violet)
+        draw.rectangle((2, 54, 61, 61), fill=dark, outline=violet)
+        for center_x in (11, 53):
+            draw.rectangle((center_x - 6, 24, center_x + 6, 55), fill=face, outline=violet)
+            draw.ellipse((center_x - 5, 16, center_x + 5, 28), outline=cyan, width=2)
+        draw.ellipse((18, 17, 46, 49), outline=violet, width=3)
+        draw.ellipse((25, 24, 39, 42), fill=(48, 221, 227, 36), outline=cyan)
+        draw.line((17, 36, 24, 33), fill=violet, width=2)
+        draw.line((40, 33, 47, 36), fill=violet, width=2)
+        draw.line((32, 14, 32, 52), fill=cyan_dim)
     elif room_id == "maintenance_passage":
-        for y, color in ((8, amber), (18, cyan_dim)):
-            draw.line((2, y, 61, y), fill=color, width=3)
-        for x in (12, 34, 53):
-            draw.ellipse((x - 5, 12, x + 5, 22), fill=dark, outline=steel_light, width=2)
-            draw.line((x, 13, x, 21), fill=amber)
-            draw.line((x - 4, 17, x + 4, 17), fill=amber)
-        draw.rectangle((4, 24, 60, 29), fill=steel, outline=outline)
+        for y, color in ((20, amber), (39, cyan_dim)):
+            draw.line((2, y, 61, y), fill=color, width=4)
+            for x in (12, 34, 53):
+                draw.rectangle((x - 2, y - 4, x + 2, y + 4), fill=steel_light)
+        for x in (13, 36, 54):
+            draw.ellipse((x - 7, 29, x + 7, 44), fill=dark, outline=steel_light, width=2)
+            draw.line((x, 31, x, 42), fill=amber, width=2)
+            draw.line((x - 5, 36, x + 5, 36), fill=amber, width=2)
+        draw.rectangle((3, 51, 60, 61), fill=steel, outline=outline)
+        draw.line((7, 56, 25, 56), fill=amber, width=2)
     else:
-        draw.rectangle((2, 5, 61, 27), fill=dark, outline=green)
+        draw.rectangle((2, 14, 61, 60), fill=dark, outline=green, width=2)
+        draw.line((8, 51, 56, 51), fill=steel_light, width=3)
+        draw.line((8, 58, 56, 58), fill=steel_light, width=3)
         for x in (5, 22, 39):
-            draw.polygon(((x, 9), (x + 8, 9), (x + 17, 16), (x + 8, 23), (x, 23), (x + 9, 16)), fill=green)
-        draw.line((5, 27, 59, 27), fill=cyan, width=2)
-        draw.rectangle((53, 8, 58, 11), fill=warm)
+            draw.polygon(((x, 22), (x + 8, 22), (x + 17, 33), (x + 8, 44), (x, 44), (x + 9, 33)), fill=green)
+        draw.line((5, 47, 59, 47), fill=cyan, width=2)
+        draw.rectangle((52, 17, 59, 22), fill=amber)
 
-    draw.point((62, 1 + index), fill=(48, 221, 227, 80))
+    # Four tiny fabrication marks make every quadrant independently auditable
+    # while remaining invisible at normal play distance.
+    for quadrant in range(4):
+        marker_x = 1 + (quadrant % 2) * TILE_SIZE
+        marker_y = 13 + (quadrant // 2) * TILE_SIZE + ((index + quadrant) % 3)
+        draw.point((marker_x, marker_y), fill=(48, 221, 227, 72 + quadrant))
     return image
 
 
@@ -894,9 +946,16 @@ def _build_atlas(spec: dict[str, Any]) -> tuple[Image.Image, dict[str, tuple[int
     for index, room_id in enumerate(ROOM_ORDER):
         hero = _draw_room_hero(room_id, index, palette)
         for segment, coordinates in enumerate(ROOM_HERO_COORDS[room_id]):
+            segment_x = (segment % 2) * TILE_SIZE
+            segment_y = (segment // 2) * TILE_SIZE
             _paste(
                 atlas,
-                hero.crop((segment * TILE_SIZE, 0, (segment + 1) * TILE_SIZE, TILE_SIZE)),
+                hero.crop((
+                    segment_x,
+                    segment_y,
+                    segment_x + TILE_SIZE,
+                    segment_y + TILE_SIZE,
+                )),
                 coordinates,
             )
     return atlas, _registered_tiles()
@@ -1058,7 +1117,7 @@ def _make_preview(atlas: Image.Image, spec: dict[str, Any]) -> None:
     draw = ImageDraw.Draw(preview)
     font = ImageFont.load_default()
     draw.text((12, scaled.height + 12), "HELIX ENVIRONMENT ATLAS · 32 PX · VISUAL ONLY", fill=_rgba(spec["palette"]["cyan"]), font=font)
-    draw.text((12, scaled.height + 34), "ROWS 0-11 SYSTEM ART · 12-13 TWO-TILE ROOM HEROES", fill=_rgba(spec["palette"]["warm"]), font=font)
+    draw.text((12, scaled.height + 34), "ROWS 0-11 SYSTEM ART · 12-15 2X2 ROOM LANDMARKS", fill=_rgba(spec["palette"]["warm"]), font=font)
     draw.text((12, scaled.height + 56), "NEAREST FILTER · NO PHYSICS · NO OCCLUSION", fill=(186, 204, 218, 255), font=font)
     preview.save(PREVIEW_PATH, optimize=False)
 
@@ -1272,12 +1331,15 @@ def validate() -> None:
             not isinstance(hero_origin, list)
             or len(hero_origin) != 2
             or not 0 <= int(hero_origin[0]) < room_width - 1
-            or not 0 <= int(hero_origin[1]) < room_height
+            or not 0 <= int(hero_origin[1]) < room_height - 1
         ):
-            raise ValueError(f"Room {room_id} has an invalid two-cell hero origin")
+            raise ValueError(f"Room {room_id} has an invalid 2x2 hero origin")
         hero_world_cells = {
-            (room_x + int(hero_origin[0]) + segment, room_y + int(hero_origin[1]))
-            for segment in range(2)
+            (
+                room_x + int(hero_origin[0]) + (segment % 2),
+                room_y + int(hero_origin[1]) + (segment // 2),
+            )
+            for segment in range(4)
         }
         hero_overlap = hero_world_cells & (solid_cells | object_cells | portal_cells)
         if hero_overlap:

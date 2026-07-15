@@ -67,28 +67,58 @@ func _test_objective_progression_and_or_authorization() -> void:
 		"Chronos Core theft cannot complete before its prerequisite chain"
 	)
 	_check(
+		director.report_event(&"level_1_acquired")
+		and director.has_latched_event(&"level_1_acquired")
+		and director.objective_graph.get_state(MissionDirector.OBJECTIVE_LEVEL_1)
+		== ObjectiveGraph.ObjectiveState.LOCKED,
+		"early Level 1 pickup is retained as a pending world fact instead of being lost"
+	)
+	var pending_access_snapshot := director.capture_recall_state()
+	_check(
 		director.report_event(&"facility_entered")
-		and director.report_event(&"level_1_acquired"),
-		"infiltration and Level 1 access complete in authored order"
+		and director.objective_graph.get_state(MissionDirector.OBJECTIVE_INFILTRATE)
+		== ObjectiveGraph.ObjectiveState.COMPLETED
+		and director.objective_graph.get_state(MissionDirector.OBJECTIVE_LEVEL_1)
+		== ObjectiveGraph.ObjectiveState.COMPLETED,
+		"infiltration reconciles the already acquired Level 1 card without a soft-lock"
+	)
+	_check(
+		director.restore_recall_state(pending_access_snapshot)
+		and director.has_latched_event(&"level_1_acquired")
+		and director.objective_graph.get_state(MissionDirector.OBJECTIVE_LEVEL_1)
+		== ObjectiveGraph.ObjectiveState.LOCKED
+		and director.report_event(&"facility_entered")
+		and director.objective_graph.get_state(MissionDirector.OBJECTIVE_LEVEL_1)
+		== ObjectiveGraph.ObjectiveState.COMPLETED,
+		"Recall restores and deterministically reconciles the pending event ledger"
 	)
 	_check(
 		director.objective_graph.get_state(MissionDirector.OBJECTIVE_SERVER_OVERRIDE)
 		== ObjectiveGraph.ObjectiveState.LOCKED
+		and director.report_event(&"server_override")
+		and director.has_latched_event(&"server_override")
 		and not director.has_vault_authorization(),
-		"Server override remains locked and cannot grant authorization before Level 2"
+		"early Server override is retained but cannot authorize the vault before Level 2"
+	)
+	var post_level_one_ids := director.get_current_objective_ids()
+	_check(
+		post_level_one_ids.size() == 3
+		and post_level_one_ids[0] == MissionDirector.OBJECTIVE_LASERS
+		and post_level_one_ids[1] == MissionDirector.OBJECTIVE_LEVEL_2
+		and post_level_one_ids[2] == MissionDirector.OBJECTIVE_CCTV,
+		"required objectives stay ahead of the optional CCTV route in the bounded HUD list"
 	)
 	_check(
 		director.report_event(&"laser_disabled")
 		and director.report_event(&"level_2_acquired"),
-		"laser shutdown and Level 2 access complete in authored order"
+		"laser shutdown and Level 2 access reconcile the pending authorization chain"
 	)
 	_check(
-		director.report_event(&"server_override")
-		and director.has_vault_authorization()
+		director.has_vault_authorization()
 		and director.get_vault_authorization_route() == &"SERVER OVERRIDE"
 		and director.objective_graph.get_state(MissionDirector.OBJECTIVE_BIOMETRIC)
-		!= ObjectiveGraph.ObjectiveState.COMPLETED,
-		"Level 2 Server override satisfies the authorization OR without biometric completion"
+		== ObjectiveGraph.ObjectiveState.FAILED,
+		"pending Server override satisfies the OR and closes the unused biometric branch"
 	)
 	_check(
 		director.report_event(&"vault_entered"),
@@ -139,10 +169,28 @@ func _test_access_levels_and_rewind() -> void:
 		func(_door_id: StringName, _required: AccessControlManager.AccessLevel) -> void:
 			denial_count[0] += 1
 	)
+	var door_denial_count: Array[int] = [0]
+	var door_denial_reason: Array[String] = [""]
+	level_one.access_denied.connect(
+		func(
+			_door_id: StringName,
+			_required: AccessControlManager.AccessLevel,
+			reason: String
+		) -> void:
+			door_denial_count[0] += 1
+			door_denial_reason[0] = reason
+	)
 	_check(
 		not access.authorize(level_one.object_id, AccessControlManager.AccessLevel.LEVEL_1)
 		and denial_count[0] == 1,
 		"PUBLIC access receives explicit denial at a Level 1 door"
+	)
+	_check(
+		not level_one.interact(player)
+		and denial_count[0] == 1
+		and door_denial_count[0] == 1
+		and door_denial_reason[0] == "LEVEL 1 CARD REQUIRED",
+		"door interaction emits one reason-bearing denial without duplicating the manager path"
 	)
 	_check(
 		access.grant_access(AccessControlManager.AccessLevel.LEVEL_1, &"card_level_1")
@@ -180,6 +228,13 @@ func _test_access_levels_and_rewind() -> void:
 		and not access.has_credential(&"card_level_2"),
 		"Echo cannot manufacture a missing keycard through replay"
 	)
+	level_two.set_discovered(false)
+	_check(
+		not level_two.replay_event(&"interact", echo, {"authorized": true})
+		and not level_two.is_open,
+		"Echo cannot replay an authorized interaction against a door hidden in the restored branch"
+	)
+	level_two.set_discovered(true)
 	_check(
 		level_two.replay_event(&"interact", echo, {"authorized": true})
 		and level_two.is_open
@@ -206,8 +261,10 @@ func _test_terminal_actor_and_access_contract() -> void:
 	await _tree.process_frame
 	_check(
 		not authorization.can_interact(player)
-		and authorization.get_interaction_prompt(player) == "LEVEL 2 ACCESS REQUIRED",
-		"credential terminal exposes and enforces its Level 2 live-access requirement"
+		and authorization.get_interaction_prompt(player)
+		== "LEVEL 2 ACCESS REQUIRED  //  VAULT OVERRIDE"
+		and authorization.get_action_label() == "VAULT OVERRIDE",
+		"credential terminal names its action while enforcing Level 2 live access"
 	)
 	_check(
 		not authorization.can_interact(echo),
@@ -237,6 +294,32 @@ func _test_terminal_actor_and_access_contract() -> void:
 		and completed_actor.size() == 1
 		and completed_actor[0] == echo,
 		"Echo retains explicitly permitted deterministic distraction-terminal replay"
+	)
+	distraction.reset_mission()
+	_check(
+		distraction.interact(player),
+		"Recall boundary regression starts a live incomplete terminal transaction"
+	)
+	distraction.call(&"_process", distraction.hack_duration_seconds * 0.5)
+	var active_hack_snapshot := distraction.capture_recall_state()
+	distraction.complete_hack_immediately()
+	_check(
+		distraction.restore_recall_state(active_hack_snapshot)
+		and not distraction.is_completed
+		and is_zero_approx(distraction.hack_elapsed)
+		and distraction.can_interact(player)
+		and not distraction.is_processing(),
+		"Recall restores a mid-hack snapshot to a clean interactable boundary with no stranded owner"
+	)
+	var laser_terminal := HACK_TERMINAL_SCENE.instantiate() as HackTerminal
+	laser_terminal.action_id = &"disable_lasers"
+	fixture.add_child(laser_terminal)
+	_check(
+		laser_terminal.get_action_label() == "LASER GRID"
+		and laser_terminal.get_action_code() == "LZR"
+		and laser_terminal.get_action_color() != authorization.get_action_color()
+		and laser_terminal.get_action_label() != distraction.get_action_label(),
+		"terminal function is distinguishable by label, code, and color before interaction"
 	)
 	await _cleanup_fixture(fixture)
 
