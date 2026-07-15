@@ -54,6 +54,30 @@ func _on_body_entered(body: Node2D) -> void:
 
 func _draw() -> void:
 	var accent := Color("47e1a8") if is_active else Color("526078")
-	draw_circle(Vector2.ZERO, 48.0, Color(accent, 0.18))
-	draw_arc(Vector2.ZERO, 42.0, 0.0, TAU, 48, accent, 5.0)
-	draw_string(ThemeDB.fallback_font, Vector2(-32.0, 5.0), "EXTRACT", HORIZONTAL_ALIGNMENT_CENTER, 64.0)
+	var status_color := Color("30dde3") if is_active else Color("8390a3")
+	draw_circle(Vector2.ZERO, 52.0, Color(accent, 0.16))
+	draw_arc(Vector2.ZERO, 44.0, 0.0, TAU, 48, accent, 5.0)
+	draw_arc(Vector2.ZERO, 34.0, -PI * 0.92, -PI * 0.08, 24, Color(accent, 0.72), 2.0)
+	for direction: float in [-1.0, 1.0]:
+		var side_x := 58.0 * direction
+		draw_line(Vector2(side_x, -34.0), Vector2(side_x, 28.0), status_color, 4.0)
+		draw_line(Vector2(side_x, -34.0), Vector2(38.0 * direction, -34.0), status_color, 4.0)
+	for index: int in range(3):
+		var x := -24.0 + index * 17.0
+		draw_polyline(
+			PackedVector2Array([
+				Vector2(x, 16.0), Vector2(x + 8.0, 24.0), Vector2(x, 32.0),
+			]),
+			accent,
+			3.0
+		)
+	var status := "EXTRACT READY" if is_active else "EXTRACT LOCKED"
+	draw_string(
+		ThemeDB.fallback_font,
+		Vector2(-58.0, -57.0),
+		status,
+		HORIZONTAL_ALIGNMENT_CENTER,
+		116.0,
+		13,
+		status_color
+	)

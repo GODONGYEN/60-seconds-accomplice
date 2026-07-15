@@ -74,3 +74,75 @@ Cycles 1 and 2 were reviewed as distinct hypotheses and screenshot comparisons b
 **Remaining issues:** Staff Office and Guard Break Room need smaller storytelling props; CCTV/Server/Electrical state changes do not yet alter their environment art; ambient animation remains sparse.
 
 **Next candidates:** Stateful monitor/breaker presentation; warm Guard Break practical light; door/access-level silhouette pass.
+
+## Visual Cycle 3
+
+**Area:** Macro depth and visibility-safe practical focus
+**Commit before:** `2d26fe5`
+**Commit after:** this environment-completion change
+
+**Observed visual problem:** The full invisible wall field rendered as an
+infinite repeated panel mass, while room identity still depended heavily on
+Player/Guard illumination.
+
+**Art hypothesis:** Restricting visible walls to the gameplay boundary plus a
+two-cell deep ring, then adding room-clipped painted pools, would improve depth
+and focal hierarchy without changing visibility authority.
+
+**Result:** Kept. The original `Walls` layer remains collision/LOS authority.
+One presentation node paints two restrained pools per room with no
+`PointLight2D`, shadow, shader, particle, or hidden-room query. Large Yard and
+Extraction spaces receive additional signatures while retaining Guard-cone and
+navigation breathing room.
+
+## Visual Cycle 4
+
+**Area:** Deterministic room motion and mission-state feedback
+**Commit before:** `2d26fe5`
+**Commit after:** this environment-completion change
+
+**Observed visual problem:** Core and lasers carried nearly all environmental
+motion, and network shutdown/Core theft did not propagate into room dressing.
+
+**Art hypothesis:** One fixed presentation clock with stable room phases could
+make the facility feel alive without introducing frame-dependent gameplay.
+
+**Result:** Kept. Fifteen rooms receive restrained two-frame motion at 6 Hz.
+CCTV offline, laser offline, security alert, stolen Core, and extraction active
+select explicit state tiles. Pause freezes the tick and reset returns tick and
+state to zero; tests inspect both behaviors.
+
+## Visual Cycle 5
+
+**Area:** Fifteen-room identity, access doors, and complete evidence
+**Commit before:** `2d26fe5`
+**Commit after:** this environment-completion change
+
+**Observed visual problem:** The least-authored rooms lacked a large identifying
+silhouette, flat scaled doors did not match reinforced walls, and the capture
+tool covered only part of the operation.
+
+**Art hypothesis:** A unique two-cell hero per room, exact-span rank-specific
+door geometry, and a 15-room × three-state capture matrix would create both the
+visual result and a repeatable release gate.
+
+**Result:** Kept after a second QA pass. The initial draft left Yard and
+Extraction too empty and kept permanent Guard name labels; the accepted pass
+adds large-room signatures, stronger clipped pools, a redesigned extraction
+gate, safer room-label placement, and removes the redundant Guard training
+labels. The committed contact sheets cover clean art, initial gameplay, and
+synthetic late state. Synthetic late state is visual evidence, not a claim of a
+played mission completion.
+
+**Gameplay readability:** Preserved. No map cell, stable ID, patrol, access
+rule, mission objective, or Recall contract changed. Door implementation now
+uses per-instance exact shapes, but preserves the blueprint collision and
+occlusion spans.
+
+**Validation:** The authored pipeline registers 182 tiles across 15 room
+profiles and 16 semantic solids. The full Godot harness passes 817 assertions.
+The single-threaded Web export boots from local HTTP with zero browser
+warnings/errors at both 1280×720 and 1024×768. The latter preserves the full
+capture modal and HUD inside the letterboxed frame. The final PCK is 846,980
+bytes: +33,224 bytes (+4.1%) over the preceding art build and +47,292 bytes
+(+5.9%) over the original environment baseline.

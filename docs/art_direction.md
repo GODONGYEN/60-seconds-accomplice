@@ -66,7 +66,17 @@ The tutorial room is a dark science-fiction security facility:
 - Orange is reserved for guard/danger emphasis.
 - Small props do not block movement unless their collision is clearly visible.
 
-The AI facility image is a concept sheet, not a production TileSet. Its left-side map preview, perspective wall pieces, baked lighting examples, and non-seamless floor variations are reference-only. Preserved regression maps use deterministic project-authored derivatives. Operation: Black Minute uses a second deterministic HELIX atlas with seven floor families, walkable-neighbor wall masks, semantic furniture aligned to existing blueprint solids, and a vault signature circuit. Door, pressure plate, objective, exit, access card, terminal, camera, and laser remain stateful scenes rather than baked map tiles.
+The AI facility image is a concept sheet, not a production TileSet. Its
+left-side map preview, perspective wall pieces, baked lighting examples, and
+non-seamless floor variations are reference-only. Preserved regression maps use
+deterministic project-authored derivatives. Operation: Black Minute uses a
+second deterministic HELIX atlas with seven floor families, walkable-neighbor
+wall masks, a deep-wall ring, semantic furniture aligned to existing blueprint
+solids, and a vault signature circuit. All 15 rooms receive a unique signature,
+two-cell hero, clipped practical-light recipe, and pause-safe state animation.
+Access doors use exact-span industrial frames and rank-specific silhouettes.
+Pressure plate, objective, exit, access card, terminal, camera, laser, and door
+logic remain stateful scenes rather than baked map tiles.
 
 ## UI integration
 

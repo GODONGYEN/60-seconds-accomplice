@@ -1,13 +1,15 @@
 # Environment Art Backlog
 
-Items are unique and ordered by visual priority. `Evidence` refers to the committed 1280×720 screenshots, the additional 1024-wide native review, or the 1024×768 browser check described in `docs/visual_improvement_log.md`.
+Items are unique and ordered by visual priority. Completed work is retained here
+as an audit trail. Evidence refers to the committed 15-room contact sheets and
+the browser review described in `docs/visual_improvement_log.md`.
 
 ## Global visual problems
 
 | Severity | Target | Evidence | Expected impact | Effort | Risk | Dependencies | Status |
 |---|---|---|---|---|---|---|---|
-| HIGH | Practical room lighting | Most rooms score 3–4/10 lighting; current contrast comes mainly from Player visibility | stronger focal hierarchy and material depth | M | HIGH: hidden-room leaks | visibility capture matrix and door open/closed test | Ready for isolated prototype |
-| MEDIUM | Door/wall integration | Access doors retain the older flat style against reinforced wall art | clearer access hierarchy and doorway depth | M | MEDIUM: false opening silhouette | preserve door collision/state scenes | Backlog |
+| HIGH | Practical room lighting | 15 room-clipped painted recipes; no new gameplay-light nodes | stronger focal hierarchy and material depth | M | HIGH: hidden-room leaks | three-state capture matrix | **Complete** |
+| MEDIUM | Door/wall integration | rank-specific reinforced frame, exact span, open/closed silhouette | clearer access hierarchy and doorway depth | M | MEDIUM: false opening silhouette | exact collision/occluder assertions | **Complete** |
 
 ## Tiles
 
@@ -20,34 +22,34 @@ Items are unique and ordered by visual priority. `Evidence` refers to the commit
 
 | Severity | Target | Evidence | Expected impact | Effort | Risk | Dependencies | Status |
 |---|---|---|---|---|---|---|---|
-| HIGH | CCTV/Electrical/Research practical-light prototype | hero props read by pixels, not localized room light | cinematic focus and state readability | M | HIGH | zero wall leak, Web renderer, 3 resolutions | Candidate for cycle 3 |
-| MEDIUM | Warm Guard Break contrast | Guard Break remains one of the least distinctive rooms | humanizes facility and improves progression | S | MEDIUM | practical-light prototype accepted first | Blocked by lighting foundation |
+| HIGH | CCTV/Electrical/Research practical-light prototype | clipped cyan/amber/violet pools retained actor priority | cinematic focus and state readability | M | HIGH | zero wall leak and Web renderer | **Complete** |
+| MEDIUM | Warm Guard Break contrast | warm canteen hero and light recipe distinguish the room | humanizes facility and improves progression | S | MEDIUM | practical-light prototype | **Complete** |
 
 ## Room dressing
 
 | Severity | Target | Evidence | Expected impact | Effort | Risk | Dependencies | Status |
 |---|---|---|---|---|---|---|---|
-| MEDIUM | Staff Office / Guard Break | 5/10 storytelling; only core furniture silhouettes | controlled lived-in detail | M | MEDIUM: clutter and false collision | decals only on non-interactive cells | Backlog |
-| MEDIUM | Reception corporate identity | desk reads, but no scanner/logo silhouette yet | stronger first interior impression | S | LOW | symbol atlas additions | Backlog |
+| MEDIUM | Staff Office / Guard Break | unique two-cell heroes plus room signatures | controlled lived-in detail | M | MEDIUM: clutter and false collision | visual-only cells | **Complete** |
+| MEDIUM | Reception corporate identity | scanner/logo hero and desk silhouette | stronger first interior impression | S | LOW | symbol atlas additions | **Complete** |
 
 ## Hero assets
 
 | Severity | Target | Evidence | Expected impact | Effort | Risk | Dependencies | Status |
 |---|---|---|---|---|---|---|---|
-| MEDIUM | Stateful CCTV/breaker panels | network shutdown currently changes gameplay object but not semantic room furniture | visible cause/effect and satisfaction | M | MEDIUM: state desync | presentation listeners only | Backlog |
-| LOW | Vault stabilizer variation | Vault scores 9/10 but benches are static/repeated | richer climax | M | LOW | deterministic phase policy | Backlog |
+| MEDIUM | Stateful CCTV/breaker panels | explicit offline/alert/stolen/active tiles follow signals | visible cause/effect and satisfaction | M | MEDIUM: state desync | presentation listeners only | **Complete** |
+| LOW | Vault stabilizer variation | stable-phase vault motion plus stolen-Core state | richer climax | M | LOW | deterministic phase policy | **Complete** |
 
 ## Environment animation
 
 | Severity | Target | Evidence | Expected impact | Effort | Risk | Dependencies | Status |
 |---|---|---|---|---|---|---|---|
-| HIGH | Monitor/server/breaker micro-animation | environment animation remains 2/10 outside existing Core/laser | makes facility feel alive | M | MEDIUM: flashing/perf/pause | stable phase offsets, state listeners | Next after lighting decision |
+| HIGH | Monitor/server/breaker micro-animation | 15 pause-safe 6 Hz room loops with stable phases | makes facility feel alive | M | MEDIUM: flashing/perf/pause | stable phase offsets, state listeners | **Complete** |
 
 ## VFX
 
 | Severity | Target | Evidence | Expected impact | Effort | Risk | Dependencies | Status |
 |---|---|---|---|---|---|---|---|
-| LOW | Extraction/Core state pulse review | current hero effects remain readable | small reward polish | S | MEDIUM: obscures silhouettes | full mission-state capture | Backlog |
+| LOW | Extraction/Core state pulse review | late-state matrix retains Core/extraction readability | small reward polish | S | MEDIUM: obscures silhouettes | full mission-state capture | **Complete** |
 
 ## UI visual integration
 
@@ -60,5 +62,5 @@ Items are unique and ordered by visual priority. `Evidence` refers to the commit
 | Severity | Target | Evidence | Expected impact | Effort | Risk | Dependencies | Status |
 |---|---|---|---|---|---|---|---|
 | MEDIUM | Browser frame-time baseline | payload and node counts are measured; FPS/frame time not yet instrumented | quantitative guardrail for lights/animation | M | LOW | production Pages build | Backlog |
-| MEDIUM | Stateful visual screenshot matrix | static room centers captured; Ghost and online/offline comparisons are incomplete | safer stateful visual iteration | M | LOW | QA capture scene/state hooks | Backlog |
-| MEDIUM | Systems-floor detail rhythm | repeated amber marks remain visible in Electrical and Server | stronger local variation without restoring noise | S | LOW | reduce density or add one restrained variant | Backlog |
+| MEDIUM | Stateful visual screenshot matrix | all 15 rooms captured clean, initial, and synthetic late state | safer stateful visual iteration | M | LOW | deterministic capture hooks | **Complete for art-state QA; real-play late capture remains** |
+| MEDIUM | Systems-floor detail rhythm | sparse signatures and heroes replace the dominant repeated field | stronger local variation without restoring noise | S | LOW | seeded atlas variants | **Complete** |

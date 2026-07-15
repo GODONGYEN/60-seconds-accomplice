@@ -74,7 +74,10 @@ Environment cyan must remain dimmer and less saturated than the live Player viso
 - Emergency flashes, if added later, must be low-frequency, phase-stable, pause-safe, and accompanied by a non-color state cue.
 - No screen-reading shaders, broad bloom, or light radius shared indiscriminately across rooms.
 
-The current foundation uses material-level emissive imitation only. A real practical-light pass remains separate work so visibility can be tested independently.
+The accepted presentation pass uses low-alpha painted polygons clipped to each
+room rectangle. These pools establish focal hierarchy without becoming
+visibility authority, casting shadows, or leaking through walls. They are drawn
+by one pause-safe presenter; no additional `PointLight2D` is used.
 
 ## Dressing density
 
@@ -92,16 +95,16 @@ No tall decorative prop may be placed on a walkable cell unless gameplay collisi
 
 | Room | Material family | Hero / signature | Accent | Breathing-space rule |
 |---|---|---|---|---|
-| External Infiltration Yard | rough outdoor metal/concrete | drains, cracks, extraction ring | weathered amber | preserve the broad onboarding and extraction lane |
-| Reception Checkpoint | clean corporate panels | three-cell reception desk | dim cyan | clear path between public gate and checkpoint |
-| Staff Office | corporate panels | two compact work desks | cyan + future warm cue | desks remain on declared solids; work aisles stay empty |
+| External Infiltration Yard | rough outdoor metal/concrete | barrier beacon and drainage/fence signatures | weathered amber | preserve the broad onboarding and extraction lane |
+| Reception Checkpoint | clean corporate panels | scanner/logo console plus reception desk | dim cyan | clear path between public gate and checkpoint |
+| Staff Office | corporate panels | paired workstation silhouette and lived-in marks | cyan + warm cue | desks remain on declared solids; work aisles stay empty |
 | Locker Room | corporate panels | two six-cell locker banks | muted steel | Level 1 card silhouette must remain isolated |
 | Security Office | corporate/security | four-cell command desk | amber | Level 2 card and door approaches remain quiet |
 | CCTV Control Room | systems floor | 2×2 camera-feed monitor bank | cyan + amber | hacking terminal and Guard cone remain unobscured |
 | Electrical Room | systems floor | vertical breaker cabinets | amber + red | central terminal approach stays open |
 | Server Room | systems floor | paired vertical server racks | cyan LEDs + amber service line | rack aisles remain legible and walkable |
 | Research Laboratory | clean research floor | paired temporal research benches | cool cyan + violet | experiment floor stays bright enough for actors |
-| Guard Break Room | corporate foundation | break table | future warm practical light | preserve patrol turn radius |
+| Guard Break Room | corporate foundation | canteen/clock silhouette and warm practical light | warm amber | preserve patrol turn radius |
 | Laser Corridor | research/security floor | the live laser barriers | magenta/red | minimal dressing; lasers own the focal hierarchy |
 | Vault Antechamber | vault panels | reinforced portal and scanner path | restrained violet | intentionally sparse security threshold |
 | Chronos Vault | vault panels | 3×3 circuit dais beneath the Core | violet + cyan | Core silhouette and acquisition prompt always win |
@@ -113,9 +116,12 @@ No tall decorative prop may be placed on a walkable cell unless gameplay collisi
 `OperationBlackMinuteMap` uses the following split:
 
 - `Walls`: invisible original TileSet cells; authoritative collision and occlusion.
-- `WallArt`: visual-only reinforced wall tiles selected by walkable-neighbor mask.
+- `WallArt`: visual-only reinforced walkable-facing masks plus a two-cell deep-wall ring.
 - `Floor` and `FloorDetails`: visual-only room-family materials and sparse overlays.
 - `PropsAbove`: visual-only semantic furniture placed exactly on existing `internal_solid_rects`.
+- `HeroDetails`: one visual-only two-cell hero silhouette for each of the 15 rooms.
+- `AnimatedDetails`: one state/motion cell per room, refreshed at a fixed presentation tick.
+- `EnvironmentPresenter`: room-clipped painted practical pools and deterministic state routing.
 - Dynamic doors, cards, terminals, lasers, Core, extraction, Guards, cameras, Player, and Echoes remain independent scenes.
 
 `resources/tilesets/facility_environment_art.tres` must always contain zero physics layers and zero occlusion layers. A visual cycle that requires new geometry must be treated as a gameplay change and reviewed separately.
@@ -126,7 +132,10 @@ No tall decorative prop may be placed on a walkable cell unless gameplay collisi
 - Use deterministic phase offsets derived from stable IDs; avoid runtime randomness.
 - One to three subtle moving elements per room is enough.
 - Pause and Recall behavior must be explicit before adding an animation.
-- The current pass adds no new particle, light, shader, or animation nodes. Existing Core and laser effects remain the hero motion.
+- The current pass uses one fixed 6 Hz visual clock and stable room phases.
+  CCTV/laser shutdown, facility alert, stolen Core, and active extraction select
+  explicit state tiles. Reset returns every room to tick zero. No new particle,
+  shader, physics, occlusion, or shadow-casting light node is added.
 
 ## Review gates
 
@@ -138,6 +147,7 @@ Keep an art change only when:
 - Player, Ghost, Guard, keycards, terminals, lasers, Core, doors, and extraction remain more prominent than decoration;
 - no hidden-room information leaks through lighting;
 - Web export has no new console errors and payload growth is explained;
-- 1280×720 native captures and a 1024×768 browser viewport retain HUD and object readability.
+- all 15 rooms pass clean-art, initial-gameplay, and late-state 1280×720 captures;
+- a 1024×768 browser viewport retains HUD and object readability.
 
 Revert when decoration weakens gameplay recognition, implies false collision, introduces perspective/pixel-density drift, produces more repetition, or materially degrades Web performance.

@@ -353,10 +353,13 @@ Loop-end reason arbitration and Ghost count remain the responsibility of `Timeli
 Operation environment art is deliberately split from gameplay geometry:
 
 - the original `Walls` TileMap and `facility_tileset.tres` own collision and occlusion;
-- `WallArt`, `Floor`, `FloorDetails`, and `PropsAbove` use `facility_environment_art.tres`, which has zero physics and occlusion layers;
-- `facility_environment_catalog.gd` is generated beside the TileSet and is the runtime source for room families, seeded variants, semantic-solid mappings, and atlas coordinates;
+- `WallArt`, `Floor`, `FloorDetails`, `PropsAbove`, `HeroDetails`, and `AnimatedDetails` use `facility_environment_art.tres`, which has zero physics and occlusion layers;
+- `WallArt` renders only the walkable-facing boundary and a two-cell deep-wall ring; the full invisible `Walls` field remains authoritative;
+- `facility_environment_catalog.gd` is generated beside the TileSet and is the runtime source for room families, seeded variants, semantic-solid mappings, hero/state cells, and atlas coordinates;
 - semantic furniture is placed only on the blueprint's existing `internal_solid_rects`;
 - room variation uses stable room seeds and integer cell hashes, never runtime randomness;
+- `OperationEnvironmentPresenter` owns the fixed 6 Hz visual clock, 15 room heroes, room-clipped painted pools, and state-tile selection; it owns no collision, LOS, visibility, or mission state;
+- access doors build exact-span interaction, blocker, and occluder shapes per instance without root scaling or shared-shape mutation;
 - dynamic doors, terminals, cameras, lasers, cards, the Core, extraction, actors, and Echoes remain independent gameplay scenes.
 
 This lets an art rebuild change pixels without changing pathing, LOS, registry IDs, reset order, or Recall snapshots. The environment pipeline validates the boundary before CI accepts generated derivatives.
@@ -407,7 +410,9 @@ scripts/recording/chrono_recall_manager.gd       Recall transaction/Echo lifecyc
 scripts/recording/recall_history.gd              bounded branch recording
 scripts/recording/rewind_state_registry.gd       value snapshot contracts
 scripts/presentation/operation_black_minute_map.gd blueprint-driven map layers
+scripts/presentation/operation_environment_presenter.gd fixed-tick room light/motion/state presentation
 tools/environment_art_pipeline.py              deterministic visual-only HELIX atlas
+tools/build_environment_contact_sheet.py       deterministic 15-room visual evidence sheet
 resources/environment/facility_environment_catalog.gd generated runtime art mapping
 scripts/ui/mission_briefing.gd                   pre-mission briefing
 scripts/ui/facility_map_overlay.gd                tactical map

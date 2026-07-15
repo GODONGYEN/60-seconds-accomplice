@@ -1,17 +1,19 @@
 {
   "atlas_grid": [
     16,
-    10
+    14
   ],
   "atlas_size": [
     512,
-    320
+    448
   ],
   "blueprint_solid_count": 16,
   "collision_authority": "resources/tilesets/facility_tileset.tres",
   "generation_rules": {
+    "animation": "fixed presentation tick with stable room phase; gameplay-independent",
     "filter": "nearest",
     "floor_detail_density_target": "approximately 6 percent per room before signature overlays",
+    "lighting": "room-clipped painted pools; no additional PointLight2D nodes",
     "randomness": "none",
     "runtime_collision_layers": 0,
     "runtime_occlusion_layers": 0
@@ -19,6 +21,523 @@
   "generator": "tools/environment_art_pipeline.py",
   "godot_tileset": "resources/tilesets/facility_environment_art.tres",
   "mode": "RGBA",
+  "room_art": {
+    "cctv_control_room": {
+      "animation_cell": [
+        6,
+        3
+      ],
+      "hero_origin": [
+        2,
+        1
+      ],
+      "light_anchors": [
+        [
+          3,
+          3
+        ],
+        [
+          7,
+          4
+        ]
+      ],
+      "light_main": "#30DDE3",
+      "light_secondary": "#E6A83A",
+      "signature": "cctv_sightline",
+      "signature_cells": [
+        [
+          1,
+          6
+        ],
+        [
+          4,
+          1
+        ]
+      ]
+    },
+    "chronos_vault": {
+      "animation_cell": [
+        4,
+        4
+      ],
+      "hero_origin": [
+        3,
+        1
+      ],
+      "light_anchors": [
+        [
+          4,
+          4
+        ],
+        [
+          6,
+          6
+        ]
+      ],
+      "light_main": "#A77BFF",
+      "light_secondary": "#30DDE3",
+      "signature": "temporal_circuit",
+      "signature_cells": [
+        [
+          1,
+          7
+        ],
+        [
+          7,
+          1
+        ]
+      ]
+    },
+    "electrical_room": {
+      "animation_cell": [
+        2,
+        2
+      ],
+      "hero_origin": [
+        4,
+        1
+      ],
+      "light_anchors": [
+        [
+          3,
+          3
+        ],
+        [
+          7,
+          6
+        ]
+      ],
+      "light_main": "#E6A83A",
+      "light_secondary": "#D9565F",
+      "signature": "power_bus",
+      "signature_cells": [
+        [
+          4,
+          7
+        ],
+        [
+          9,
+          1
+        ]
+      ]
+    },
+    "external_infiltration_yard": {
+      "animation_cell": [
+        9,
+        2
+      ],
+      "hero_origin": [
+        4,
+        1
+      ],
+      "light_anchors": [
+        [
+          3,
+          3
+        ],
+        [
+          8,
+          9
+        ]
+      ],
+      "light_main": "#E6A83A",
+      "light_secondary": "#30DDE3",
+      "signature": "yard_drain",
+      "signature_cells": [
+        [
+          1,
+          2
+        ],
+        [
+          9,
+          8
+        ],
+        [
+          1,
+          10
+        ],
+        [
+          9,
+          2
+        ]
+      ]
+    },
+    "extraction_route": {
+      "animation_cell": [
+        2,
+        5
+      ],
+      "hero_origin": [
+        10,
+        1
+      ],
+      "light_anchors": [
+        [
+          5,
+          3
+        ],
+        [
+          17,
+          3
+        ]
+      ],
+      "light_main": "#5CCB96",
+      "light_secondary": "#30DDE3",
+      "signature": "extraction_runway",
+      "signature_cells": [
+        [
+          2,
+          5
+        ],
+        [
+          20,
+          5
+        ],
+        [
+          7,
+          2
+        ],
+        [
+          15,
+          2
+        ]
+      ]
+    },
+    "guard_break_room": {
+      "animation_cell": [
+        5,
+        4
+      ],
+      "hero_origin": [
+        1,
+        1
+      ],
+      "light_anchors": [
+        [
+          3,
+          3
+        ],
+        [
+          6,
+          5
+        ]
+      ],
+      "light_main": "#F2D58A",
+      "light_secondary": "#E6A83A",
+      "signature": "coffee_break",
+      "signature_cells": [
+        [
+          1,
+          5
+        ],
+        [
+          7,
+          1
+        ],
+        [
+          7,
+          6
+        ]
+      ]
+    },
+    "laser_corridor": {
+      "animation_cell": [
+        1,
+        1
+      ],
+      "hero_origin": [
+        5,
+        0
+      ],
+      "light_anchors": [
+        [
+          3,
+          2
+        ],
+        [
+          8,
+          2
+        ]
+      ],
+      "light_main": "#D9565F",
+      "light_secondary": "#30DDE3",
+      "signature": "laser_chevrons",
+      "signature_cells": [
+        [
+          1,
+          2
+        ],
+        [
+          10,
+          2
+        ]
+      ]
+    },
+    "locker_room": {
+      "animation_cell": [
+        4,
+        1
+      ],
+      "hero_origin": [
+        3,
+        2
+      ],
+      "light_anchors": [
+        [
+          2,
+          3
+        ],
+        [
+          6,
+          4
+        ]
+      ],
+      "light_main": "#B9D7E8",
+      "light_secondary": "#E6A83A",
+      "signature": "locker_roster",
+      "signature_cells": [
+        [
+          1,
+          3
+        ],
+        [
+          7,
+          4
+        ]
+      ]
+    },
+    "maintenance_passage": {
+      "animation_cell": [
+        2,
+        2
+      ],
+      "hero_origin": [
+        5,
+        1
+      ],
+      "light_anchors": [
+        [
+          4,
+          3
+        ],
+        [
+          9,
+          5
+        ]
+      ],
+      "light_main": "#E6A83A",
+      "light_secondary": "#30DDE3",
+      "signature": "maintenance_flow",
+      "signature_cells": [
+        [
+          5,
+          6
+        ],
+        [
+          11,
+          1
+        ]
+      ]
+    },
+    "reception_checkpoint": {
+      "animation_cell": [
+        6,
+        3
+      ],
+      "hero_origin": [
+        4,
+        1
+      ],
+      "light_anchors": [
+        [
+          2,
+          3
+        ],
+        [
+          7,
+          5
+        ]
+      ],
+      "light_main": "#30DDE3",
+      "light_secondary": "#F2D58A",
+      "signature": "helix_lobby_seal",
+      "signature_cells": [
+        [
+          1,
+          2
+        ],
+        [
+          8,
+          7
+        ]
+      ]
+    },
+    "research_laboratory": {
+      "animation_cell": [
+        4,
+        3
+      ],
+      "hero_origin": [
+        5,
+        1
+      ],
+      "light_anchors": [
+        [
+          4,
+          3
+        ],
+        [
+          8,
+          6
+        ]
+      ],
+      "light_main": "#72E6EA",
+      "light_secondary": "#A77BFF",
+      "signature": "specimen_hex",
+      "signature_cells": [
+        [
+          1,
+          7
+        ],
+        [
+          10,
+          1
+        ]
+      ]
+    },
+    "security_office": {
+      "animation_cell": [
+        3,
+        2
+      ],
+      "hero_origin": [
+        4,
+        1
+      ],
+      "light_anchors": [
+        [
+          3,
+          3
+        ],
+        [
+          7,
+          6
+        ]
+      ],
+      "light_main": "#E6A83A",
+      "light_secondary": "#30DDE3",
+      "signature": "security_shield",
+      "signature_cells": [
+        [
+          1,
+          6
+        ],
+        [
+          9,
+          2
+        ]
+      ]
+    },
+    "server_room": {
+      "animation_cell": [
+        2,
+        2
+      ],
+      "hero_origin": [
+        4,
+        1
+      ],
+      "light_anchors": [
+        [
+          3,
+          3
+        ],
+        [
+          7,
+          4
+        ]
+      ],
+      "light_main": "#30DDE3",
+      "light_secondary": "#A77BFF",
+      "signature": "cooling_vent",
+      "signature_cells": [
+        [
+          4,
+          6
+        ],
+        [
+          9,
+          1
+        ]
+      ]
+    },
+    "staff_office": {
+      "animation_cell": [
+        2,
+        1
+      ],
+      "hero_origin": [
+        4,
+        1
+      ],
+      "light_anchors": [
+        [
+          3,
+          3
+        ],
+        [
+          7,
+          6
+        ]
+      ],
+      "light_main": "#F2D58A",
+      "light_secondary": "#30DDE3",
+      "signature": "staff_papers",
+      "signature_cells": [
+        [
+          1,
+          2
+        ],
+        [
+          5,
+          7
+        ]
+      ]
+    },
+    "vault_antechamber": {
+      "animation_cell": [
+        1,
+        1
+      ],
+      "hero_origin": [
+        3,
+        1
+      ],
+      "light_anchors": [
+        [
+          3,
+          3
+        ],
+        [
+          4,
+          7
+        ]
+      ],
+      "light_main": "#F2D58A",
+      "light_secondary": "#A77BFF",
+      "signature": "vault_authorization",
+      "signature_cells": [
+        [
+          1,
+          7
+        ],
+        [
+          6,
+          2
+        ]
+      ]
+    }
+  },
   "room_families": {
     "cctv_control_room": "systems",
     "chronos_vault": "vault",
@@ -80,10 +599,15 @@
     "usage": "visual direction reference only; no runtime dependency"
   },
   "tile_counts": {
+    "deep_wall": 2,
     "floor": 14,
     "floor_detail": 12,
+    "room_animation": 30,
+    "room_hero": 30,
+    "room_signature": 15,
     "semantic_solid": 33,
-    "total": 100,
+    "state": 5,
+    "total": 182,
     "vault_signature": 9,
     "wall": 32
   },
@@ -92,6 +616,126 @@
     32
   ],
   "tiles": {
+    "animation_cctv_control_room_0": [
+      5,
+      9
+    ],
+    "animation_cctv_control_room_1": [
+      5,
+      10
+    ],
+    "animation_chronos_vault_0": [
+      12,
+      9
+    ],
+    "animation_chronos_vault_1": [
+      12,
+      10
+    ],
+    "animation_electrical_room_0": [
+      6,
+      9
+    ],
+    "animation_electrical_room_1": [
+      6,
+      10
+    ],
+    "animation_external_infiltration_yard_0": [
+      0,
+      9
+    ],
+    "animation_external_infiltration_yard_1": [
+      0,
+      10
+    ],
+    "animation_extraction_route_0": [
+      14,
+      9
+    ],
+    "animation_extraction_route_1": [
+      14,
+      10
+    ],
+    "animation_guard_break_room_0": [
+      9,
+      9
+    ],
+    "animation_guard_break_room_1": [
+      9,
+      10
+    ],
+    "animation_laser_corridor_0": [
+      10,
+      9
+    ],
+    "animation_laser_corridor_1": [
+      10,
+      10
+    ],
+    "animation_locker_room_0": [
+      3,
+      9
+    ],
+    "animation_locker_room_1": [
+      3,
+      10
+    ],
+    "animation_maintenance_passage_0": [
+      13,
+      9
+    ],
+    "animation_maintenance_passage_1": [
+      13,
+      10
+    ],
+    "animation_reception_checkpoint_0": [
+      1,
+      9
+    ],
+    "animation_reception_checkpoint_1": [
+      1,
+      10
+    ],
+    "animation_research_laboratory_0": [
+      8,
+      9
+    ],
+    "animation_research_laboratory_1": [
+      8,
+      10
+    ],
+    "animation_security_office_0": [
+      4,
+      9
+    ],
+    "animation_security_office_1": [
+      4,
+      10
+    ],
+    "animation_server_room_0": [
+      7,
+      9
+    ],
+    "animation_server_room_1": [
+      7,
+      10
+    ],
+    "animation_staff_office_0": [
+      2,
+      9
+    ],
+    "animation_staff_office_1": [
+      2,
+      10
+    ],
+    "animation_vault_antechamber_0": [
+      11,
+      9
+    ],
+    "animation_vault_antechamber_1": [
+      11,
+      10
+    ],
     "bench_left": [
       8,
       5
@@ -119,6 +763,14 @@
     "cctv_top_right": [
       11,
       4
+    ],
+    "deep_wall_0": [
+      5,
+      11
+    ],
+    "deep_wall_1": [
+      6,
+      11
     ],
     "desk_left": [
       0,
@@ -248,6 +900,126 @@
       0,
       0
     ],
+    "hero_cctv_control_room_0": [
+      10,
+      12
+    ],
+    "hero_cctv_control_room_1": [
+      11,
+      12
+    ],
+    "hero_chronos_vault_0": [
+      8,
+      13
+    ],
+    "hero_chronos_vault_1": [
+      9,
+      13
+    ],
+    "hero_electrical_room_0": [
+      12,
+      12
+    ],
+    "hero_electrical_room_1": [
+      13,
+      12
+    ],
+    "hero_external_infiltration_yard_0": [
+      0,
+      12
+    ],
+    "hero_external_infiltration_yard_1": [
+      1,
+      12
+    ],
+    "hero_extraction_route_0": [
+      12,
+      13
+    ],
+    "hero_extraction_route_1": [
+      13,
+      13
+    ],
+    "hero_guard_break_room_0": [
+      2,
+      13
+    ],
+    "hero_guard_break_room_1": [
+      3,
+      13
+    ],
+    "hero_laser_corridor_0": [
+      4,
+      13
+    ],
+    "hero_laser_corridor_1": [
+      5,
+      13
+    ],
+    "hero_locker_room_0": [
+      6,
+      12
+    ],
+    "hero_locker_room_1": [
+      7,
+      12
+    ],
+    "hero_maintenance_passage_0": [
+      10,
+      13
+    ],
+    "hero_maintenance_passage_1": [
+      11,
+      13
+    ],
+    "hero_reception_checkpoint_0": [
+      2,
+      12
+    ],
+    "hero_reception_checkpoint_1": [
+      3,
+      12
+    ],
+    "hero_research_laboratory_0": [
+      0,
+      13
+    ],
+    "hero_research_laboratory_1": [
+      1,
+      13
+    ],
+    "hero_security_office_0": [
+      8,
+      12
+    ],
+    "hero_security_office_1": [
+      9,
+      12
+    ],
+    "hero_server_room_0": [
+      14,
+      12
+    ],
+    "hero_server_room_1": [
+      15,
+      12
+    ],
+    "hero_staff_office_0": [
+      4,
+      12
+    ],
+    "hero_staff_office_1": [
+      5,
+      12
+    ],
+    "hero_vault_antechamber_0": [
+      6,
+      13
+    ],
+    "hero_vault_antechamber_1": [
+      7,
+      13
+    ],
     "locker_left": [
       3,
       4
@@ -319,6 +1091,86 @@
     "server_top": [
       5,
       5
+    ],
+    "signature_cctv_control_room": [
+      5,
+      7
+    ],
+    "signature_chronos_vault": [
+      12,
+      7
+    ],
+    "signature_electrical_room": [
+      6,
+      7
+    ],
+    "signature_external_infiltration_yard": [
+      0,
+      7
+    ],
+    "signature_extraction_route": [
+      14,
+      7
+    ],
+    "signature_guard_break_room": [
+      9,
+      7
+    ],
+    "signature_laser_corridor": [
+      10,
+      7
+    ],
+    "signature_locker_room": [
+      3,
+      7
+    ],
+    "signature_maintenance_passage": [
+      13,
+      7
+    ],
+    "signature_reception_checkpoint": [
+      1,
+      7
+    ],
+    "signature_research_laboratory": [
+      8,
+      7
+    ],
+    "signature_security_office": [
+      4,
+      7
+    ],
+    "signature_server_room": [
+      7,
+      7
+    ],
+    "signature_staff_office": [
+      2,
+      7
+    ],
+    "signature_vault_antechamber": [
+      11,
+      7
+    ],
+    "state_cctv_offline": [
+      0,
+      11
+    ],
+    "state_extraction_active": [
+      4,
+      11
+    ],
+    "state_laser_offline": [
+      1,
+      11
+    ],
+    "state_security_alert": [
+      2,
+      11
+    ],
+    "state_vault_stolen": [
+      3,
+      11
     ],
     "table_left": [
       8,

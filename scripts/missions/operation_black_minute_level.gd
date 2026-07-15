@@ -122,6 +122,7 @@ func reset_operation() -> bool:
 	if not _operation_ready:
 		return false
 	_set_runtime_simulation(false)
+	operation_map.reset_environment_presentation()
 	get_tree().paused = false
 	_pause_open = false
 	_capture_pending = false
@@ -302,11 +303,9 @@ func _spawn_access_doors() -> void:
 		door.required_access = _parse_access_level(String(portal.get("required_access", "PUBLIC")))
 		door.starts_open = bool(portal.get("initially_open", false))
 		door.position = _rect_world_center(span)
+		door.configure_span_length(float(maxi(span.size.x, span.size.y) * TILE_SIZE))
 		if span.size.x > span.size.y:
 			door.rotation = PI * 0.5
-			door.scale.y = maxf(0.5, float(span.size.x) / 3.0)
-		else:
-			door.scale.y = maxf(0.5, float(span.size.y) / 3.0)
 		var required_flags := _string_name_array(portal.get("required_flags_all", []))
 		var condition := Callable()
 		var denial_message := "SECURITY CONDITION NOT MET"
@@ -855,6 +854,8 @@ func _on_core_state_changed(is_carried: bool) -> void:
 		player.initialize_at(player.global_position)
 	if _extraction != null:
 		_extraction.set_active(is_carried)
+	operation_map.set_core_visual_state(is_carried)
+	operation_map.set_extraction_visual_state(is_carried)
 	hud.set_core_carried(is_carried)
 	_sync_map_status()
 
@@ -880,12 +881,22 @@ func _on_access_denied(
 func _on_cctv_network_changed(is_online: bool) -> void:
 	for camera: SecurityCamera in _cameras:
 		camera.set_network_online(is_online)
+	operation_map.set_security_visual_state(
+		security_system.cctv_online,
+		security_system.laser_online,
+		security_system.alert_level
+	)
 	_sync_security_ui()
 
 
 func _on_laser_network_changed(is_online: bool) -> void:
 	for laser: SecurityLaser in _lasers:
 		laser.set_active(is_online)
+	operation_map.set_security_visual_state(
+		security_system.cctv_online,
+		security_system.laser_online,
+		security_system.alert_level
+	)
 	_sync_security_ui()
 
 
@@ -899,6 +910,11 @@ func _on_alert_level_changed(
 		audio_feedback.play_alert()
 	elif _current != _previous and _current == SecuritySystemManager.AlertLevel.SUSPICIOUS:
 		audio_feedback.play_suspicion()
+	operation_map.set_security_visual_state(
+		security_system.cctv_online,
+		security_system.laser_online,
+		security_system.alert_level
+	)
 	_sync_security_ui()
 
 

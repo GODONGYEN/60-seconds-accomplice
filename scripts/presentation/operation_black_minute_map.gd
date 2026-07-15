@@ -24,6 +24,7 @@ const VAULT_RING_ORIGIN := Vector2i(57, 7)
 @onready var wall_art: TileMapLayer = %WallArt
 @onready var props_below: TileMapLayer = %PropsBelow
 @onready var props_above: TileMapLayer = %PropsAbove
+@onready var environment_presenter: OperationEnvironmentPresenter = %EnvironmentPresenter
 @onready var room_labels: Node2D = %RoomLabels
 @onready var observation_windows: Node2D = %ObservationWindows
 
@@ -32,12 +33,15 @@ var _walkable_cells: Dictionary[Vector2i, bool] = {}
 var _room_by_cell: Dictionary[Vector2i, StringName] = {}
 var _solid_cells: Dictionary[Vector2i, bool] = {}
 var _semantic_solid_cell_count: int = 0
+var _room_signature_cell_count: int = 0
 
 
 func _ready() -> void:
 	if not load_blueprint():
 		return
 	rebuild_map()
+	if not environment_presenter.configure(_blueprint, ENVIRONMENT_ART_TILESET):
+		push_error("OperationBlackMinuteMap could not configure environment presentation")
 
 
 func load_blueprint() -> bool:
@@ -69,8 +73,11 @@ func rebuild_map() -> void:
 				_place_room_floor_detail(cell)
 			else:
 				walls.set_cell(cell, SOURCE_ID, _select_collision_wall_tile(cell))
-				wall_art.set_cell(cell, SOURCE_ID, _select_wall_art_tile(cell))
+				var wall_tile := _select_wall_art_tile(cell)
+				if wall_tile != Vector2i(-1, -1):
+					wall_art.set_cell(cell, SOURCE_ID, wall_tile)
 	_place_semantic_solids()
+	_place_room_signatures()
 	_place_signature_floor_details()
 	_build_room_labels()
 	_build_observation_windows()
@@ -104,6 +111,34 @@ func get_semantic_solid_cell_count() -> int:
 
 func get_floor_detail_cell_count() -> int:
 	return floor_details.get_used_cells().size()
+
+
+func get_room_signature_count() -> int:
+	return _room_signature_cell_count
+
+
+func get_visible_wall_art_cell_count() -> int:
+	return wall_art.get_used_cells().size()
+
+
+func reset_environment_presentation() -> void:
+	environment_presenter.reset_environment_presentation()
+
+
+func set_security_visual_state(
+	cctv_online: bool,
+	laser_online: bool,
+	alert_level: int
+) -> void:
+	environment_presenter.set_security_visual_state(cctv_online, laser_online, alert_level)
+
+
+func set_core_visual_state(is_carried: bool) -> void:
+	environment_presenter.set_core_visual_state(is_carried)
+
+
+func set_extraction_visual_state(is_active: bool) -> void:
+	environment_presenter.set_extraction_visual_state(is_active)
 
 
 func is_walkable_cell(cell: Vector2i) -> bool:
@@ -219,6 +254,34 @@ func _select_floor_tile(cell: Vector2i) -> Vector2i:
 	return variants[variant_index]
 
 
+func _place_room_signatures() -> void:
+	_room_signature_cell_count = 0
+	for room_id: StringName in ENVIRONMENT_CATALOG.ROOM_ART:
+		var room_rect := get_room_rect(room_id)
+		var profile: Dictionary = ENVIRONMENT_CATALOG.ROOM_ART[room_id]
+		var atlas_coordinates: Vector2i = ENVIRONMENT_CATALOG.ROOM_SIGNATURE_TILES.get(
+			room_id,
+			Vector2i(-1, -1)
+		)
+		if room_rect.size == Vector2i.ZERO or atlas_coordinates == Vector2i(-1, -1):
+			push_warning("Operation environment skipped invalid signature profile '%s'" % room_id)
+			continue
+		var local_cells: Array = profile.get(&"signature_cells", [])
+		for local_variant: Variant in local_cells:
+			if not local_variant is Vector2i:
+				push_warning("Operation environment room '%s' has a malformed signature cell" % room_id)
+				continue
+			var cell := room_rect.position + (local_variant as Vector2i)
+			if not is_walkable_cell(cell):
+				push_warning(
+					"Operation environment room '%s' skipped blocked signature cell %s"
+					% [room_id, cell]
+				)
+				continue
+			floor_details.set_cell(cell, SOURCE_ID, atlas_coordinates)
+			_room_signature_cell_count += 1
+
+
 func _place_signature_floor_details() -> void:
 	for local_y: int in range(3):
 		for local_x: int in range(3):
@@ -312,7 +375,7 @@ func _build_room_labels() -> void:
 		var rect := _json_rect(room_data.get("rect", []))
 		var label := Label.new()
 		label.text = String(room_data.get("display_name", str(room_key))).to_upper()
-		label.position = Vector2(rect.position * TILE_SIZE) + Vector2(10.0, 7.0)
+		label.position = Vector2(rect.position * TILE_SIZE) + Vector2(10.0, 30.0)
 		label.add_theme_font_size_override("font_size", 11)
 		label.add_theme_color_override("font_color", Color(0.42, 0.75, 0.82, 0.68))
 		label.add_theme_color_override("font_outline_color", Color(0.01, 0.03, 0.05, 0.9))
@@ -341,17 +404,47 @@ func _build_observation_windows() -> void:
 		shape_node.shape = shape
 		body.position = Vector2(rect.position * TILE_SIZE) + shape.size * 0.5
 		body.add_child(shape_node)
-		var line := Line2D.new()
-		line.width = 4.0
-		line.default_color = Color(0.25, 0.9, 1.0, 0.55)
-		line.points = PackedVector2Array([
-			-shape.size * 0.5,
-			Vector2(shape.size.x * 0.5, -shape.size.y * 0.5),
-			shape.size * 0.5,
-			Vector2(-shape.size.x * 0.5, shape.size.y * 0.5),
-			-shape.size * 0.5,
+		var half_size := shape.size * 0.5
+		var glass := Polygon2D.new()
+		glass.polygon = PackedVector2Array([
+			-half_size,
+			Vector2(half_size.x, -half_size.y),
+			half_size,
+			Vector2(-half_size.x, half_size.y),
 		])
-		body.add_child(line)
+		glass.color = Color(0.05, 0.22, 0.29, 0.78)
+		body.add_child(glass)
+		var frame := Line2D.new()
+		frame.width = 5.0
+		frame.default_color = Color(0.22, 0.55, 0.66, 0.92)
+		frame.antialiased = false
+		frame.points = PackedVector2Array([
+			-half_size,
+			Vector2(half_size.x, -half_size.y),
+			half_size,
+			Vector2(-half_size.x, half_size.y),
+			-half_size,
+		])
+		body.add_child(frame)
+		var reflection := Line2D.new()
+		reflection.width = 2.0
+		reflection.default_color = Color(0.42, 0.88, 0.94, 0.42)
+		reflection.antialiased = false
+		reflection.points = PackedVector2Array([
+			Vector2(-half_size.x + 7.0, -half_size.y + 8.0),
+			Vector2(half_size.x - 7.0, half_size.y - 8.0),
+		])
+		body.add_child(reflection)
+		var mullion := Line2D.new()
+		mullion.width = 3.0
+		mullion.default_color = Color(0.09, 0.19, 0.26, 0.96)
+		mullion.antialiased = false
+		mullion.points = (
+			PackedVector2Array([Vector2(0.0, -half_size.y), Vector2(0.0, half_size.y)])
+			if shape.size.x >= shape.size.y
+			else PackedVector2Array([Vector2(-half_size.x, 0.0), Vector2(half_size.x, 0.0)])
+		)
+		body.add_child(mullion)
 		observation_windows.add_child(body)
 
 
@@ -373,8 +466,24 @@ func _select_wall_art_tile(cell: Vector2i) -> Vector2i:
 		mask |= 4
 	if is_walkable_cell(cell + Vector2i.LEFT):
 		mask |= 8
-	var variant := 1 if _stable_cell_hash(cell, 211) % 13 == 0 else 0
-	return Vector2i(mask, 2 + variant)
+	if mask != 0:
+		var variant := 1 if _stable_cell_hash(cell, 211) % 13 == 0 else 0
+		return Vector2i(mask, 2 + variant)
+	if _is_within_wall_depth_ring(cell):
+		var deep_variant := _stable_cell_hash(cell, 307) % ENVIRONMENT_CATALOG.DEEP_WALL_TILES.size()
+		return ENVIRONMENT_CATALOG.DEEP_WALL_TILES[deep_variant]
+	return Vector2i(-1, -1)
+
+
+func _is_within_wall_depth_ring(cell: Vector2i) -> bool:
+	for offset_x: int in range(-2, 3):
+		for offset_y: int in range(-2, 3):
+			var manhattan_distance := absi(offset_x) + absi(offset_y)
+			if manhattan_distance == 0 or manhattan_distance > 2:
+				continue
+			if is_walkable_cell(cell + Vector2i(offset_x, offset_y)):
+				return true
+	return false
 
 
 static func _stable_cell_hash(cell: Vector2i, seed: int) -> int:

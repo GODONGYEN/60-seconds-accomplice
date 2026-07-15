@@ -10,6 +10,9 @@ const ENVIRONMENT_ART_TILESET: TileSet = preload(
 const ENVIRONMENT_ART_ATLAS_PATH: String = (
 	"res://assets/sprites/environment/facility_environment_atlas.png"
 )
+const ENVIRONMENT_CATALOG: GDScript = preload(
+	"res://resources/environment/facility_environment_catalog.gd"
+)
 const STEP_SECONDS: float = 0.05
 
 var _tree: SceneTree
@@ -81,9 +84,71 @@ func _test_runtime_contract(operation: OperationBlackMinuteLevel) -> void:
 		"all sixteen blueprint solids receive collision-aligned semantic furniture art"
 	)
 	_check(
-		operation_map.get_floor_detail_cell_count() >= 60
-		and operation_map.get_floor_detail_cell_count() <= 110,
-		"room detail placement is sparse and avoids the former every-third-cell pattern"
+		operation_map.get_floor_detail_cell_count() >= 85
+		and operation_map.get_floor_detail_cell_count() <= 140
+		and operation_map.get_room_signature_count() == 35,
+		"sparse floor variation plus at least two authored signatures dress every room"
+	)
+	var signatures_match_profiles := true
+	for room_id: StringName in ENVIRONMENT_CATALOG.ROOM_ART:
+		var room_rect := operation_map.get_room_rect(room_id)
+		var profile: Dictionary = ENVIRONMENT_CATALOG.ROOM_ART[room_id]
+		var signature_cells: Array = profile.get(&"signature_cells", [])
+		var seen_signature_cells: Dictionary[Vector2i, bool] = {}
+		if signature_cells.size() < 2:
+			signatures_match_profiles = false
+		for local_variant: Variant in signature_cells:
+			var local_cell := local_variant as Vector2i
+			seen_signature_cells[local_cell] = true
+			signatures_match_profiles = (
+				signatures_match_profiles
+				and operation_map.floor_details.get_cell_atlas_coords(
+					room_rect.position + local_cell
+				) == ENVIRONMENT_CATALOG.ROOM_SIGNATURE_TILES[room_id]
+			)
+		if seen_signature_cells.size() != signature_cells.size():
+			signatures_match_profiles = false
+	_check(
+		signatures_match_profiles,
+		"every room places at least two unique signature cells from its own profile"
+	)
+	_check(
+		operation_map.get_visible_wall_art_cell_count() > 0
+		and operation_map.get_visible_wall_art_cell_count()
+		< operation_map.walls.get_used_cells().size(),
+		"visible reinforced walls stop at a two-cell depth ring while collision remains complete"
+	)
+	var visible_wall_cells_are_bounded := true
+	for wall_cell: Vector2i in operation_map.wall_art.get_used_cells():
+		var near_walkable := false
+		for offset_x: int in range(-2, 3):
+			for offset_y: int in range(-2, 3):
+				var distance := absi(offset_x) + absi(offset_y)
+				if distance >= 1 and distance <= 2:
+					near_walkable = (
+						near_walkable
+						or operation_map.is_walkable_cell(
+							wall_cell + Vector2i(offset_x, offset_y)
+						)
+					)
+		visible_wall_cells_are_bounded = (
+			visible_wall_cells_are_bounded
+			and not operation_map.is_walkable_cell(wall_cell)
+			and near_walkable
+		)
+	var boundary_walls_have_art := true
+	for wall_cell: Vector2i in operation_map.walls.get_used_cells():
+		var touches_walkable := false
+		for direction: Vector2i in [Vector2i.UP, Vector2i.RIGHT, Vector2i.DOWN, Vector2i.LEFT]:
+			touches_walkable = (
+				touches_walkable
+				or operation_map.is_walkable_cell(wall_cell + direction)
+			)
+		if touches_walkable and operation_map.wall_art.get_cell_source_id(wall_cell) < 0:
+			boundary_walls_have_art = false
+	_check(
+		visible_wall_cells_are_bounded and boundary_walls_have_art,
+		"wall art covers every walkable boundary and never exceeds the two-cell depth contract"
 	)
 	var vault_signature_complete := true
 	for local_y: int in range(3):
@@ -105,6 +170,8 @@ func _test_runtime_contract(operation: OperationBlackMinuteLevel) -> void:
 		and operation_map.get_room_material_family(&"chronos_vault") == &"vault",
 		"major mission zones resolve to distinct authored material families"
 	)
+	_test_environment_presentation(operation_map)
+	_test_exact_door_geometry(operation)
 	_check(
 		operation.get_guard_count() == 10
 		and operation.get_camera_count() == 8
@@ -179,6 +246,139 @@ func _test_runtime_contract(operation: OperationBlackMinuteLevel) -> void:
 	await _tree.process_frame
 
 
+func _test_environment_presentation(operation_map: OperationBlackMinuteMap) -> void:
+	var presenter := operation_map.environment_presenter
+	_check(
+		presenter != null
+		and presenter.get_room_profile_count() == 15
+		and presenter.get_room_hero_cell_count() == 30
+		and presenter.get_active_animation_count() == 15,
+		"one pausable presenter supplies a two-tile hero, practical light, and deterministic motion to all 15 rooms"
+	)
+	var room_assets_match_profiles := true
+	presenter.set_presentation_time_for_capture(0.0)
+	var first_animation_tiles: Dictionary[StringName, Vector2i] = {}
+	for room_id: StringName in ENVIRONMENT_CATALOG.ROOM_ART:
+		var room_rect := operation_map.get_room_rect(room_id)
+		var profile: Dictionary = ENVIRONMENT_CATALOG.ROOM_ART[room_id]
+		var hero_origin: Vector2i = profile[&"hero_origin"]
+		var hero_tiles: Array = ENVIRONMENT_CATALOG.ROOM_HERO_TILES[room_id]
+		room_assets_match_profiles = (
+			room_assets_match_profiles
+			and presenter.hero_details.get_cell_atlas_coords(room_rect.position + hero_origin)
+			== hero_tiles[0]
+			and presenter.hero_details.get_cell_atlas_coords(
+				room_rect.position + hero_origin + Vector2i.RIGHT
+			) == hero_tiles[1]
+		)
+		var first_tile := presenter.get_room_animation_tile(room_id)
+		first_animation_tiles[room_id] = first_tile
+		room_assets_match_profiles = (
+			room_assets_match_profiles
+			and first_tile in ENVIRONMENT_CATALOG.ROOM_ANIMATION_TILES[room_id]
+		)
+	presenter.set_presentation_time_for_capture(1.0 / 6.0 + 0.001)
+	for room_id: StringName in ENVIRONMENT_CATALOG.ROOM_ART:
+		var next_tile := presenter.get_room_animation_tile(room_id)
+		room_assets_match_profiles = (
+			room_assets_match_profiles
+			and next_tile in ENVIRONMENT_CATALOG.ROOM_ANIMATION_TILES[room_id]
+			and next_tile != first_animation_tiles[room_id]
+		)
+	_check(
+		room_assets_match_profiles,
+		"every room uses its own visible hero and advances its own deterministic animation frame"
+	)
+	_check(
+		presenter.find_children("*", "PointLight2D", true, false).is_empty(),
+		"room practical lighting uses clipped painted pools without information-leaking lights"
+	)
+	var initial_cctv := presenter.get_room_animation_tile(&"cctv_control_room")
+	_check(
+		initial_cctv in ENVIRONMENT_CATALOG.ROOM_ANIMATION_TILES[&"cctv_control_room"],
+		"online CCTV presentation begins on a deterministic monitor frame"
+	)
+	operation_map.set_security_visual_state(false, true, 0)
+	_check(
+		presenter.get_room_animation_tile(&"cctv_control_room")
+		== ENVIRONMENT_CATALOG.STATE_TILES[&"cctv_offline"],
+		"CCTV shutdown replaces the moving feed with an explicit offline frame"
+	)
+	operation_map.set_security_visual_state(true, false, 0)
+	_check(
+		presenter.get_room_animation_tile(&"electrical_room")
+		== ENVIRONMENT_CATALOG.STATE_TILES[&"laser_offline"]
+		and presenter.get_room_animation_tile(&"laser_corridor")
+		== ENVIRONMENT_CATALOG.STATE_TILES[&"laser_offline"],
+		"laser shutdown synchronizes Electrical and corridor presentation"
+	)
+	operation_map.set_security_visual_state(true, true, 2)
+	_check(
+		presenter.get_room_animation_tile(&"security_office")
+		== ENVIRONMENT_CATALOG.STATE_TILES[&"security_alert"]
+		and presenter.get_room_animation_tile(&"vault_antechamber")
+		== ENVIRONMENT_CATALOG.STATE_TILES[&"security_alert"],
+		"facility alert drives matching non-color warning shapes in secure rooms"
+	)
+	operation_map.set_core_visual_state(true)
+	_check(
+		presenter.get_room_animation_tile(&"chronos_vault")
+		== ENVIRONMENT_CATALOG.STATE_TILES[&"vault_stolen"]
+		and presenter.get_room_animation_tile(&"extraction_route")
+		== ENVIRONMENT_CATALOG.STATE_TILES[&"extraction_active"],
+		"Core theft shuts down the Vault circuit and activates extraction runway art"
+	)
+	presenter.set_presentation_time_for_capture(1.0)
+	_check(
+		presenter.get_presentation_tick() == 6,
+		"environment presentation exposes a deterministic six-Hz capture clock"
+	)
+	operation_map.reset_environment_presentation()
+	_check(
+		presenter.get_presentation_tick() == 0
+		and presenter.get_active_animation_count() == 15
+		and presenter.get_room_animation_tile(&"cctv_control_room")
+		in ENVIRONMENT_CATALOG.ROOM_ANIMATION_TILES[&"cctv_control_room"],
+		"mission reset restores the initial environment phase and online state"
+	)
+
+
+func _test_exact_door_geometry(operation: OperationBlackMinuteLevel) -> void:
+	var portal_geometry: Dictionary[StringName, Dictionary] = {}
+	for portal_variant: Variant in operation.get_blueprint().get("dynamic_portals", []):
+		var portal := portal_variant as Dictionary
+		var span := portal.get("span_rect", []) as Array
+		var length := float(maxi(int(span[2]), int(span[3])) * 32)
+		portal_geometry[StringName(str(portal.get("id", "")))] = {
+			"length": length,
+			"rotation": PI * 0.5 if int(span[2]) > int(span[3]) else 0.0,
+		}
+	var validated_count := 0
+	for child: Node in operation.get_node("DynamicObjects").get_children():
+		if not child is AccessDoor:
+			continue
+		var door := child as AccessDoor
+		var expected: Dictionary = portal_geometry.get(door.object_id, {})
+		var expected_length: float = float(expected.get("length", 0.0))
+		var blocker_size := door.get_blocker_size()
+		var interaction_size := door.get_interaction_size()
+		var occluder_size := door.get_occluder_size()
+		if (
+			expected_length > 0.0
+			and door.scale.is_equal_approx(Vector2.ONE)
+			and is_equal_approx(door.rotation, float(expected.get("rotation", -1.0)))
+			and is_equal_approx(door.get_span_length_pixels(), expected_length)
+			and blocker_size.is_equal_approx(Vector2(32.0, expected_length))
+			and interaction_size.is_equal_approx(Vector2(58.0, expected_length + 16.0))
+			and occluder_size.is_equal_approx(Vector2(32.0, expected_length))
+		):
+			validated_count += 1
+	_check(
+		validated_count == portal_geometry.size(),
+		"every access door uses exact rotation, interaction, blocker, and occluder geometry"
+	)
+
+
 func _test_modal_pause_freeze(operation: OperationBlackMinuteLevel) -> void:
 	var registry: ObjectRegistry = operation.get_node("Systems/ObjectRegistry")
 	var recall: ChronoRecallManager = operation.get_node("Systems/ChronoRecallManager")
@@ -188,10 +388,20 @@ func _test_modal_pause_freeze(operation: OperationBlackMinuteLevel) -> void:
 	var player := operation.get_player()
 	var terminal := registry.get_object(&"terminal_staff_intel_01") as HackTerminal
 	var capture_recall_button := hud.get_node("%CaptureRecallButton") as Button
+	var environment_presenter := operation.operation_map.environment_presenter
 
 	_check(terminal.interact(player), "pause regression starts a real in-progress terminal hack")
 	var map_pause_world_time := recall.get_world_time()
 	var map_pause_hack_time := terminal.hack_elapsed
+	var active_presentation_tick := environment_presenter.get_presentation_tick()
+	await _tree.create_timer(0.20, true).timeout
+	_check(
+		environment_presenter.get_presentation_tick() > active_presentation_tick,
+		"environment presentation advances on its fixed clock before pause"
+	)
+	map_pause_world_time = recall.get_world_time()
+	map_pause_hack_time = terminal.hack_elapsed
+	var map_pause_presentation_tick := environment_presenter.get_presentation_tick()
 	map_overlay.open_map()
 	_check(
 		_tree.paused
@@ -203,11 +413,12 @@ func _test_modal_pause_freeze(operation: OperationBlackMinuteLevel) -> void:
 		and not recall.can_process(),
 		"map pause keeps modal controls alive while every gameplay branch is pausable"
 	)
-	await _tree.create_timer(0.08, true).timeout
+	await _tree.create_timer(0.20, true).timeout
 	_check(
 		is_equal_approx(recall.get_world_time(), map_pause_world_time)
-		and is_equal_approx(terminal.hack_elapsed, map_pause_hack_time),
-		"map pause advances neither Chrono history nor an in-progress terminal hack"
+		and is_equal_approx(terminal.hack_elapsed, map_pause_hack_time)
+		and environment_presenter.get_presentation_tick() == map_pause_presentation_tick,
+		"map pause advances neither Chrono history, terminal hack, nor environment phase"
 	)
 	map_overlay.close_map()
 	terminal.reset_mission()
@@ -318,6 +529,12 @@ func _test_no_recall_solution(operation: OperationBlackMinuteLevel) -> void:
 		"Player completes the vulnerable CCTV terminal interaction"
 	)
 	_check(not security.cctv_online, "CCTV terminal takes the eight-camera network offline")
+	_check(
+		operation.operation_map.environment_presenter.get_room_animation_tile(
+			&"cctv_control_room"
+		) == ENVIRONMENT_CATALOG.STATE_TILES[&"cctv_offline"],
+		"live CCTV shutdown signal reaches the room presentation"
+	)
 
 	var lasers := registry.get_object(&"terminal_laser_network_01") as HackTerminal
 	_check(
@@ -325,6 +542,12 @@ func _test_no_recall_solution(operation: OperationBlackMinuteLevel) -> void:
 		"Player completes the electrical-room laser shutdown"
 	)
 	_check(not security.laser_online, "electrical terminal disables all physical laser triggers")
+	_check(
+		operation.operation_map.environment_presenter.get_room_animation_tile(
+			&"laser_corridor"
+		) == ENVIRONMENT_CATALOG.STATE_TILES[&"laser_offline"],
+		"live laser shutdown signal reaches the corridor presentation"
+	)
 
 	var level_two := registry.get_object(&"keycard_level_2_01") as AccessCard
 	_check(level_two.interact(player), "Player physically collects Level 2 access in Security")
@@ -369,6 +592,15 @@ func _test_no_recall_solution(operation: OperationBlackMinuteLevel) -> void:
 	)
 	var extraction := registry.get_object(&"extraction_yard_01") as MissionExtractionZone
 	_check(extraction.is_active, "Core theft activates the external extraction zone")
+	_check(
+		operation.operation_map.environment_presenter.get_room_animation_tile(
+			&"chronos_vault"
+		) == ENVIRONMENT_CATALOG.STATE_TILES[&"vault_stolen"]
+		and operation.operation_map.environment_presenter.get_room_animation_tile(
+			&"extraction_route"
+		) == ENVIRONMENT_CATALOG.STATE_TILES[&"extraction_active"],
+		"live Core theft signal updates Vault and extraction presentation"
+	)
 	extraction.extraction_requested.emit(player)
 	_check(director.is_completed(), "returning to extraction completes the heist")
 	_check(
@@ -414,6 +646,15 @@ func _test_no_recall_solution(operation: OperationBlackMinuteLevel) -> void:
 
 func _test_recall_and_echo(operation: OperationBlackMinuteLevel) -> void:
 	_check(operation.reset_operation(), "mission checkpoint restart rebuilds a clean operation")
+	_check(
+		operation.operation_map.environment_presenter.get_room_animation_tile(
+			&"cctv_control_room"
+		) in ENVIRONMENT_CATALOG.ROOM_ANIMATION_TILES[&"cctv_control_room"]
+		and operation.operation_map.environment_presenter.get_room_animation_tile(
+			&"chronos_vault"
+		) in ENVIRONMENT_CATALOG.ROOM_ANIMATION_TILES[&"chronos_vault"],
+		"mission checkpoint reset restores online room presentation through production wiring"
+	)
 	_check(
 		operation.get_last_mission_result().is_empty()
 		and not operation.performance_tracker.is_finalized(),

@@ -65,7 +65,9 @@ Run commands from the repository root:
 
 Inputs:
 
-- `assets/source/environment/facility_environment_spec.json`: canonical palette, room-family, seed, and semantic-solid mapping;
+- `assets/source/environment/facility_environment_spec.json`: canonical palette,
+  room-family, seed, semantic-solid mapping, and 15 validated room-art profiles
+  containing signature cells, hero origins, animation cells, and light anchors;
 - `assets/source/environment/helix_environment_concept_v1.png`: visual-direction reference only, never sampled into or referenced by runtime.
 
 Outputs:
@@ -78,15 +80,35 @@ Outputs:
 - `resources/tilesets/facility_environment_art.tres`;
 - `resources/environment/facility_environment_catalog.gd`.
 
-The 512×320 RGBA atlas contains 100 named 32 px cells: 14 base floors, 12 sparse floor overlays, 32 wall masks, 33 semantic-solid pieces, and a nine-cell Vault circuit. There is no runtime randomness. Room-specific integer seeds select a sparse alternate or detail deterministically. The same build writes the runtime GDScript catalog consumed by `OperationBlackMinuteMap`, so atlas packing, room families, seeds, solid motifs, and Vault coordinates cannot drift from the Python source of truth.
+The 512×448 RGBA atlas contains 182 named 32 px cells: 14 base floors,
+12 sparse overlays, 32 wall masks, 33 semantic-solid pieces, nine Vault-circuit
+cells, 15 room signatures, 30 room hero segments, 30 two-frame animation cells,
+five explicit mission-state cells, and a deep-wall pair. There
+is no runtime randomness. Room seeds choose variants and stable animation phases
+deterministically. The same build writes the runtime GDScript catalog consumed
+by `OperationBlackMinuteMap` and `OperationEnvironmentPresenter`, so packing,
+profiles, state cells, and Godot resources cannot drift from the Python source
+of truth.
 
 The generated TileSet contains zero physics and zero occlusion layers. `resources/tilesets/facility_tileset.tres` and the mission blueprint continue to own collision, LOS, navigation, and topology. `tools/validate_assets.sh` fingerprints both pipelines before and after regeneration so CI rejects stale derivatives.
 
-For visual review, `tools/capture_environment_screenshots.gd` renders eight fixed room centers and one unlit whole-map composition overview. It must run with a graphical renderer, not `--headless`; a missing render image, requested/rendered size mismatch, or PNG write failure exits nonzero. Use a real browser viewport for non-16:9 responsive checks such as 1024×768. This static capture set does not claim Ghost, door-state, or security-state coverage, which belongs to the targeted screenshot matrix backlog.
+For visual review, `tools/capture_environment_screenshots.gd` renders all 15
+room centers and one whole-map overview. It must run with a graphical renderer,
+not `--headless`; a missing image, requested/rendered size mismatch, or PNG write
+failure exits nonzero. The supported modes are `art_clean`,
+`gameplay_initial`, and `gameplay_late`. Late mode is deterministic synthetic
+state staging for visual comparison, not a claim that a mission route was
+played. Use a real browser viewport for non-16:9 checks such as 1024×768.
 
 ```bash
 godot --path . --script tools/capture_environment_screenshots.gd -- \
-  --output-dir=/tmp/60sa-environment-captures --size=1280x720
+  --output-dir=/tmp/60sa-environment-captures --size=1280x720 \
+  --mode=gameplay_initial --presentation-time=0.5
+
+.tools/venv/bin/python tools/build_environment_contact_sheet.py \
+  --input-dir=/tmp/60sa-environment-captures \
+  --output=/tmp/operation-contact.png \
+  --mode=gameplay_initial --size=1280x720
 ```
 
 These captures validate composition and readability, not path completion. Gameplay acceptance remains the responsibility of the headless physical route tests.

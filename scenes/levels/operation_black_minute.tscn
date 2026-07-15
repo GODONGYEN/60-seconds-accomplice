@@ -1,4 +1,4 @@
-[gd_scene load_steps=16 format=3]
+[gd_scene load_steps=17 format=3]
 
 [ext_resource type="Script" path="res://scripts/missions/operation_black_minute_level.gd" id="1_level"]
 [ext_resource type="Script" path="res://scripts/presentation/operation_black_minute_map.gd" id="2_map"]
@@ -14,6 +14,7 @@
 [ext_resource type="PackedScene" path="res://scenes/ui/heist_hud.tscn" id="12_hud"]
 [ext_resource type="PackedScene" path="res://scenes/ui/facility_map_overlay.tscn" id="13_overlay"]
 [ext_resource type="Script" path="res://scripts/ui/audio_feedback.gd" id="14_audio"]
+[ext_resource type="Script" path="res://scripts/presentation/operation_environment_presenter.gd" id="15_environment_presenter"]
 
 [node name="OperationBlackMinute" type="Node2D"]
 process_mode = 3
@@ -35,6 +36,19 @@ z_index = -6
 unique_name_in_owner = true
 z_index = -5
 
+[node name="EnvironmentPresenter" type="Node2D" parent="OperationMap"]
+unique_name_in_owner = true
+z_index = -4
+script = ExtResource("15_environment_presenter")
+
+[node name="HeroDetails" type="TileMapLayer" parent="OperationMap/EnvironmentPresenter"]
+unique_name_in_owner = true
+z_index = 3
+
+[node name="AnimatedDetails" type="TileMapLayer" parent="OperationMap/EnvironmentPresenter"]
+unique_name_in_owner = true
+z_index = 7
+
 [node name="Walls" type="TileMapLayer" parent="OperationMap"]
 unique_name_in_owner = true
 z_index = 1
@@ -54,6 +68,7 @@ z_index = 2
 
 [node name="RoomLabels" type="Node2D" parent="OperationMap"]
 unique_name_in_owner = true
+visible = false
 z_index = 1
 
 [node name="ObservationWindows" type="Node2D" parent="OperationMap"]
