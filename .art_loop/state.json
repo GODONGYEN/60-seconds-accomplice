@@ -1,30 +1,34 @@
 {
   "schema_version": 1,
-  "last_completed_cycle": 2,
-  "last_verified_commit": "676cb49",
-  "current_area": "facility-wide environment foundation",
-  "current_visual_problem": "practical lighting and stateful environment animation remain under-authored",
+  "last_completed_cycle": 5,
+  "last_verified_commit": "7196d1d6f8fe387eced851be0e4bb24e653a10d1",
+  "current_area": "fifteen-room environment completion",
+  "current_visual_problem": "all authored rooms pass the ten-point completeness gate; independent taste testing and measured browser frame time remain",
   "completed_areas": [
     "global floor material families",
     "reinforced wall visual masks",
     "sixteen blueprint-aligned semantic solid motifs",
-    "Chronos Vault circuit dais"
+    "Chronos Vault circuit dais",
+    "fifteen unique room hero silhouettes and signatures",
+    "room-clipped practical-light recipes",
+    "pause-safe fixed-tick state animation",
+    "rank-specific exact-span access doors",
+    "three-state fifteen-room capture matrix"
   ],
   "areas_needing_revision": [
-    "practical room lighting",
-    "dynamic door visual consistency",
-    "Staff Office and Guard Break storytelling",
-    "CCTV/server/electrical stateful presentation"
+    "independent player taste testing",
+    "measured browser frame-time baseline",
+    "optional room-label/HUD overlap polish"
   ],
   "failed_visual_experiments": [
     "per-tile research and vault emissive accents created a new repeated rhythm; revised to sparse variants before acceptance"
   ],
   "next_candidates": [
-    "visibility-safe CCTV/Electrical/Research practical-light prototype",
-    "deterministic monitor/server/breaker micro-animation",
-    "access-door frame and silhouette pass"
+    "instrument production browser frame time",
+    "run first-player silhouette recognition study",
+    "capture a representative real-play late mission state"
   ],
-  "last_screenshot_set": "docs/screenshots/environment",
-  "last_ci_url": "https://github.com/GODONGYEN/60-seconds-accomplice/actions/runs/29362503649",
+  "last_screenshot_set": "docs/screenshots/environment/final",
+  "last_ci_url": null,
   "last_pages_url": "https://godongyen.github.io/60-seconds-accomplice/"
 }
